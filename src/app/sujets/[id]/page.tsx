@@ -3,9 +3,7 @@ import { notFound } from "next/navigation";
 import { BackHeader } from "@/components/BackHeader";
 import { Badge } from "@/components/EmptyState";
 import { Icon } from "@/components/icons";
-import { FilePreview } from "@/components/FilePreview";
-import { DownloadButton } from "@/components/DownloadButton";
-import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
+import { SujetViewer } from "@/components/SujetViewer";
 import { ShareSheet } from "@/components/ShareSheet";
 import { ToastButton } from "@/components/ToastButton";
 import { getSimilarSubjects, getSubjectById } from "@/lib/data";
@@ -51,29 +49,28 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
           </Badge>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-[20px] border border-line bg-surface-3">
-          {subject.fileUrl ? (
-            <Link href={`/sujets/${subject.id}/plein`} className="block">
-              <FilePreview url={subject.fileUrl} className="h-[360px] w-full border-0" />
-            </Link>
-          ) : (
-            <div className="p-7 text-center">
-              <div className="mx-auto mb-1 h-[11px] w-[52%] rounded-md bg-line-4" />
-              <div className="mx-auto mt-5 h-2 w-[88%] rounded bg-line-3" />
-              <div className="mx-auto mt-2.5 h-2 w-[94%] rounded bg-line-3" />
-              <div className="mx-auto mt-2.5 h-2 w-[70%] rounded bg-line-3" />
-              <div className="mt-6 text-[13px] font-semibold text-slate-light">
-                Aperçu indisponible pour ce contenu de démonstration
-              </div>
-            </div>
-          )}
-        </div>
+        <SujetViewer
+          subjectId={subject.id}
+          matiere={subject.matiere}
+          filiere={subject.filiere}
+          niveau={subject.niveau}
+          fileUrl={subject.fileUrl}
+          correctionUrl={subject.correctionUrl}
+          onRecord={incrementSubjectDownload.bind(null, subject.id)}
+        />
 
         <div className="mt-[18px] rounded-[20px] border border-line px-3.5">
           {[
             { label: "Année", valeur: subject.annee },
             { label: "Épreuve", valeur: subject.type },
-            { label: "Corrigé", valeur: subject.corrige ? "Joint au document" : "Pas encore" },
+            {
+              label: "Corrigé",
+              valeur: subject.correctionUrl
+                ? "Disponible séparément"
+                : subject.corrige
+                ? "Joint au document"
+                : "Pas encore",
+            },
             { label: "Vérifié le", valeur: subject.createdAt.toLocaleDateString("fr-FR") },
             { label: "Téléchargements", valeur: String(subject.downloads) },
           ].map((row) => (
@@ -118,23 +115,6 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
         >
           Signaler un problème sur ce sujet
         </ToastButton>
-      </div>
-
-      <div
-        className="fixed inset-x-0 z-[4] flex gap-2.5 bg-white px-5 pb-[18px] pt-4"
-        style={{ bottom: "calc(76px + var(--safe-bottom))" }}
-      >
-        <DownloadButton
-          fileUrl={subject.fileUrl}
-          onRecord={incrementSubjectDownload.bind(null, subject.id)}
-        />
-        <WhatsAppShareButton
-          text={`Regarde ce sujet sur Campusly : ${subject.matiere} (${subject.filiere} · ${subject.niveau})`}
-          aria-label="Partager sur WhatsApp"
-          className="press-scale grid h-[54px] w-[54px] flex-none place-items-center rounded-2xl border-[1.5px] border-line-4 bg-white active:bg-teal-tint-soft"
-        >
-          <Icon name="chat" size={19} strokeWidth={1.9} />
-        </WhatsAppShareButton>
       </div>
     </div>
   );

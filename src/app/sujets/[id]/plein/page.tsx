@@ -4,12 +4,27 @@ import { getSubjectById } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
-export default async function SujetPleinPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function SujetPleinPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ mode?: string }>;
+}) {
   const { id } = await params;
+  const { mode } = await searchParams;
   const subject = await getSubjectById(Number(id));
   if (!subject) notFound();
 
+  const isCorrection = mode === "correction";
+  const fileUrl = isCorrection ? subject.correctionUrl : subject.fileUrl;
+  const title = isCorrection ? `${subject.matiere} — Corrigé` : subject.matiere;
+
   return (
-    <FullscreenViewer title={subject.matiere} fileUrl={subject.fileUrl} closeHref={`/sujets/${subject.id}`} />
+    <FullscreenViewer
+      title={title}
+      fileUrl={fileUrl}
+      closeHref={`/sujets/${subject.id}`}
+    />
   );
 }

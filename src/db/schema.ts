@@ -84,6 +84,8 @@ export const subjects = pgTable("subject", {
   corrige: boolean("corrige").notNull().default(false),
   fileUrl: text("file_url"),
   fileName: text("file_name"),
+  correctionUrl: text("correction_url"),
+  correctionName: text("correction_name"),
   downloads: integer("downloads").notNull().default(0),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
