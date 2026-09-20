@@ -60,7 +60,10 @@ export function FullscreenViewer({
         )}
       </div>
 
-      <div className="flex h-full w-full items-center justify-center">
+      <div
+        className="absolute inset-x-0 flex items-center justify-center"
+        style={{ top: "calc(64px + var(--safe-top))", bottom: "calc(24px + var(--safe-bottom))" }}
+      >
         <div style={{ width: "95%", height: "90%" }}>
           {!fileUrl && (
             <div className="grid h-full place-items-center rounded-lg bg-[#1c2735] text-[13px] font-semibold text-slate-light">
