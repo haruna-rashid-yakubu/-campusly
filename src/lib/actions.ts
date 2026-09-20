@@ -5,10 +5,17 @@ import { cookies } from "next/headers";
 import { eq, sql } from "drizzle-orm";
 import { auth, signIn, signOut } from "@/auth";
 import { db } from "@/db";
-import { roomTypes, subjectSubmissions, subjects, programmePublications } from "@/db/schema";
+import {
+  roomTypes,
+  subjectSubmissions,
+  subjects,
+  programmePublications,
+  pushSubscriptions,
+} from "@/db/schema";
 import { uploadFile } from "@/lib/blob";
 import { getClasseByLabel } from "@/lib/data";
 import { BANNER_COOKIE, CLASSE_COOKIE } from "@/lib/constants";
+import { sendPushToAll, sendPushToUser } from "@/lib/push";
 
 async function requireUser() {
   const session = await auth();
@@ -120,6 +127,12 @@ export async function moderateSubject(
       .update(subjectSubmissions)
       .set({ status: "publie", reviewedAt: new Date(), publishedSubjectId: published.id })
       .where(eq(subjectSubmissions.id, submissionId));
+
+    await sendPushToUser(submission.userId, {
+      title: "Ton sujet a été publié !",
+      body: `${submission.matiere} · ${submission.annee} est maintenant en ligne sur Campusly.`,
+      url: `/sujets/${published.id}`,
+    });
   } else {
     await db
       .update(subjectSubmissions)
@@ -129,6 +142,12 @@ export async function moderateSubject(
         note: note ?? "Photo illisible — renvoie-la mieux cadrée.",
       })
       .where(eq(subjectSubmissions.id, submissionId));
+
+    await sendPushToUser(submission.userId, {
+      title: "Ton envoi a été refusé",
+      body: note ?? "Photo illisible — renvoie-la mieux cadrée.",
+      url: "/sujets/mes-envois",
+    });
   }
 
   revalidatePath("/admin");
@@ -176,4 +195,38 @@ export async function publishProgramme(classeLabel: string, weekLabel: string, f
 
   revalidatePath("/admin");
   revalidatePath("/programme");
+
+  await sendPushToAll({
+    title: "Nouveau programme publié",
+    body: `${classeLabel} — ${weekLabel}`,
+    url: "/programme",
+  });
+}
+
+export async function subscribePush(subscription: {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+}) {
+  const session = await auth();
+
+  await db
+    .insert(pushSubscriptions)
+    .values({
+      userId: session?.user?.id ?? null,
+      endpoint: subscription.endpoint,
+      p256dh: subscription.keys.p256dh,
+      auth: subscription.keys.auth,
+    })
+    .onConflictDoUpdate({
+      target: pushSubscriptions.endpoint,
+      set: {
+        userId: session?.user?.id ?? null,
+        p256dh: subscription.keys.p256dh,
+        auth: subscription.keys.auth,
+      },
+    });
+}
+
+export async function unsubscribePush(endpoint: string) {
+  await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
 }

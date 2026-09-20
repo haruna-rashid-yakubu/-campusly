@@ -53,8 +53,12 @@ export function SujetViewer({
 
       <div className="mt-4 overflow-hidden rounded-[20px] border border-line bg-surface-3">
         {activeUrl ? (
-          <Link href={`/sujets/${subjectId}/plein?mode=${mode}`} className="block">
+          <Link href={`/sujets/${subjectId}/plein?mode=${mode}`} className="press-scale relative block">
             <FilePreview url={activeUrl} className="h-[360px] w-full border-0" />
+            <span className="absolute bottom-3 right-3 flex h-10 items-center gap-1.5 rounded-[13px] bg-ink/80 px-3.5 text-[12.5px] font-bold text-white">
+              <Icon name="full" size={18} strokeWidth={2} />
+              Agrandir
+            </span>
           </Link>
         ) : (
           <div className="p-7 text-center">

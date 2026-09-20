@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { Logo } from "@/components/Logo";
 import { Icon } from "@/components/icons";
 import { ClasseSwitcher } from "@/components/ClasseSwitcher";
+import { NotificationBell } from "@/components/NotificationBell";
 import { ShareSheet } from "@/components/ShareSheet";
 import {
   getClasseByLabel,
@@ -49,15 +50,18 @@ export default async function AccueilPage() {
             <Logo size={36} />
             <span className="text-xl font-extrabold tracking-tight">Campusly</span>
           </div>
-          {session?.user?.role === "admin" && (
-            <Link
-              href="/admin"
-              className="press-scale grid h-11 w-11 place-items-center text-ink-soft"
-              aria-label="Administration"
-            >
-              <Icon name="bell" size={22} />
-            </Link>
-          )}
+          <div className="flex items-center">
+            {session?.user?.role === "admin" && (
+              <Link
+                href="/admin"
+                className="press-scale grid h-11 w-11 place-items-center text-ink-soft"
+                aria-label="Administration"
+              >
+                <Icon name="shield" size={21} />
+              </Link>
+            )}
+            <NotificationBell />
+          </div>
         </div>
 
         <div className="mt-4">

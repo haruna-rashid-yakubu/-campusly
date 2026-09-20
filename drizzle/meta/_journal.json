@@ -15,6 +15,13 @@
       "when": 1789927741206,
       "tag": "0001_nice_pete_wisdom",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789929327550,
+      "tag": "0002_sleepy_wildside",
+      "breakpoints": true
     }
   ]
 }

@@ -158,6 +158,15 @@ export const pressingTarifs = pgTable("pressing_tarif", {
   sortOrder: integer("sort_order").notNull().default(0),
 });
 
+export const pushSubscriptions = pgTable("push_subscription", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
 export const programmePublications = pgTable("programme_publication", {
   id: serial("id").primaryKey(),
   classeId: integer("classe_id")
