@@ -7,23 +7,26 @@ import {
   roomTypes,
   pressings,
   pressingTarifs,
+  programmePublications,
 } from "./schema";
+
+const CLASSE_LABELS = [
+  "Génie informatique · L1",
+  "Génie informatique · L2",
+  "Génie informatique · L3",
+  "Génie civil · L3",
+  "Gestion · L1",
+];
 
 async function main() {
   console.log("Seeding…");
 
   await db
     .insert(classes)
-    .values(
-      [
-        "Génie informatique · L1",
-        "Génie informatique · L2",
-        "Génie informatique · L3",
-        "Génie civil · L3",
-        "Gestion · L1",
-      ].map((label) => ({ label }))
-    )
+    .values(CLASSE_LABELS.map((label) => ({ label })))
     .onConflictDoNothing();
+  const classeRows = await db.select().from(classes);
+  const classeByLabel = new Map(classeRows.map((c) => [c.label, c.id]));
 
   await db.insert(subjects).values([
     { matiere: "Analyse numérique", filiere: "Génie informatique", niveau: "L2", annee: "2024", type: "Partiel", corrige: true, downloads: 47 },
@@ -44,7 +47,10 @@ async function main() {
         description:
           "Cité calme tenue par la paroisse, portail fermé à 22 h, gardien la nuit. Forage et compteur individuel par chambre. Marché de Nkolbisson à 5 minutes à pied.",
         whatsapp: "+237600000011",
-        photos: [],
+        photos: [
+          "https://smp2uiacevm3zokj.public.blob.vercel-storage.com/cites/cite1-1-gP9DnOhFF68Y3kl1rGoPfm5TOztveX.png",
+          "https://smp2uiacevm3zokj.public.blob.vercel-storage.com/cites/cite1-2-uwUdlSirLLIMb4nMM9U2FtPF9n2fF2.png",
+        ],
       },
       {
         nom: "Résidence Le Campus",
@@ -53,7 +59,10 @@ async function main() {
         description:
           "Résidence récente sur la route de l'UCAC. Eau courante, groupe électrogène en cas de coupure, cour fermée et parking motos.",
         whatsapp: "+237600000012",
-        photos: [],
+        photos: [
+          "https://smp2uiacevm3zokj.public.blob.vercel-storage.com/cites/cite2-1-JrocXC6LyqyQTlmrumIvPXVrFufdT0.png",
+          "https://smp2uiacevm3zokj.public.blob.vercel-storage.com/cites/cite2-2-vNSHPWL9J1LDg4F5pRCEMQg0l2VWAF.png",
+        ],
       },
       {
         nom: "Cité Les Palmiers",
@@ -62,7 +71,10 @@ async function main() {
         description:
           "Grande cité étudiante à Melen, à un carrefour desservi par les taxis. Cuisine commune par étage.",
         whatsapp: "+237600000013",
-        photos: [],
+        photos: [
+          "https://smp2uiacevm3zokj.public.blob.vercel-storage.com/cites/cite3-1-Us5lG13IcUn9NgCPh1jmOzie0XuqzX.png",
+          "https://smp2uiacevm3zokj.public.blob.vercel-storage.com/cites/cite3-2-e636PPAJ9c6ZpCD1IF42BQwXP2vWSX.png",
+        ],
       },
       {
         nom: "Résidence Akwa",
@@ -71,7 +83,10 @@ async function main() {
         description:
           "Le moins cher de la sélection, plus loin du campus mais bien desservi. Eau de forage, gardien de jour.",
         whatsapp: "+237600000014",
-        photos: [],
+        photos: [
+          "https://smp2uiacevm3zokj.public.blob.vercel-storage.com/cites/cite4-1-ysQUcWJqSb6i8RB79OFB6X0SifLbji.png",
+          "https://smp2uiacevm3zokj.public.blob.vercel-storage.com/cites/cite4-2-nKWnVcp673ecNZ0acdKJf1wBaIlYU5.png",
+        ],
       },
     ])
     .returning();
@@ -112,6 +127,52 @@ async function main() {
     { pressingId: p3.id, article: "Pantalon", prix: 600, sortOrder: 1 },
     { pressingId: p3.id, article: "Veste", prix: 1200, sortOrder: 2 },
   ]);
+
+  const PROGRAMME_PHOTOS: Record<string, string> = {
+    "Génie informatique · L1":
+      "https://smp2uiacevm3zokj.public.blob.vercel-storage.com/programme/g-nie-informatique-l1-jJdM5m8HxoshyDBsKZ44nvkfiCQpkG.png",
+    "Génie informatique · L2":
+      "https://smp2uiacevm3zokj.public.blob.vercel-storage.com/programme/g-nie-informatique-l2-XxB6pMJ1AUYhODSMrhdoJbPoBINhyt.png",
+    "Génie informatique · L3":
+      "https://smp2uiacevm3zokj.public.blob.vercel-storage.com/programme/g-nie-informatique-l3-VHfzrxQiYnbgpQvZpA2RfkYg3pzKb8.png",
+    "Génie civil · L3":
+      "https://smp2uiacevm3zokj.public.blob.vercel-storage.com/programme/g-nie-civil-l3-86gt83H7bLZldc98j5EXGuHDuo6R43.png",
+    "Gestion · L1":
+      "https://smp2uiacevm3zokj.public.blob.vercel-storage.com/programme/gestion-l1-23tDJ0VAqp7ucPgoei3mMjI4yStzwE.png",
+  };
+
+  const programme = (label: string, weekLabel: string, publishedAt: Date) => {
+    const classeId = classeByLabel.get(label);
+    const photoUrl = PROGRAMME_PHOTOS[label];
+    if (!classeId || !photoUrl) return null;
+    return { classeId, weekLabel, publishedAt, photoUrl };
+  };
+
+  await db.insert(programmePublications).values(
+    [
+      programme(
+        "Génie informatique · L1",
+        "Semaine du 15 au 20 sept.",
+        new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+      ),
+      programme(
+        "Génie informatique · L2",
+        "Semaine du 15 au 20 sept.",
+        new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+      ),
+      programme(
+        "Génie informatique · L3",
+        "Semaine du 8 au 13 sept.",
+        new Date(Date.now() - 8 * 24 * 60 * 60 * 1000)
+      ),
+      programme("Génie civil · L3", "Semaine du 15 au 20 sept.", new Date()),
+      programme(
+        "Gestion · L1",
+        "Semaine du 1 au 6 sept.",
+        new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
+      ),
+    ].filter((p): p is NonNullable<typeof p> => p !== null)
+  );
 
   console.log("Seed complete.");
 }
