@@ -126,7 +126,7 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
       >
         <DownloadButton
           fileUrl={subject.fileUrl}
-          onRecord={() => incrementSubjectDownload(subject.id)}
+          onRecord={incrementSubjectDownload.bind(null, subject.id)}
         />
         <WhatsAppShareButton
           text={`Regarde ce sujet sur Campusly : ${subject.matiere} (${subject.filiere} · ${subject.niveau})`}
