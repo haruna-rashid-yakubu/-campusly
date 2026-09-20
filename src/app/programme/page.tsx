@@ -44,17 +44,14 @@ export default async function ProgrammePage() {
           </div>
           <div className="fixed inset-x-0 z-[4] flex gap-2.5 bg-white px-5 pb-[18px] pt-4" style={{ bottom: "calc(76px + var(--safe-bottom))" }}>
             <DownloadButton fileUrl={programme.photoUrl} />
-            <ShareSheet
-              trigger={(open) => (
-                <button
-                  onClick={open}
-                  className="press-scale grid h-[54px] w-[54px] flex-none place-items-center rounded-2xl border-[1.5px] border-line-4 bg-white active:bg-teal-tint-soft"
-                  aria-label="Partager"
-                >
-                  <Icon name="share" size={19} strokeWidth={1.9} />
-                </button>
-              )}
-            />
+            <ShareSheet>
+              <button
+                className="press-scale grid h-[54px] w-[54px] flex-none place-items-center rounded-2xl border-[1.5px] border-line-4 bg-white active:bg-teal-tint-soft"
+                aria-label="Partager"
+              >
+                <Icon name="share" size={19} strokeWidth={1.9} />
+              </button>
+            </ShareSheet>
           </div>
         </>
       ) : (

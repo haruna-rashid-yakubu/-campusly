@@ -6,11 +6,7 @@ import { useToast } from "@/components/Toast";
 
 const APP_URL = "https://campusly.app";
 
-export function ShareSheet({
-  trigger,
-}: {
-  trigger: (open: () => void) => React.ReactNode;
-}) {
+export function ShareSheet({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const { show } = useToast();
 
@@ -50,7 +46,9 @@ export function ShareSheet({
 
   return (
     <>
-      {trigger(() => setOpen(true))}
+      <span onClick={() => setOpen(true)} style={{ display: "contents" }}>
+        {children}
+      </span>
       <Sheet
         open={open}
         onClose={() => setOpen(false)}

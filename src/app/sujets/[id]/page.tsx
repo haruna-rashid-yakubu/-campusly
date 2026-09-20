@@ -28,17 +28,14 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
       <BackHeader
         border
         right={
-          <ShareSheet
-            trigger={(open) => (
-              <button
-                onClick={open}
-                className="press-scale grid h-11 w-11 place-items-center"
-                aria-label="Partager"
-              >
-                <Icon name="share" size={19} strokeWidth={1.9} />
-              </button>
-            )}
-          />
+          <ShareSheet>
+            <button
+              className="press-scale grid h-11 w-11 place-items-center"
+              aria-label="Partager"
+            >
+              <Icon name="share" size={19} strokeWidth={1.9} />
+            </button>
+          </ShareSheet>
         }
       />
 

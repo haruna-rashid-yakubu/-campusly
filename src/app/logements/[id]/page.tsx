@@ -31,17 +31,14 @@ export default async function CiteDetailPage({ params }: { params: Promise<{ id:
         alt={cite.nom}
         backHref="/logements"
         shareButton={
-          <ShareSheet
-            trigger={(open) => (
-              <button
-                onClick={open}
-                className="press-scale grid h-[42px] w-[42px] place-items-center rounded-full bg-white/95 shadow-md"
-                aria-label="Partager"
-              >
-                <Icon name="share" size={19} strokeWidth={1.9} />
-              </button>
-            )}
-          />
+          <ShareSheet>
+            <button
+              className="press-scale grid h-[42px] w-[42px] place-items-center rounded-full bg-white/95 shadow-md"
+              aria-label="Partager"
+            >
+              <Icon name="share" size={19} strokeWidth={1.9} />
+            </button>
+          </ShareSheet>
         }
       />
 

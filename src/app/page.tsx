@@ -190,17 +190,12 @@ export default async function AccueilPage() {
       </div>
 
       <div className="px-5 pb-7 pt-5">
-        <ShareSheet
-          trigger={(open) => (
-            <button
-              onClick={open}
-              className="press-scale flex h-[52px] w-full items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-teal bg-white text-[15px] font-bold text-teal-dark active:bg-teal-tint-soft"
-            >
-              <Icon name="share" size={19} strokeWidth={1.9} />
-              Partager Campusly
-            </button>
-          )}
-        />
+        <ShareSheet>
+          <button className="press-scale flex h-[52px] w-full items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-teal bg-white text-[15px] font-bold text-teal-dark active:bg-teal-tint-soft">
+            <Icon name="share" size={19} strokeWidth={1.9} />
+            Partager Campusly
+          </button>
+        </ShareSheet>
       </div>
     </div>
   );
