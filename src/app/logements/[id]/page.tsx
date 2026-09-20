@@ -23,6 +23,7 @@ export async function generateMetadata({
   return {
     title: cite.nom,
     description: `${cite.nom} — ${cite.quartier}, à ${distanceLabel(cite.distanceM)} de l'UCAC Nkolbisson. ${cite.description}`.trim(),
+    alternates: { canonical: `/logements/${cite.id}` },
   };
 }
 
@@ -68,10 +69,12 @@ export default async function CiteDetailPage({ params }: { params: Promise<{ id:
               {cite.quartier} · {distanceLabel(cite.distanceM)} de l&rsquo;UCAC
             </div>
           </div>
-          <span className="flex h-7 flex-none items-center gap-1.5 rounded-[9px] bg-teal-tint px-2.5 text-[11.5px] font-extrabold text-teal-dark">
-            <Icon name="shield" size={15} strokeWidth={1.9} />
-            Vérifié
-          </span>
+          {cite.verified && (
+            <span className="flex h-7 flex-none items-center gap-1.5 rounded-[9px] bg-teal-tint px-2.5 text-[11.5px] font-extrabold text-teal-dark">
+              <Icon name="shield" size={15} strokeWidth={1.9} />
+              Vérifié
+            </span>
+          )}
         </div>
 
         <div className="mt-3.5 flex flex-wrap gap-2">

@@ -16,7 +16,7 @@ export function WhatsAppShareButton({
       aria-label={ariaLabel}
       onClick={() => {
         const url = window.location.href;
-        window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + url)}`, "_blank");
+        window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + url)}`, "_blank", "noopener,noreferrer");
       }}
       className={className}
     >

@@ -5,6 +5,7 @@ import { Icon } from "@/components/icons";
 import { ClasseSwitcher } from "@/components/ClasseSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ShareSheet } from "@/components/ShareSheet";
+import { SignOutButton } from "@/components/SignOutButton";
 import {
   getClasseByLabel,
   getClasses,
@@ -65,8 +66,11 @@ export default async function AccueilPage() {
         </div>
 
         <div className="mt-4">
-          <div className="text-[26px] font-extrabold leading-tight tracking-tight">
-            {firstName ? `Salut ${firstName},` : "Salut,"}
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-[26px] font-extrabold leading-tight tracking-tight">
+              {firstName ? `Salut ${firstName},` : "Salut,"}
+            </div>
+            {session?.user && <SignOutButton />}
           </div>
           <ClasseSwitcher value={classe} classes={classesRows.map((c) => c.label)} />
         </div>

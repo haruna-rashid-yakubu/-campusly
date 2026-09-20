@@ -71,7 +71,8 @@ export function DownloadButton({
   const handleShare = () => {
     window.open(
       `https://wa.me/?text=${encodeURIComponent("Campusly — ton campus dans une appli : " + APP_URL)}`,
-      "_blank"
+      "_blank",
+      "noopener,noreferrer"
     );
     window.localStorage.setItem(SHARED_KEY, "1");
     setGateOpen(false);

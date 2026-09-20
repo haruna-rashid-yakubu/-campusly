@@ -10,6 +10,7 @@ import { citeAvailabilityLabel, distanceLabel, fcfa } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Logements étudiants vérifiés",
   description: "Cités et logements étudiants vérifiés autour de l'UCAC Nkolbisson, à Yaoundé.",
+  alternates: { canonical: "/logements" },
 };
 
 export const dynamic = "force-dynamic";
@@ -56,6 +57,7 @@ export default async function LogementsPage({
               <Link
                 key={c.id}
                 href={`/logements/${c.id}`}
+                prefetch={false}
                 className="press-scale mb-3.5 block overflow-hidden rounded-[22px] border border-line bg-white"
               >
                 <div className="relative grid h-[154px] place-items-center bg-line-3 text-[12.5px] font-semibold text-slate-light">
@@ -64,10 +66,12 @@ export default async function LogementsPage({
                   ) : (
                     "photo de la cité"
                   )}
-                  <span className="absolute left-3 top-3 flex h-7 items-center gap-1.5 rounded-[9px] bg-white px-2.5 text-[11.5px] font-extrabold text-teal-dark">
-                    <Icon name="shield" size={14} strokeWidth={1.9} />
-                    Vérifié par Campusly
-                  </span>
+                  {c.verified && (
+                    <span className="absolute left-3 top-3 flex h-7 items-center gap-1.5 rounded-[9px] bg-white px-2.5 text-[11.5px] font-extrabold text-teal-dark">
+                      <Icon name="shield" size={14} strokeWidth={1.9} />
+                      Vérifié par Campusly
+                    </span>
+                  )}
                   <span
                     className="absolute bottom-3 left-3 flex h-7 items-center rounded-[9px] px-2.5 text-[11.5px] font-extrabold text-white"
                     style={{ background: c.stock === 0 ? "#B4322F" : "rgba(15,23,42,.8)" }}

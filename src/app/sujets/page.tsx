@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Anciens sujets d'examens",
   description:
     "Retrouve les anciens sujets d'examens, partiels et rattrapages de l'UCAC Nkolbisson, avec corrigés quand disponibles.",
+  alternates: { canonical: "/sujets" },
 };
 
 export const dynamic = "force-dynamic";
@@ -83,6 +84,7 @@ export default async function SujetsPage({
               <Link
                 key={s.id}
                 href={`/sujets/${s.id}`}
+                prefetch={false}
                 className="press-scale mb-3 block rounded-[20px] border border-line bg-white p-3.5 active:bg-surface-3"
               >
                 <div className="flex items-start gap-3">

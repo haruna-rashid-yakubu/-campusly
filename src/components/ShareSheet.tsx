@@ -14,7 +14,11 @@ export function ShareSheet({ children }: { children: React.ReactNode }) {
     {
       label: "WhatsApp",
       run: () => {
-        window.open(`https://wa.me/?text=${encodeURIComponent("Campusly — ton campus dans une appli : " + APP_URL)}`, "_blank");
+        window.open(
+          `https://wa.me/?text=${encodeURIComponent("Campusly — ton campus dans une appli : " + APP_URL)}`,
+          "_blank",
+          "noopener,noreferrer"
+        );
       },
     },
     {

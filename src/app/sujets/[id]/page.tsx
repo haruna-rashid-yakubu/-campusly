@@ -25,6 +25,7 @@ export async function generateMetadata({
   return {
     title: `${subject.matiere} — ${subject.filiere} ${subject.niveau} (${subject.annee})`,
     description: `${subject.type} de ${subject.matiere} — ${subject.filiere}, ${subject.niveau}, ${subject.annee}.${subject.corrige ? " Corrigé disponible." : ""}`,
+    alternates: { canonical: `/sujets/${subject.id}` },
   };
 }
 

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { auth } from "@/auth";
 import { ToastProvider } from "@/components/Toast";
@@ -57,12 +58,14 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: "cover",
   themeColor: "#14B8AC",
 };
@@ -80,6 +83,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <LoginPromptSheet signedIn={!!session?.user} />
         </ToastProvider>
         <ServiceWorkerRegister />
+        <SpeedInsights />
       </body>
     </html>
   );

@@ -19,13 +19,18 @@ export function TabBar() {
         className="pointer-events-none h-8"
         style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.97) 85%)" }}
       />
-      <nav className="flex border-t border-[#EAEFF1] bg-white/97 px-1.5 pt-2 backdrop-blur-md" style={{ paddingBottom: "var(--safe-bottom)" }}>
+      <nav
+        aria-label="Navigation principale"
+        className="flex border-t border-[#EAEFF1] bg-white/97 px-1.5 pt-2 backdrop-blur-md"
+        style={{ paddingBottom: "var(--safe-bottom)" }}
+      >
         {TABS.map((tab) => {
           const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
           return (
             <Link
               key={tab.href}
               href={tab.href}
+              aria-current={active ? "page" : undefined}
               className="press-scale flex min-h-[62px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-0.5 pb-3 pt-1.5"
               style={{
                 background: active ? "var(--color-teal-tint)" : "transparent",

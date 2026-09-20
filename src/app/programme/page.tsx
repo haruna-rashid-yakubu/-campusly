@@ -11,6 +11,7 @@ import { getClasseByLabel, getClasses, getLatestProgramme, getPreferredClasse } 
 export const metadata: Metadata = {
   title: "Programme de la semaine",
   description: "Le programme de cours de la semaine, par classe, pour l'UCAC Nkolbisson.",
+  alternates: { canonical: "/programme" },
 };
 
 export const dynamic = "force-dynamic";

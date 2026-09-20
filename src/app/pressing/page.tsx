@@ -7,6 +7,7 @@ import { fcfa } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Pressings partenaires",
   description: "Pressings partenaires autour de l'UCAC Nkolbisson, avec tarifs indicatifs.",
+  alternates: { canonical: "/pressing" },
 };
 
 export const dynamic = "force-dynamic";

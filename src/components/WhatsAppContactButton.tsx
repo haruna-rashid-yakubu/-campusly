@@ -5,7 +5,12 @@ import { Icon } from "@/components/icons";
 
 export function WhatsAppContactButton({ authed, whatsapp }: { authed: boolean; whatsapp: string }) {
   return (
-    <Gated authed={authed} onAuthed={() => window.open(`https://wa.me/${whatsapp.replace(/\D/g, "")}`, "_blank")}>
+    <Gated
+      authed={authed}
+      onAuthed={() =>
+        window.open(`https://wa.me/${whatsapp.replace(/\D/g, "")}`, "_blank", "noopener,noreferrer")
+      }
+    >
       {(onClick) => (
         <button
           onClick={onClick}
