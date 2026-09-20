@@ -1,4 +1,4 @@
-import { and, desc, eq, ne, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, ne, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { db } from "@/db";
 import {
@@ -161,6 +161,66 @@ export async function getClassesWithoutRecentProgramme() {
 
 export async function getRecentSubjects(limit = 1) {
   return db.select().from(subjects).orderBy(desc(subjects.createdAt)).limit(limit);
+}
+
+export type NotificationItem = {
+  id: string;
+  icon: "cal" | "doc" | "flag";
+  title: string;
+  subtitle: string;
+  href: string;
+  date: Date;
+};
+
+export async function getNotificationFeed(userId?: string, limit = 30): Promise<NotificationItem[]> {
+  const [programmes, submissions] = await Promise.all([
+    db.query.programmePublications.findMany({
+      with: { classe: true },
+      orderBy: (p, { desc }) => desc(p.publishedAt),
+      limit,
+    }),
+    userId
+      ? db
+          .select()
+          .from(subjectSubmissions)
+          .where(and(eq(subjectSubmissions.userId, userId), isNotNull(subjectSubmissions.reviewedAt)))
+          .orderBy(desc(subjectSubmissions.reviewedAt))
+          .limit(limit)
+      : Promise.resolve([]),
+  ]);
+
+  const items: NotificationItem[] = [
+    ...programmes.map((p) => ({
+      id: `programme-${p.id}`,
+      icon: "cal" as const,
+      title: "Nouveau programme publié",
+      subtitle: `${p.classe.label} — ${p.weekLabel}`,
+      href: "/programme",
+      date: p.publishedAt,
+    })),
+    ...submissions.map((s) =>
+      s.status === "publie"
+        ? {
+            id: `submission-${s.id}`,
+            icon: "doc" as const,
+            title: "Ton sujet a été publié !",
+            subtitle: `${s.matiere} · ${s.annee}`,
+            href: s.publishedSubjectId ? `/sujets/${s.publishedSubjectId}` : "/sujets/mes-envois",
+            date: s.reviewedAt!,
+          }
+        : {
+            id: `submission-${s.id}`,
+            icon: "flag" as const,
+            title: "Ton envoi a été refusé",
+            subtitle: s.note ?? `${s.matiere} · ${s.annee}`,
+            href: "/sujets/mes-envois",
+            date: s.reviewedAt!,
+          }
+    ),
+  ];
+
+  items.sort((a, b) => b.date.getTime() - a.date.getTime());
+  return items.slice(0, limit);
 }
 
 export async function getRecentCite() {
