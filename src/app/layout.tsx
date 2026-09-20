@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import "./globals.css";
+import { auth } from "@/auth";
 import { ToastProvider } from "@/components/Toast";
+import { LoginPromptSheet } from "@/components/LoginPromptSheet";
 import { OfflineOverlay } from "@/components/OfflineOverlay";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { TabBarGate } from "@/components/TabBarGate";
@@ -31,7 +33,9 @@ export const viewport: Viewport = {
   themeColor: "#14B8AC",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+
   return (
     <html lang="fr" className={`${manrope.variable} h-full`}>
       <body className="h-full font-sans antialiased">
@@ -39,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <TabBarGate />
           <OfflineOverlay />
+          <LoginPromptSheet signedIn={!!session?.user} />
         </ToastProvider>
         <ServiceWorkerRegister />
       </body>
