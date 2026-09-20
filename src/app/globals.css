@@ -37,39 +37,48 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-* {
-  box-sizing: border-box;
-}
+/*
+ * These base resets must live inside Tailwind's `base` layer. Unlayered
+ * CSS always wins over layered CSS regardless of selector specificity, so
+ * an unlayered `button { color: inherit }` would silently defeat every
+ * `text-white` utility on a <button> (and `a { color: ... }` likewise on
+ * every <a>), even though the utility class has higher specificity.
+ */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-html,
-body {
-  height: 100%;
-}
+  html,
+  body {
+    height: 100%;
+  }
 
-body {
-  margin: 0;
-  background: #ffffff;
-  color: var(--color-ink);
-  -webkit-font-smoothing: antialiased;
-  overscroll-behavior-y: none;
-}
+  body {
+    margin: 0;
+    background: #ffffff;
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
 
-a {
-  color: var(--color-teal-dark);
-}
-a:hover {
-  color: var(--color-teal-press);
-}
+  a {
+    color: var(--color-teal-dark);
+  }
+  a:hover {
+    color: var(--color-teal-press);
+  }
 
-button {
-  font-family: inherit;
-  color: inherit;
-}
+  button {
+    font-family: inherit;
+    color: inherit;
+  }
 
-input,
-textarea,
-select {
-  font-family: inherit;
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+  }
 }
 
 .no-scrollbar {
