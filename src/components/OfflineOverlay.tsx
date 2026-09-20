@@ -6,9 +6,11 @@ import { Logo } from "@/components/Logo";
 import { Icon } from "@/components/icons";
 
 export function OfflineOverlay() {
-  const [online, setOnline] = useState(
-    () => typeof navigator === "undefined" || navigator.onLine
-  );
+  // `navigator.onLine`'s initial reading is notoriously unreliable (some
+  // browsers/networks misreport false on load, with no later `online` event
+  // to correct it since no real transition occurred). Trust only the
+  // `online`/`offline` events, which fire on genuine transitions.
+  const [online, setOnline] = useState(true);
   const [viewingCache, setViewingCache] = useState(false);
   const router = useRouter();
 
@@ -28,6 +30,16 @@ export function OfflineOverlay() {
   }, [router]);
 
   if (online) return null;
+
+  const retry = async () => {
+    try {
+      await fetch("/manifest.webmanifest", { method: "HEAD", cache: "no-store" });
+      setOnline(true);
+      router.refresh();
+    } catch {
+      /* still offline */
+    }
+  };
 
   if (viewingCache) {
     return (
@@ -51,12 +63,7 @@ export function OfflineOverlay() {
         Réessaie quand le réseau revient. Tes dernières pages restent consultables.
       </p>
       <button
-        onClick={() => {
-          if (navigator.onLine) {
-            setOnline(true);
-            router.refresh();
-          }
-        }}
+        onClick={retry}
         className="press-scale mt-6 flex h-[54px] items-center gap-2.5 rounded-2xl bg-teal px-6 text-[15.5px] font-bold text-white active:bg-teal-press"
       >
         <Icon name="retry" size={19} strokeWidth={2} />
