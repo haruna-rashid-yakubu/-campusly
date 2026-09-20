@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+
+  --color-teal: #14b8ac;
+  --color-teal-press: #0e9e96;
+  --color-teal-dark: #0a7f77;
+  --color-teal-active: #0f766e;
+  --color-teal-tint: #e6f7f5;
+  --color-teal-tint-soft: #f4fbfa;
+  --color-teal-border: #bce9e5;
+
+  --color-ink: #0f172a;
+  --color-ink-soft: #334155;
+  --color-slate: #475569;
+  --color-slate-light: #64748b;
+
+  --color-surface: #f1f5f6;
+  --color-surface-2: #f2f6f7;
+  --color-surface-3: #f7fafa;
+  --color-line: #e6ebee;
+  --color-line-2: #e1e8ea;
+  --color-line-3: #eef2f4;
+  --color-line-4: #d7e0e3;
+  --color-line-5: #dce3e6;
+
+  --color-danger: #b4322f;
+  --color-danger-tint: #fdecec;
+  --color-danger-border: #f3c9c8;
+  --color-warn-ink: #8a6100;
+  --color-warn-tint: #fff6e0;
+}
+
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #ffffff;
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+a {
+  color: var(--color-teal-dark);
+}
+a:hover {
+  color: var(--color-teal-press);
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.press-scale {
+  transition: transform 0.12s ease;
+}
+.press-scale:active {
+  transform: scale(0.96);
+}
+
+@keyframes cy-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes cy-push {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes cy-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes cy-skeleton {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+@keyframes cy-toast {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.anim-fade {
+  animation: cy-fade 0.2s ease;
+}
+.anim-push {
+  animation: cy-push 0.22s ease;
+}
+.anim-up {
+  animation: cy-up 0.24s cubic-bezier(0.22, 0.9, 0.3, 1);
+}
+.anim-skeleton {
+  animation: cy-skeleton 1.4s ease-in-out infinite;
+}
+.anim-toast {
+  animation: cy-toast 0.2s ease;
+}

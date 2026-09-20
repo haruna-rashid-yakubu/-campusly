@@ -1,0 +1,175 @@
+import { and, desc, eq, ne, sql } from "drizzle-orm";
+import { cookies } from "next/headers";
+import { db } from "@/db";
+import {
+  classes,
+  cites,
+  programmePublications,
+  roomTypes,
+  subjectSubmissions,
+  subjects,
+} from "@/db/schema";
+import { BANNER_COOKIE, CLASSE_COOKIE, DEFAULT_CLASSE } from "@/lib/constants";
+
+export async function getPreferredClasse() {
+  const store = await cookies();
+  return store.get(CLASSE_COOKIE)?.value || DEFAULT_CLASSE;
+}
+
+export async function isBannerDismissed() {
+  const store = await cookies();
+  return store.get(BANNER_COOKIE)?.value === "1";
+}
+
+export type SubjectFilters = {
+  q?: string;
+  filiere?: string;
+  niveau?: string;
+  annee?: string;
+  type?: string;
+};
+
+export async function getSubjects(filters: SubjectFilters = {}) {
+  const conditions = [];
+  if (filters.q) conditions.push(sql`lower(${subjects.matiere}) like ${"%" + filters.q.toLowerCase() + "%"}`);
+  if (filters.filiere) conditions.push(eq(subjects.filiere, filters.filiere));
+  if (filters.niveau) conditions.push(eq(subjects.niveau, filters.niveau));
+  if (filters.annee) conditions.push(eq(subjects.annee, filters.annee));
+  if (filters.type) conditions.push(eq(subjects.type, filters.type as (typeof subjects.type.enumValues)[number]));
+
+  return db
+    .select()
+    .from(subjects)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(subjects.createdAt));
+}
+
+export async function getSubjectById(id: number) {
+  const [row] = await db.select().from(subjects).where(eq(subjects.id, id));
+  return row;
+}
+
+export async function getSimilarSubjects(subjectId: number, filiere: string) {
+  return db
+    .select()
+    .from(subjects)
+    .where(and(ne(subjects.id, subjectId), eq(subjects.filiere, filiere)))
+    .limit(2);
+}
+
+export async function getUserSubmissions(userId: string) {
+  return db
+    .select()
+    .from(subjectSubmissions)
+    .where(eq(subjectSubmissions.userId, userId))
+    .orderBy(desc(subjectSubmissions.createdAt));
+}
+
+export async function getModerationQueue() {
+  return db.query.subjectSubmissions.findMany({
+    where: eq(subjectSubmissions.status, "en_attente"),
+    orderBy: (s, { asc }) => asc(s.createdAt),
+    with: { user: true },
+  });
+}
+
+export type CiteFilters = {
+  maxDistanceM?: number;
+  maxPrice?: number;
+  quartier?: string;
+  sort?: "distance" | "prix";
+};
+
+export async function getCitesWithAvailability(filters: CiteFilters = {}) {
+  const rows = await db.query.cites.findMany({ with: { roomTypes: true } });
+
+  const enriched = rows.map((c) => {
+    const stock = c.roomTypes.reduce((a, r) => a + r.stock, 0);
+    const minPrice = c.roomTypes.length ? Math.min(...c.roomTypes.map((r) => r.prixMensuel)) : 0;
+    return { ...c, stock, minPrice };
+  });
+
+  const filtered = enriched.filter((c) => {
+    if (filters.maxDistanceM != null && c.distanceM > filters.maxDistanceM) return false;
+    if (filters.maxPrice != null && c.minPrice > filters.maxPrice) return false;
+    if (filters.quartier && c.quartier !== filters.quartier) return false;
+    return true;
+  });
+
+  if (filters.sort === "prix") {
+    filtered.sort((a, b) => a.minPrice - b.minPrice);
+  } else {
+    filtered.sort((a, b) => a.distanceM - b.distanceM);
+  }
+
+  return filtered;
+}
+
+export async function getCiteById(id: number) {
+  return db.query.cites.findFirst({
+    where: eq(cites.id, id),
+    with: { roomTypes: { orderBy: roomTypes.sortOrder } },
+  });
+}
+
+export async function updateRoomStock(roomTypeId: number, delta: number) {
+  const [row] = await db.select().from(roomTypes).where(eq(roomTypes.id, roomTypeId));
+  if (!row) return;
+  const next = Math.max(0, row.stock + delta);
+  await db.update(roomTypes).set({ stock: next }).where(eq(roomTypes.id, roomTypeId));
+}
+
+export async function getPressings() {
+  return db.query.pressings.findMany({
+    with: { tarifs: { orderBy: (t, { asc }) => asc(t.sortOrder) } },
+  });
+}
+
+export async function getClasses() {
+  return db.select().from(classes).orderBy(classes.id);
+}
+
+export async function getClasseByLabel(label: string) {
+  const [row] = await db.select().from(classes).where(eq(classes.label, label));
+  return row;
+}
+
+export async function getLatestProgramme(classeId: number) {
+  const [row] = await db
+    .select()
+    .from(programmePublications)
+    .where(eq(programmePublications.classeId, classeId))
+    .orderBy(desc(programmePublications.publishedAt))
+    .limit(1);
+  return row;
+}
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+export async function getClassesWithoutRecentProgramme() {
+  const all = await getClasses();
+  const cutoff = new Date(Date.now() - WEEK_MS);
+  const results = await Promise.all(
+    all.map(async (c) => {
+      const latest = await getLatestProgramme(c.id);
+      const manquant = !latest || latest.publishedAt < cutoff;
+      return { classe: c, manquant };
+    })
+  );
+  return results;
+}
+
+export async function getRecentSubjects(limit = 1) {
+  return db.select().from(subjects).orderBy(desc(subjects.createdAt)).limit(limit);
+}
+
+export async function getRecentCite() {
+  const [row] = await db.query.cites.findMany({
+    with: { roomTypes: true },
+    orderBy: [desc(cites.createdAt)],
+    limit: 1,
+  });
+  if (!row) return null;
+  const minPrice = row.roomTypes.length ? Math.min(...row.roomTypes.map((r) => r.prixMensuel)) : 0;
+  return { ...row, minPrice };
+}
