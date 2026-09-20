@@ -1,5 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import { Icon } from "@/components/icons";
+import { useToast } from "@/components/Toast";
+import { downloadFile } from "@/lib/download";
 import { ZoomViewer } from "@/components/ZoomViewer";
 
 export function FullscreenViewer({
@@ -11,7 +16,21 @@ export function FullscreenViewer({
   fileUrl: string | null;
   closeHref: string;
 }) {
+  const { show } = useToast();
+  const [downloading, setDownloading] = useState(false);
   const isPdf = fileUrl ? /\.pdf(\?|$)/i.test(fileUrl) : false;
+
+  const handleDownload = async () => {
+    if (!fileUrl || downloading) return;
+    setDownloading(true);
+    try {
+      await downloadFile(fileUrl);
+    } catch {
+      show("Téléchargement impossible", "warn");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-30 bg-ink anim-fade">
@@ -28,15 +47,14 @@ export function FullscreenViewer({
         </Link>
         <span className="max-w-[60%] truncate text-[14px] font-bold">{title}</span>
         {fileUrl ? (
-          <a
-            href={fileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="press-scale grid h-11 w-11 place-items-center"
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="press-scale grid h-11 w-11 place-items-center disabled:opacity-60"
             aria-label="Télécharger"
           >
             <Icon name="down" size={21} strokeWidth={2} />
-          </a>
+          </button>
         ) : (
           <span className="h-11 w-11" />
         )}
@@ -49,7 +67,11 @@ export function FullscreenViewer({
           </div>
         )}
         {fileUrl && isPdf && (
-          <iframe src={fileUrl} title={title} className="h-full w-full rounded-lg border-0" />
+          <iframe
+            src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
+            title={title}
+            className="h-full w-full rounded-lg border-0 bg-white"
+          />
         )}
         {fileUrl && !isPdf && <ZoomViewer url={fileUrl} />}
       </div>

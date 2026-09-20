@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
 import { Sheet } from "@/components/Sheet";
+import { downloadFile } from "@/lib/download";
 
 const FREE_DOWNLOADS = 3;
 const COUNT_KEY = "campusly:downloads";
@@ -32,6 +33,7 @@ export function DownloadButton({
   const { show } = useToast();
   const [, startTransition] = useTransition();
   const [gateOpen, setGateOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   if (!fileUrl) {
     return (
@@ -45,14 +47,25 @@ export function DownloadButton({
     );
   }
 
-  const handleClick = (e: React.MouseEvent) => {
+  const runDownload = async () => {
+    setDownloading(true);
+    try {
+      await downloadFile(fileUrl);
+      window.localStorage.setItem(COUNT_KEY, String(getCount() + 1));
+      if (onRecord) startTransition(onRecord);
+    } catch {
+      show("Téléchargement impossible", "warn");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleClick = () => {
     if (getCount() >= FREE_DOWNLOADS && !hasShared()) {
-      e.preventDefault();
       setGateOpen(true);
       return;
     }
-    window.localStorage.setItem(COUNT_KEY, String(getCount() + 1));
-    if (onRecord) startTransition(onRecord);
+    runDownload();
   };
 
   const handleShare = () => {
@@ -67,16 +80,14 @@ export function DownloadButton({
 
   return (
     <>
-      <a
-        href={fileUrl}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
         onClick={handleClick}
-        className="press-scale flex h-[54px] flex-1 items-center justify-center gap-2 rounded-2xl bg-teal text-[15.5px] font-bold text-white active:bg-teal-press"
+        disabled={downloading}
+        className="press-scale flex h-[54px] flex-1 items-center justify-center gap-2 rounded-2xl bg-teal text-[15.5px] font-bold text-white active:bg-teal-press disabled:opacity-60"
       >
         <Icon name="down" size={19} strokeWidth={1.9} />
-        {label}
-      </a>
+        {downloading ? "Téléchargement…" : label}
+      </button>
 
       <Sheet
         open={gateOpen}
