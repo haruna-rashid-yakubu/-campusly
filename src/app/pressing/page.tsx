@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { Icon } from "@/components/icons";
 import { Badge } from "@/components/EmptyState";
 import { getPressings } from "@/lib/data";
 import { fcfa } from "@/lib/utils";
+
+export const metadata: Metadata = {
+  title: "Pressings partenaires",
+  description: "Pressings partenaires autour de l'UCAC Nkolbisson, avec tarifs indicatifs.",
+};
 
 export const dynamic = "force-dynamic";
 

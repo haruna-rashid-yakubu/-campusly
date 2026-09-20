@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { BackHeader } from "@/components/BackHeader";
 import { SignInRequired } from "@/components/SignInRequired";
 import { Badge, EmptyState } from "@/components/EmptyState";
 import { getUserSubmissions } from "@/lib/data";
+
+export const metadata: Metadata = {
+  title: "Mes envois",
+  robots: { index: false, follow: false },
+};
 
 export const dynamic = "force-dynamic";
 

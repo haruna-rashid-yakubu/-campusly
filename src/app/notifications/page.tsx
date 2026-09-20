@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { BackHeader } from "@/components/BackHeader";
@@ -5,6 +6,11 @@ import { EmptyState } from "@/components/EmptyState";
 import { Icon } from "@/components/icons";
 import { NotificationControls } from "@/components/NotificationControls";
 import { getNotificationFeed } from "@/lib/data";
+
+export const metadata: Metadata = {
+  title: "Notifications",
+  robots: { index: false, follow: false },
+};
 
 export const dynamic = "force-dynamic";
 

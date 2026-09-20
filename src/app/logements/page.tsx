@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { LogementsFilterBar } from "@/components/LogementsFilterBar";
@@ -5,6 +6,11 @@ import { EmptyState } from "@/components/EmptyState";
 import { Icon } from "@/components/icons";
 import { getCitesWithAvailability } from "@/lib/data";
 import { citeAvailabilityLabel, distanceLabel, fcfa } from "@/lib/utils";
+
+export const metadata: Metadata = {
+  title: "Logements étudiants vérifiés",
+  description: "Cités et logements étudiants vérifiés autour de l'UCAC Nkolbisson, à Yaoundé.",
+};
 
 export const dynamic = "force-dynamic";
 

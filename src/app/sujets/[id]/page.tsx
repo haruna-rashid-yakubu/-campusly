@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackHeader } from "@/components/BackHeader";
@@ -10,6 +11,22 @@ import { getSimilarSubjects, getSubjectById } from "@/lib/data";
 import { incrementSubjectDownload } from "@/lib/actions";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const subjectId = Number(id);
+  if (Number.isNaN(subjectId)) return { title: "Sujet introuvable" };
+  const subject = await getSubjectById(subjectId);
+  if (!subject) return { title: "Sujet introuvable" };
+  return {
+    title: `${subject.matiere} — ${subject.filiere} ${subject.niveau} (${subject.annee})`,
+    description: `${subject.type} de ${subject.matiere} — ${subject.filiere}, ${subject.niveau}, ${subject.annee}.${subject.corrige ? " Corrigé disponible." : ""}`,
+  };
+}
 
 export default async function SujetDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { BackHeader } from "@/components/BackHeader";
 import { SignInRequired } from "@/components/SignInRequired";
 import { ProposerForm } from "@/components/ProposerForm";
 import { Icon } from "@/components/icons";
 import { getPreferredClasse } from "@/lib/data";
+
+export const metadata: Metadata = {
+  title: "Proposer un sujet",
+  robots: { index: false, follow: false },
+};
 
 export const dynamic = "force-dynamic";
 

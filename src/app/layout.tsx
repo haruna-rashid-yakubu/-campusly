@@ -14,14 +14,48 @@ const manrope = Manrope({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+const SITE_URL = "https://campusly-ucac.vercel.app";
+const SITE_DESCRIPTION =
+  "Campusly — l'appli étudiante de l'UCAC Nkolbisson : anciens sujets d'examens, logements vérifiés autour du campus, pressings partenaires et programme de la semaine.";
+
 export const metadata: Metadata = {
-  title: "Campusly",
-  description: "Your campus. One app. — L'appli étudiante de l'UCAC Nkolbisson.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Campusly — Your campus. One app.",
+    template: "%s · Campusly",
+  },
+  description: SITE_DESCRIPTION,
+  keywords: [
+    "UCAC Nkolbisson",
+    "sujets d'examens",
+    "anciens sujets",
+    "logements étudiants Yaoundé",
+    "pressing campus",
+    "programme de cours",
+    "application étudiante",
+  ],
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Campusly",
+  },
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    url: SITE_URL,
+    siteName: "Campusly",
+    title: "Campusly — Your campus. One app.",
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Campusly — Your campus. One app.",
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 

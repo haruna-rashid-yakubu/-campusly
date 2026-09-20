@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { PhotoCarousel } from "@/components/PhotoCarousel";
@@ -8,6 +9,22 @@ import { getCiteById } from "@/lib/data";
 import { distanceLabel, fcfa, roomStockLabel } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const citeId = Number(id);
+  if (Number.isNaN(citeId)) return { title: "Logement introuvable" };
+  const cite = await getCiteById(citeId);
+  if (!cite) return { title: "Logement introuvable" };
+  return {
+    title: cite.nom,
+    description: `${cite.nom} — ${cite.quartier}, à ${distanceLabel(cite.distanceM)} de l'UCAC Nkolbisson. ${cite.description}`.trim(),
+  };
+}
 
 const EQUIPMENTS = [
   { label: "Eau · forage", icon: "drop" as const },

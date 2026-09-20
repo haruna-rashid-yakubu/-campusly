@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { Icon } from "@/components/icons";
 import { Badge, EmptyState } from "@/components/EmptyState";
 import { SujetsFilterBar } from "@/components/SujetsFilterBar";
 import { getSubjects, getUserSubmissions } from "@/lib/data";
+
+export const metadata: Metadata = {
+  title: "Anciens sujets d'examens",
+  description:
+    "Retrouve les anciens sujets d'examens, partiels et rattrapages de l'UCAC Nkolbisson, avec corrigés quand disponibles.",
+};
 
 export const dynamic = "force-dynamic";
 

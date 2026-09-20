@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ClasseSwitcher } from "@/components/ClasseSwitcher";
@@ -6,6 +7,11 @@ import { ToastButton } from "@/components/ToastButton";
 import { DownloadButton } from "@/components/DownloadButton";
 import { Icon } from "@/components/icons";
 import { getClasseByLabel, getClasses, getLatestProgramme, getPreferredClasse } from "@/lib/data";
+
+export const metadata: Metadata = {
+  title: "Programme de la semaine",
+  description: "Le programme de cours de la semaine, par classe, pour l'UCAC Nkolbisson.",
+};
 
 export const dynamic = "force-dynamic";
 

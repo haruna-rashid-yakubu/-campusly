@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { BackHeader } from "@/components/BackHeader";
@@ -14,6 +15,11 @@ import {
   getPreferredClasse,
 } from "@/lib/data";
 import { distanceLabel, fcfa } from "@/lib/utils";
+
+export const metadata: Metadata = {
+  title: "Administration",
+  robots: { index: false, follow: false },
+};
 
 export const dynamic = "force-dynamic";
 
