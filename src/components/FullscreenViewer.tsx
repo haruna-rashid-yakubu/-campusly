@@ -60,20 +60,22 @@ export function FullscreenViewer({
         )}
       </div>
 
-      <div className="absolute inset-x-5" style={{ top: "calc(90px + var(--safe-top))", bottom: "calc(90px + var(--safe-bottom))" }}>
-        {!fileUrl && (
-          <div className="grid h-full place-items-center rounded-lg bg-[#1c2735] text-[13px] font-semibold text-slate-light">
-            Aperçu indisponible pour ce contenu de démonstration
-          </div>
-        )}
-        {fileUrl && isPdf && (
-          <iframe
-            src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
-            title={title}
-            className="h-full w-full rounded-lg border-0 bg-white"
-          />
-        )}
-        {fileUrl && !isPdf && <ZoomViewer url={fileUrl} />}
+      <div className="flex h-full w-full items-center justify-center">
+        <div style={{ width: "95%", height: "90%" }}>
+          {!fileUrl && (
+            <div className="grid h-full place-items-center rounded-lg bg-[#1c2735] text-[13px] font-semibold text-slate-light">
+              Aperçu indisponible pour ce contenu de démonstration
+            </div>
+          )}
+          {fileUrl && isPdf && (
+            <iframe
+              src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
+              title={title}
+              className="h-full w-full rounded-lg border-0 bg-white"
+            />
+          )}
+          {fileUrl && !isPdf && <ZoomViewer url={fileUrl} />}
+        </div>
       </div>
     </div>
   );
