@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob";
+import { del, put } from "@vercel/blob";
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024; // 15 MB
 
@@ -17,4 +17,15 @@ export async function uploadFile(file: File, folder: string) {
     addRandomSuffix: true,
   });
   return { url: blob.url, name: file.name };
+}
+
+// Deleting the row is what the admin asked for; losing the blob afterwards is
+// housekeeping. Never let a storage hiccup surface as a failed deletion.
+export async function deleteFile(url: string) {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return;
+  try {
+    await del(url);
+  } catch {
+    // orphaned blob — harmless, and the row is already gone
+  }
 }

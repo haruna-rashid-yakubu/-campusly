@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { BackHeader } from "@/components/BackHeader";
 import { SignInRequired } from "@/components/SignInRequired";
 import { EmptyState, Badge } from "@/components/EmptyState";
+import { Icon } from "@/components/icons";
 import { ModerationCard } from "@/components/admin/ModerationCard";
 import { StockControl } from "@/components/admin/StockControl";
 import { ProgrammePublishForm } from "@/components/admin/ProgrammePublishForm";
@@ -13,6 +14,7 @@ import {
   getClassesWithoutRecentProgramme,
   getModerationQueue,
   getPreferredClasse,
+  getSubjects,
 } from "@/lib/data";
 import { distanceLabel, fcfa } from "@/lib/utils";
 
@@ -24,7 +26,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const TABS = [
-  { id: "sujets", label: "Sujets" },
+  { id: "sujets", label: "Envois" },
+  { id: "publies", label: "Publiés" },
   { id: "cites", label: "Cités" },
   { id: "prog", label: "Programme" },
 ] as const;
@@ -32,7 +35,7 @@ const TABS = [
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; q?: string }>;
 }) {
   const session = await auth();
   if (!session?.user) return <SignInRequired backHref="/" title="Administration" />;
@@ -45,7 +48,7 @@ export default async function AdminPage({
     );
   }
 
-  const { tab: rawTab } = await searchParams;
+  const { tab: rawTab, q } = await searchParams;
   const tab = TABS.some((t) => t.id === rawTab) ? (rawTab as (typeof TABS)[number]["id"]) : "sujets";
 
   return (
@@ -65,7 +68,7 @@ export default async function AdminPage({
             <Link
               key={t.id}
               href={`/admin?tab=${t.id}`}
-              className="h-[42px] flex-1 rounded-xl text-center text-[13.5px] font-bold leading-[42px]"
+              className="h-[42px] flex-1 rounded-xl text-center text-[12.5px] font-bold leading-[42px]"
               style={{
                 background: tab === t.id ? "#fff" : "transparent",
                 color: tab === t.id ? "#0F172A" : "#64748B",
@@ -80,6 +83,7 @@ export default async function AdminPage({
 
       <div className="px-5 pb-12">
         {tab === "sujets" && <ModerationTab />}
+        {tab === "publies" && <PubliesTab q={q} />}
         {tab === "cites" && <CitesTab />}
         {tab === "prog" && <ProgrammeTab />}
       </div>
@@ -98,6 +102,58 @@ async function ModerationTab() {
         <EmptyState icon="check" title="File vide" body="Tout est traité. Les nouveaux envois arrivent ici." />
       ) : (
         queue.map((s) => <ModerationCard key={s.id} submission={s} />)
+      )}
+    </>
+  );
+}
+
+async function PubliesTab({ q }: { q?: string }) {
+  const subjects = await getSubjects(q ? { q } : {});
+
+  return (
+    <>
+      <form action="/admin" className="mb-3.5">
+        <input type="hidden" name="tab" value="publies" />
+        <div className="flex h-12 items-center gap-2.5 rounded-2xl bg-surface-2 px-3.5">
+          <span className="flex-none text-slate-light">
+            <Icon name="search" size={19} strokeWidth={2} />
+          </span>
+          <input
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder="Matière ou enseignant"
+            className="min-w-0 flex-1 border-0 bg-transparent text-[15px] text-ink outline-none"
+          />
+        </div>
+      </form>
+
+      <div className="mb-2 text-[13px] text-slate-light">
+        {subjects.length} sujet{subjects.length > 1 ? "s" : ""} en ligne
+      </div>
+
+      {subjects.length === 0 ? (
+        <EmptyState icon="doc" title="Aucun sujet" body="Rien ne correspond à cette recherche." />
+      ) : (
+        subjects.map((s) => (
+          <Link
+            key={s.id}
+            href={`/admin/sujets/${s.id}`}
+            prefetch={false}
+            className="flex items-center gap-3 border-b border-line-3 py-3 active:bg-surface-3"
+          >
+            <span className="grid h-[46px] w-[38px] flex-none place-items-center rounded-[9px] bg-surface text-teal-active">
+              <Icon name={s.type === "TD" ? "inbox" : "doc"} size={20} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[14.5px] font-bold">{s.matiere}</span>
+              <span className="mt-0.5 block truncate text-[12.5px] text-slate-light">
+                {s.niveau} · {s.annee} · {s.type}
+                {s.enseignant ? ` · ${s.enseignant}` : ""}
+              </span>
+            </span>
+            <Icon name="right" size={18} className="flex-none text-slate-light" />
+          </Link>
+        ))
       )}
     </>
   );

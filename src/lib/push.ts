@@ -1,6 +1,6 @@
 import webpush from "web-push";
 import { db } from "@/db";
-import { pushSubscriptions } from "@/db/schema";
+import { pushSubscriptions, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 let configured = false;
@@ -50,5 +50,21 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
     .select()
     .from(pushSubscriptions)
     .where(eq(pushSubscriptions.userId, userId));
+  await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
+}
+
+// Admins are the only people who can act on a new submission, so the alert
+// goes to their devices only — every other subscriber would just be spammed.
+export async function sendPushToAdmins(payload: PushPayload) {
+  if (!ensureConfigured()) return;
+  const subs = await db
+    .select({
+      endpoint: pushSubscriptions.endpoint,
+      p256dh: pushSubscriptions.p256dh,
+      auth: pushSubscriptions.auth,
+    })
+    .from(pushSubscriptions)
+    .innerJoin(users, eq(users.id, pushSubscriptions.userId))
+    .where(eq(users.role, "admin"));
   await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
 }

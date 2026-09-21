@@ -139,6 +139,13 @@ export async function getUserSubmissions(userId: string) {
     .orderBy(desc(subjectSubmissions.createdAt));
 }
 
+export async function getSubmissionById(id: number) {
+  return db.query.subjectSubmissions.findFirst({
+    where: eq(subjectSubmissions.id, id),
+    with: { user: true },
+  });
+}
+
 export async function getModerationQueue() {
   return db.query.subjectSubmissions.findMany({
     where: eq(subjectSubmissions.status, "en_attente"),

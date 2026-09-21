@@ -12,10 +12,10 @@ import {
   programmePublications,
   pushSubscriptions,
 } from "@/db/schema";
-import { uploadFile } from "@/lib/blob";
+import { deleteFile, uploadFile } from "@/lib/blob";
 import { getClasseByLabel } from "@/lib/data";
 import { BANNER_COOKIE, CLASSE_COOKIE } from "@/lib/constants";
-import { sendPushToAll, sendPushToUser } from "@/lib/push";
+import { sendPushToAdmins, sendPushToAll, sendPushToUser } from "@/lib/push";
 
 async function requireUser() {
   const session = await auth();
@@ -80,25 +80,51 @@ export async function proposeSubject(formData: FormData) {
     fileName = uploaded.name;
   }
 
-  await db.insert(subjectSubmissions).values({
-    userId: user.id,
-    filiere,
-    niveau,
-    matiere,
-    annee,
-    type: type as (typeof SUBJECT_TYPES)[number],
-    fileUrl,
-    fileName,
+  const [submission] = await db
+    .insert(subjectSubmissions)
+    .values({
+      userId: user.id,
+      filiere,
+      niveau,
+      matiere,
+      annee,
+      type: type as (typeof SUBJECT_TYPES)[number],
+      fileUrl,
+      fileName,
+    })
+    .returning();
+
+  // Deep-link straight to the review screen: an admin tapping the notification
+  // lands on the document itself, not on a queue they then have to search.
+  await sendPushToAdmins({
+    title: "Nouveau sujet proposé",
+    body: `${matiere} · ${niveau} · ${annee} — par ${user.name ?? "un étudiant"}`,
+    url: `/admin/envois/${submission.id}`,
   });
 
   revalidatePath("/sujets/mes-envois");
+  revalidatePath("/admin");
   revalidatePath("/");
 }
 
+export type SubjectEdits = {
+  matiere: string;
+  filiere: string;
+  niveau: string;
+  annee: string;
+  type: string;
+  enseignant: string;
+  corrige: boolean;
+};
+
+// `edits` carries what the admin corrected on the review screen. Students
+// mistype the matière or guess the année, so the row that gets published is
+// the reviewed version, not the raw submission.
 export async function moderateSubject(
   submissionId: number,
   decision: "publie" | "refuse",
-  note?: string
+  note?: string,
+  edits?: SubjectEdits
 ) {
   await requireAdmin();
 
@@ -109,15 +135,22 @@ export async function moderateSubject(
   if (!submission) return;
 
   if (decision === "publie") {
+    const type = edits?.type ?? submission.type;
+    if (!SUBJECT_TYPES.includes(type as (typeof SUBJECT_TYPES)[number])) {
+      throw new Error("Type d'épreuve invalide.");
+    }
+    const enseignant = edits?.enseignant?.trim();
+
     const [published] = await db
       .insert(subjects)
       .values({
-        matiere: submission.matiere,
-        filiere: submission.filiere,
-        niveau: submission.niveau,
-        annee: submission.annee,
-        type: submission.type,
-        corrige: false,
+        matiere: edits?.matiere?.trim() || submission.matiere,
+        filiere: edits?.filiere?.trim() || submission.filiere,
+        niveau: edits?.niveau?.trim() || submission.niveau,
+        annee: edits?.annee?.trim() || submission.annee,
+        type: type as (typeof SUBJECT_TYPES)[number],
+        corrige: edits?.corrige ?? false,
+        enseignant: enseignant ? enseignant : null,
         fileUrl: submission.fileUrl,
         fileName: submission.fileName,
       })
@@ -153,6 +186,64 @@ export async function moderateSubject(
   revalidatePath("/admin");
   revalidatePath("/sujets");
   revalidatePath("/sujets/mes-envois");
+}
+
+export async function updateSubject(subjectId: number, edits: SubjectEdits) {
+  await requireAdmin();
+
+  if (!SUBJECT_TYPES.includes(edits.type as (typeof SUBJECT_TYPES)[number])) {
+    throw new Error("Type d'épreuve invalide.");
+  }
+  const matiere = edits.matiere.trim();
+  const filiere = edits.filiere.trim();
+  const niveau = edits.niveau.trim();
+  const annee = edits.annee.trim();
+  if (!matiere || !filiere || !niveau || !annee) {
+    throw new Error("Matière, filière, niveau et année sont obligatoires.");
+  }
+  const enseignant = edits.enseignant.trim();
+
+  await db
+    .update(subjects)
+    .set({
+      matiere,
+      filiere,
+      niveau,
+      annee,
+      type: edits.type as (typeof SUBJECT_TYPES)[number],
+      corrige: edits.corrige,
+      enseignant: enseignant ? enseignant : null,
+    })
+    .where(eq(subjects.id, subjectId));
+
+  revalidatePath("/admin");
+  revalidatePath("/sujets");
+  revalidatePath(`/sujets/${subjectId}`);
+}
+
+export async function deleteSubject(subjectId: number) {
+  await requireAdmin();
+
+  const [subject] = await db.select().from(subjects).where(eq(subjects.id, subjectId));
+  if (!subject) return;
+
+  // A published submission points back at this row with no ON DELETE rule, so
+  // the delete would fail on the foreign key. Detaching first keeps the
+  // student's "Ton sujet a été publié" history instead of cascading it away.
+  await db
+    .update(subjectSubmissions)
+    .set({ publishedSubjectId: null })
+    .where(eq(subjectSubmissions.publishedSubjectId, subjectId));
+
+  await db.delete(subjects).where(eq(subjects.id, subjectId));
+
+  // Best effort: an orphaned blob costs storage but a failure here must not
+  // leave the row deleted-but-reported-failed.
+  if (subject.fileUrl) await deleteFile(subject.fileUrl);
+  if (subject.correctionUrl) await deleteFile(subject.correctionUrl);
+
+  revalidatePath("/admin");
+  revalidatePath("/sujets");
 }
 
 export async function incrementSubjectDownload(subjectId: number) {
