@@ -24,7 +24,7 @@ export async function generateMetadata({
   if (!subject) return { title: "Sujet introuvable" };
   return {
     title: `${subject.matiere} — ${subject.filiere} ${subject.niveau} (${subject.annee})`,
-    description: `${subject.type} de ${subject.matiere} — ${subject.filiere}, ${subject.niveau}, ${subject.annee}.${subject.corrige ? " Corrigé disponible." : ""}`,
+    description: `${subject.type} de ${subject.matiere} — ${subject.filiere}, ${subject.niveau}, ${subject.annee}.${subject.enseignant ? ` Enseignant : ${subject.enseignant}.` : ""}${subject.corrige ? " Corrigé disponible." : ""}`,
     alternates: { canonical: `/sujets/${subject.id}` },
   };
 }
@@ -81,6 +81,7 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
           {[
             { label: "Année", valeur: subject.annee },
             { label: "Épreuve", valeur: subject.type },
+            { label: "Enseignant", valeur: subject.enseignant },
             {
               label: "Corrigé",
               valeur: subject.correctionUrl
@@ -91,15 +92,17 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
             },
             { label: "Vérifié le", valeur: subject.createdAt.toLocaleDateString("fr-FR") },
             { label: "Téléchargements", valeur: String(subject.downloads) },
-          ].map((row) => (
-            <div
-              key={row.label}
-              className="flex justify-between gap-3 border-b border-line-3 py-3 text-[14px] last:border-b-0"
-            >
-              <span className="text-slate-light">{row.label}</span>
-              <span className="text-right font-bold">{row.valeur}</span>
-            </div>
-          ))}
+          ]
+            .filter((row) => row.valeur)
+            .map((row) => (
+              <div
+                key={row.label}
+                className="flex justify-between gap-3 border-b border-line-3 py-3 text-[14px] last:border-b-0"
+              >
+                <span className="text-slate-light">{row.label}</span>
+                <span className="text-right font-bold">{row.valeur}</span>
+              </div>
+            ))}
         </div>
 
         {similaires.length > 0 && (

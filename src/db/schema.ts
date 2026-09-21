@@ -82,6 +82,7 @@ export const subjects = pgTable("subject", {
   annee: text("annee").notNull(),
   type: text("type", { enum: subjectTypeEnum }).notNull(),
   corrige: boolean("corrige").notNull().default(false),
+  enseignant: text("enseignant"),
   fileUrl: text("file_url"),
   fileName: text("file_name"),
   correctionUrl: text("correction_url"),
