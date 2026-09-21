@@ -69,7 +69,7 @@ export const verificationTokens = pgTable(
 
 export const classes = pgTable("classe", {
   id: serial("id").primaryKey(),
-  label: text("label").notNull().unique(), // e.g. "Génie informatique · L2"
+  label: text("label").notNull().unique(), // e.g. "BME · L2"
 });
 
 export const subjectTypeEnum = ["Partiel", "Examen", "Rattrapage", "TD"] as const;

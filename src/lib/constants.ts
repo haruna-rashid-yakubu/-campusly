@@ -1,5 +1,5 @@
 export const CLASSE_COOKIE = "campusly_classe";
-export const DEFAULT_CLASSE = "Génie informatique · L2";
+export const DEFAULT_CLASSE = "BME · L2";
 export const BANNER_COOKIE = "campusly_banner_dismissed";
 
 export const SUBJECT_FILTER_LABELS: Record<string, string> = {
@@ -8,20 +8,6 @@ export const SUBJECT_FILTER_LABELS: Record<string, string> = {
   annee: "Année",
   type: "Type d'épreuve",
   enseignant: "Enseignant",
-};
-
-export const PROPOSER_FACETS: Record<string, string[]> = {
-  filiere: ["Génie informatique", "Génie civil", "Gestion", "Droit"],
-  niveau: ["L1", "L2", "L3", "M1"],
-  matiere: [
-    "Analyse numérique",
-    "Base de données",
-    "Algorithmique",
-    "Réseaux informatiques",
-    "Autre matière",
-  ],
-  annee: ["2024", "2023", "2022", "2021"],
-  type: ["Partiel", "Examen", "Rattrapage"],
 };
 
 export const PROPOSER_LABELS: Record<string, string> = {

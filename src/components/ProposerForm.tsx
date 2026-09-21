@@ -6,23 +6,25 @@ import { PickerButton } from "@/components/PickerButton";
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
 import { proposeSubject } from "@/lib/actions";
-import { PROPOSER_FACETS, PROPOSER_LABELS } from "@/lib/constants";
+import { PROPOSER_LABELS } from "@/lib/constants";
 
 const FIELDS = ["filiere", "niveau", "matiere", "annee", "type"] as const;
 
 export function ProposerForm({
   defaultFiliere,
   defaultNiveau,
+  facets,
 }: {
   defaultFiliere: string;
   defaultNiveau: string;
+  facets: Record<string, string[]>;
 }) {
   const [values, setValues] = useState<Record<(typeof FIELDS)[number], string>>({
-    filiere: PROPOSER_FACETS.filiere.includes(defaultFiliere) ? defaultFiliere : PROPOSER_FACETS.filiere[0],
-    niveau: PROPOSER_FACETS.niveau.includes(defaultNiveau) ? defaultNiveau : PROPOSER_FACETS.niveau[0],
-    matiere: PROPOSER_FACETS.matiere[0],
-    annee: PROPOSER_FACETS.annee[0],
-    type: PROPOSER_FACETS.type[0],
+    filiere: facets.filiere.includes(defaultFiliere) ? defaultFiliere : facets.filiere[0],
+    niveau: facets.niveau.includes(defaultNiveau) ? defaultNiveau : facets.niveau[0],
+    matiere: facets.matiere[0],
+    annee: facets.annee[0],
+    type: facets.type[0],
   });
   const [file, setFile] = useState<File | null>(null);
   const [pending, startTransition] = useTransition();
@@ -53,7 +55,7 @@ export function ProposerForm({
             <PickerButton
               title={PROPOSER_LABELS[f]}
               value={values[f]}
-              options={PROPOSER_FACETS[f].map((o) => ({ label: o, value: o }))}
+              options={facets[f].map((o) => ({ label: o, value: o }))}
               onSelect={(v) => setValues((s) => ({ ...s, [f]: v }))}
               trigger={(open) => (
                 <button

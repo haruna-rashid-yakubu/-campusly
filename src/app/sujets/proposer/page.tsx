@@ -4,7 +4,7 @@ import { BackHeader } from "@/components/BackHeader";
 import { SignInRequired } from "@/components/SignInRequired";
 import { ProposerForm } from "@/components/ProposerForm";
 import { Icon } from "@/components/icons";
-import { getPreferredClasse } from "@/lib/data";
+import { getPreferredClasse, getProposerFacets } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Proposer un sujet",
@@ -19,7 +19,7 @@ export default async function ProposerPage() {
     return <SignInRequired backHref="/sujets" title="Proposer un sujet" />;
   }
 
-  const classe = await getPreferredClasse();
+  const [classe, facets] = await Promise.all([getPreferredClasse(), getProposerFacets()]);
   const [defaultFiliere, defaultNiveau] = classe.split(" · ");
 
   return (
@@ -37,7 +37,11 @@ export default async function ProposerPage() {
           <Icon name="check" size={18} className="flex-none text-teal-dark" />
         </div>
       </div>
-      <ProposerForm defaultFiliere={defaultFiliere ?? ""} defaultNiveau={defaultNiveau ?? ""} />
+      <ProposerForm
+        defaultFiliere={defaultFiliere ?? ""}
+        defaultNiveau={defaultNiveau ?? ""}
+        facets={facets}
+      />
     </div>
   );
 }

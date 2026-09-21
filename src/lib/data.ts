@@ -83,6 +83,27 @@ export async function getSubjectFacets() {
   };
 }
 
+// The proposer form offers what the bank already holds, plus escape hatches.
+// A hardcoded list here drifted out of sync twice before: it still advertised
+// Génie civil and Gestion long after those demo papers were the only ones.
+export async function getProposerFacets() {
+  const rows = await db
+    .select({ filiere: subjects.filiere, niveau: subjects.niveau, matiere: subjects.matiere })
+    .from(subjects);
+
+  const uniq = (values: string[]) =>
+    [...new Set(values)].sort((a, b) => a.localeCompare(b, "fr"));
+  const thisYear = new Date().getFullYear();
+
+  return {
+    filiere: uniq(rows.map((r) => r.filiere)),
+    niveau: uniq(rows.map((r) => r.niveau)),
+    matiere: [...uniq(rows.map((r) => r.matiere)), "Autre matière"],
+    annee: Array.from({ length: 6 }, (_, i) => String(thisYear - i)),
+    type: [...subjectTypeEnum],
+  };
+}
+
 export async function getSubjectById(id: number) {
   const [row] = await db.select().from(subjects).where(eq(subjects.id, id));
   return row;

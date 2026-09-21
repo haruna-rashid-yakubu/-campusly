@@ -32,11 +32,13 @@ click-through prototype this app was built from).
    - `BLOB_READ_WRITE_TOKEN` — from a Vercel Blob store (Vercel dashboard → Storage → Create
      Blob store). Needed for the "Proposer un sujet" and admin "Publier le programme" uploads to
      work; without it those actions fail with a clear error instead of silently doing nothing.
-3. Push the schema and seed the reference data (subjects, cités, room types, pressings):
+3. Push the schema:
    ```bash
    npm run db:push
-   npm run db:seed
    ```
+   There is no seed script: the demo data it created (placeholder papers, Génie
+   informatique/Génie civil/Gestion classes) was deleted once real UCAC papers went in, and
+   re-running it would have brought them back. Add real rows through `/admin` instead.
 4. `npm run dev` and open http://localhost:3000.
 
 ## Notable implementation choices vs. the prototype
@@ -60,10 +62,9 @@ backend. This app is the real thing, so a few things were adapted rather than co
 - **The "Installer maintenant" button uses the real `beforeinstallprompt` API** on Android/Chrome
   instead of being decorative; on iOS (which has no such API) only the manual Safari steps show,
   which is more accurate than the prototype always showing an install button.
-- **Subject PDFs/images without an uploaded file** (i.e. the seeded reference subjects) show an
-  explicit "aperçu indisponible pour ce contenu de démonstration" placeholder instead of the
-  prototype's fake skeleton-bars mockup — anything a student actually submits and gets approved
-  renders for real (PDF in an `<iframe>`, images with pinch-to-zoom-style +/− controls).
+- **Subject PDFs/images without an uploaded file** show an explicit "aperçu indisponible"
+  placeholder instead of the prototype's fake skeleton-bars mockup. No such subject exists any
+  more — every row in the bank has a real file — but the guard stays for rows added by hand.
 - **Cité/room photo uploads and a cité-creation form are not wired up.** The prototype itself
   never specified that flow either (its admin screen only exposes stock +/-); the "Ajouter une
   cité" admin action is left as a note pointing at doing this outside the app for now, matching
@@ -79,7 +80,7 @@ src/
                    (/, /sujets, /logements, /pressing, /programme); /sujets/proposer,
                    /installer and /admin intentionally hide the tab bar (see lib/nav.ts).
   components/      Shared UI: Sheet/PickerButton, TabBar, Toast, icons, admin widgets…
-  db/              Drizzle schema, client, and the seed script.
+  db/              Drizzle schema and client.
   lib/             Data access (data.ts), mutations (actions.ts, all Server Actions),
                    constants, small utils.
   auth.ts          NextAuth config (Google + Drizzle adapter).
@@ -89,5 +90,5 @@ public/sw.js       Minimal offline-fallback service worker.
 ## Deploying
 
 Any Next.js host works; Vercel is the path of least resistance since Blob storage is already a
-Vercel product. Set the same env vars there, run `npm run db:push` once against the production
-`DATABASE_URL`, then `npm run db:seed` if you want the reference data.
+Vercel product. Set the same env vars there and run `npm run db:push` once against the production
+`DATABASE_URL`.
