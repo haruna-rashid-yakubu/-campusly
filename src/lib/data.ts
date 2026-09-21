@@ -28,11 +28,21 @@ export type SubjectFilters = {
   niveau?: string;
   annee?: string;
   type?: string;
+  enseignant?: string;
 };
 
 export async function getSubjects(filters: SubjectFilters = {}) {
   const conditions = [];
-  if (filters.q) conditions.push(sql`lower(${subjects.matiere}) like ${"%" + filters.q.toLowerCase() + "%"}`);
+  // Students look for a course *or* a lecturer in the same box ("Noumo",
+  // "macro"), so one query has to match both columns. Combined with the
+  // enseignant facet below, this answers "what did Dr. X give in macro ?".
+  if (filters.q) {
+    const like = `%${filters.q.toLowerCase()}%`;
+    conditions.push(
+      sql`(lower(${subjects.matiere}) like ${like} or lower(coalesce(${subjects.enseignant}, '')) like ${like})`
+    );
+  }
+  if (filters.enseignant) conditions.push(eq(subjects.enseignant, filters.enseignant));
   if (filters.filiere) conditions.push(eq(subjects.filiere, filters.filiere));
   if (filters.niveau) conditions.push(eq(subjects.niveau, filters.niveau));
   if (filters.annee) conditions.push(eq(subjects.annee, filters.annee));
@@ -55,6 +65,7 @@ export async function getSubjectFacets() {
       niveau: subjects.niveau,
       annee: subjects.annee,
       type: subjects.type,
+      enseignant: subjects.enseignant,
     })
     .from(subjects);
 
@@ -65,6 +76,10 @@ export async function getSubjectFacets() {
     niveau: uniq(rows.map((r) => r.niveau)).sort((a, b) => a.localeCompare(b, "fr")),
     annee: uniq(rows.map((r) => r.annee)).sort((a, b) => b.localeCompare(a)),
     type: subjectTypeEnum.filter((t) => rows.some((r) => r.type === t)),
+    // enseignant is nullable — most older papers have no name on them yet.
+    enseignant: uniq(rows.map((r) => r.enseignant).filter((e): e is string => Boolean(e))).sort(
+      (a, b) => a.localeCompare(b, "fr")
+    ),
   };
 }
 

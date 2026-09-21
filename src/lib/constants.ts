@@ -7,6 +7,7 @@ export const SUBJECT_FILTER_LABELS: Record<string, string> = {
   niveau: "Niveau",
   annee: "Année",
   type: "Type d'épreuve",
+  enseignant: "Enseignant",
 };
 
 export const PROPOSER_FACETS: Record<string, string[]> = {

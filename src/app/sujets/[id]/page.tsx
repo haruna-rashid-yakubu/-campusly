@@ -82,10 +82,18 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
         />
 
         <div className="mt-[18px] rounded-[20px] border border-line px-3.5">
-          {[
+          {([
             { label: "Année", valeur: subject.annee },
             { label: "Épreuve", valeur: subject.type },
-            { label: "Enseignant", valeur: subject.enseignant },
+            {
+              label: "Enseignant",
+              valeur: subject.enseignant,
+              // Tapping the name is how you find everything this lecturer has
+              // given — combine it with the search box to narrow to one course.
+              href: subject.enseignant
+                ? `/sujets?enseignant=${encodeURIComponent(subject.enseignant)}`
+                : undefined,
+            },
             {
               label: "Corrigé",
               valeur: subject.correctionUrl
@@ -96,7 +104,7 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
             },
             { label: "Vérifié le", valeur: subject.createdAt.toLocaleDateString("fr-FR") },
             { label: "Téléchargements", valeur: String(subject.downloads) },
-          ]
+          ] as { label: string; valeur: string | null; href?: string }[])
             .filter((row) => row.valeur)
             .map((row) => (
               <div
@@ -104,7 +112,13 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
                 className="flex justify-between gap-3 border-b border-line-3 py-3 text-[14px] last:border-b-0"
               >
                 <span className="text-slate-light">{row.label}</span>
-                <span className="text-right font-bold">{row.valeur}</span>
+                {row.href ? (
+                  <Link href={row.href} className="text-right font-bold text-teal-dark underline">
+                    {row.valeur}
+                  </Link>
+                ) : (
+                  <span className="text-right font-bold">{row.valeur}</span>
+                )}
               </div>
             ))}
         </div>

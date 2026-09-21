@@ -18,7 +18,14 @@ export const dynamic = "force-dynamic";
 export default async function SujetsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; filiere?: string; niveau?: string; annee?: string; type?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    filiere?: string;
+    niveau?: string;
+    annee?: string;
+    type?: string;
+    enseignant?: string;
+  }>;
 }) {
   const params = await searchParams;
   const session = await auth();
@@ -30,7 +37,9 @@ export default async function SujetsPage({
   ]);
 
   const hasPending = submissions.some((s) => s.status === "en_attente");
-  const hasFilters = Boolean(params.q || params.filiere || params.niveau || params.annee || params.type);
+  const hasFilters = Boolean(
+    params.q || params.filiere || params.niveau || params.annee || params.type || params.enseignant
+  );
 
   return (
     <div className="relative min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
@@ -97,6 +106,11 @@ export default async function SujetsPage({
                     <div className="mt-0.5 text-[12.5px] text-slate-light">
                       {s.filiere} · {s.niveau} · {s.annee}
                     </div>
+                    {s.enseignant && (
+                      <div className="mt-0.5 truncate text-[12.5px] text-slate-light">
+                        {s.enseignant}
+                      </div>
+                    )}
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <Badge tone="neutral">{s.type}</Badge>
                       <Badge tone={s.corrige ? "teal" : "neutral"}>

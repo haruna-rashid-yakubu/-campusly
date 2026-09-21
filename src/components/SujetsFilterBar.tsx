@@ -12,6 +12,7 @@ const RESET_LABEL: Record<string, string> = {
   niveau: "Tous",
   annee: "Toutes",
   type: "Tous",
+  enseignant: "Tous",
 };
 
 export function SujetsFilterBar({ facets }: { facets: Record<string, string[]> }) {
@@ -44,7 +45,7 @@ export function SujetsFilterBar({ facets }: { facets: Record<string, string[]> }
         <input
           value={q}
           onChange={(e) => onQChange(e.target.value)}
-          placeholder="Chercher une matière"
+          placeholder="Matière ou enseignant"
           className="min-w-0 flex-1 border-0 bg-transparent text-[15px] text-ink outline-none"
         />
         {q && (
@@ -60,24 +61,34 @@ export function SujetsFilterBar({ facets }: { facets: Record<string, string[]> }
         )}
       </div>
       <div className="no-scrollbar -mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-0.5">
-        {Object.entries(facets).map(([key, options]) => {
-          const current = searchParams.get(key) ?? "";
-          return (
-            <PickerButton
-              key={key}
-              title={SUBJECT_FILTER_LABELS[key]}
-              value={current}
-              options={[
-                { label: RESET_LABEL[key], value: "" },
-                ...options.map((o) => ({ label: o, value: o })),
-              ]}
-              onSelect={(v) => pushParams((params) => (v ? params.set(key, v) : params.delete(key)))}
-              trigger={(open) => (
-                <Chip label={current || SUBJECT_FILTER_LABELS[key]} active={!!current} onClick={open} />
-              )}
-            />
-          );
-        })}
+        {Object.entries(facets)
+          // A facet with no values (no paper carries an enseignant yet) would
+          // render a chip that opens an empty picker.
+          .filter(([, options]) => options.length > 0)
+          .map(([key, options]) => {
+            const current = searchParams.get(key) ?? "";
+            return (
+              <PickerButton
+                key={key}
+                title={SUBJECT_FILTER_LABELS[key]}
+                value={current}
+                options={[
+                  { label: RESET_LABEL[key], value: "" },
+                  ...options.map((o) => ({ label: o, value: o })),
+                ]}
+                onSelect={(v) =>
+                  pushParams((params) => (v ? params.set(key, v) : params.delete(key)))
+                }
+                trigger={(open) => (
+                  <Chip
+                    label={current || SUBJECT_FILTER_LABELS[key]}
+                    active={!!current}
+                    onClick={open}
+                  />
+                )}
+              />
+            );
+          })}
       </div>
     </>
   );
