@@ -72,7 +72,7 @@ export const classes = pgTable("classe", {
   label: text("label").notNull().unique(), // e.g. "Génie informatique · L2"
 });
 
-export const subjectTypeEnum = ["Partiel", "Examen", "Rattrapage"] as const;
+export const subjectTypeEnum = ["Partiel", "Examen", "Rattrapage", "TD"] as const;
 
 export const subjects = pgTable("subject", {
   id: serial("id").primaryKey(),
