@@ -7,7 +7,7 @@ import { Icon } from "@/components/icons";
 import { SujetViewer } from "@/components/SujetViewer";
 import { ShareSheet } from "@/components/ShareSheet";
 import { ToastButton } from "@/components/ToastButton";
-import { getSimilarSubjects, getSubjectById } from "@/lib/data";
+import { getRelatedSubjects, getSubjectById } from "@/lib/data";
 import { incrementSubjectDownload } from "@/lib/actions";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +37,11 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
   const subject = await getSubjectById(subjectId);
   if (!subject) notFound();
 
-  const similaires = await getSimilarSubjects(subject.id, subject.filiere);
+  const { sameMatiere, sameFiliere } = await getRelatedSubjects(
+    subject.id,
+    subject.matiere,
+    subject.filiere
+  );
 
   return (
     <div className="relative min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
@@ -105,17 +109,48 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
             ))}
         </div>
 
-        {similaires.length > 0 && (
+        {sameMatiere.length > 0 && (
           <>
-            <div className="mb-0.5 mt-6 text-[17px] font-extrabold tracking-tight">Dans la même filière</div>
-            {similaires.map((s) => (
+            <div className="mb-0.5 mt-6 text-[17px] font-extrabold tracking-tight">
+              Autres documents de {subject.matiere}
+            </div>
+            {sameMatiere.map((s) => (
               <Link
                 key={s.id}
                 href={`/sujets/${s.id}`}
+                prefetch={false}
                 className="flex items-center gap-3 border-b border-line-3 py-3.5 active:opacity-60"
               >
                 <span className="grid h-[50px] w-[42px] flex-none place-items-center rounded-[10px] bg-surface text-teal-active">
-                  <Icon name="doc" size={22} />
+                  <Icon name={s.type === "TD" ? "inbox" : "doc"} size={22} />
+                </span>
+                <span className="flex-1">
+                  <span className="block text-[14.5px] font-bold">
+                    {s.type} · {s.annee}
+                  </span>
+                  <span className="mt-0.5 block text-[12.5px] text-slate-light">
+                    {s.filiere} · {s.niveau}
+                    {s.corrige ? " · corrigé" : ""}
+                  </span>
+                </span>
+                <Icon name="right" size={18} className="text-slate-light" />
+              </Link>
+            ))}
+          </>
+        )}
+
+        {sameFiliere.length > 0 && (
+          <>
+            <div className="mb-0.5 mt-6 text-[17px] font-extrabold tracking-tight">Dans la même filière</div>
+            {sameFiliere.map((s) => (
+              <Link
+                key={s.id}
+                href={`/sujets/${s.id}`}
+                prefetch={false}
+                className="flex items-center gap-3 border-b border-line-3 py-3.5 active:opacity-60"
+              >
+                <span className="grid h-[50px] w-[42px] flex-none place-items-center rounded-[10px] bg-surface text-teal-active">
+                  <Icon name={s.type === "TD" ? "inbox" : "doc"} size={22} />
                 </span>
                 <span className="flex-1">
                   <span className="block text-[14.5px] font-bold">{s.matiere}</span>

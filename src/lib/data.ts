@@ -1,4 +1,4 @@
-import { and, desc, eq, isNotNull, ne, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, ne, notInArray, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { db } from "@/db";
 import {
@@ -73,12 +73,26 @@ export async function getSubjectById(id: number) {
   return row;
 }
 
-export async function getSimilarSubjects(subjectId: number, filiere: string) {
-  return db
+// Other papers of the same course (other years, and its TDs) are far more
+// useful than anything else in the filière, so they're fetched separately
+// and shown first.
+export async function getRelatedSubjects(subjectId: number, matiere: string, filiere: string) {
+  const sameMatiere = await db
     .select()
     .from(subjects)
-    .where(and(ne(subjects.id, subjectId), eq(subjects.filiere, filiere)))
-    .limit(2);
+    .where(and(ne(subjects.id, subjectId), eq(subjects.matiere, matiere)))
+    .orderBy(desc(subjects.annee))
+    .limit(6);
+
+  const excluded = [subjectId, ...sameMatiere.map((s) => s.id)];
+  const sameFiliere = await db
+    .select()
+    .from(subjects)
+    .where(and(notInArray(subjects.id, excluded), eq(subjects.filiere, filiere)))
+    .orderBy(desc(subjects.createdAt))
+    .limit(3);
+
+  return { sameMatiere, sameFiliere };
 }
 
 export async function getUserSubmissions(userId: string) {
