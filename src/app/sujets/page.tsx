@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { Icon } from "@/components/icons";
 import { Badge, EmptyState } from "@/components/EmptyState";
 import { SujetsFilterBar } from "@/components/SujetsFilterBar";
-import { getSubjects, getUserSubmissions } from "@/lib/data";
+import { getSubjectFacets, getSubjects, getUserSubmissions } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Anciens sujets d'examens",
@@ -23,9 +23,10 @@ export default async function SujetsPage({
   const params = await searchParams;
   const session = await auth();
 
-  const [subjects, submissions] = await Promise.all([
+  const [subjects, submissions, facets] = await Promise.all([
     getSubjects(params),
     session?.user ? getUserSubmissions(session.user.id) : Promise.resolve([]),
+    getSubjectFacets(),
   ]);
 
   const hasPending = submissions.some((s) => s.status === "en_attente");
@@ -56,7 +57,7 @@ export default async function SujetsPage({
             <Icon name="plus" size={20} strokeWidth={2.2} />
           </Link>
         </div>
-        <SujetsFilterBar />
+        <SujetsFilterBar facets={facets} />
       </div>
 
       <div className="relative px-5 pt-1">

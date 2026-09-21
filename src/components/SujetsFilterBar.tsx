@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Chip } from "@/components/Chip";
 import { PickerButton } from "@/components/PickerButton";
 import { Icon } from "@/components/icons";
-import { SUBJECT_FILTER_FACETS, SUBJECT_FILTER_LABELS } from "@/lib/constants";
+import { SUBJECT_FILTER_LABELS } from "@/lib/constants";
 
 const RESET_LABEL: Record<string, string> = {
   filiere: "Toutes",
@@ -14,7 +14,7 @@ const RESET_LABEL: Record<string, string> = {
   type: "Tous",
 };
 
-export function SujetsFilterBar() {
+export function SujetsFilterBar({ facets }: { facets: Record<string, string[]> }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -60,7 +60,7 @@ export function SujetsFilterBar() {
         )}
       </div>
       <div className="no-scrollbar -mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-0.5">
-        {Object.entries(SUBJECT_FILTER_FACETS).map(([key, options]) => {
+        {Object.entries(facets).map(([key, options]) => {
           const current = searchParams.get(key) ?? "";
           return (
             <PickerButton

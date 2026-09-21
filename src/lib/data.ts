@@ -8,6 +8,7 @@ import {
   roomTypes,
   subjectSubmissions,
   subjects,
+  subjectTypeEnum,
 } from "@/db/schema";
 import { BANNER_COOKIE, CLASSE_COOKIE, DEFAULT_CLASSE } from "@/lib/constants";
 
@@ -42,6 +43,29 @@ export async function getSubjects(filters: SubjectFilters = {}) {
     .from(subjects)
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(desc(subjects.createdAt));
+}
+
+// Filter options are derived from what's actually in the table — a hardcoded
+// list silently drifts out of sync every time a subject with a new filière or
+// année is published, making those subjects unreachable from the filter bar.
+export async function getSubjectFacets() {
+  const rows = await db
+    .select({
+      filiere: subjects.filiere,
+      niveau: subjects.niveau,
+      annee: subjects.annee,
+      type: subjects.type,
+    })
+    .from(subjects);
+
+  const uniq = (values: string[]) => [...new Set(values)];
+
+  return {
+    filiere: uniq(rows.map((r) => r.filiere)).sort((a, b) => a.localeCompare(b, "fr")),
+    niveau: uniq(rows.map((r) => r.niveau)).sort((a, b) => a.localeCompare(b, "fr")),
+    annee: uniq(rows.map((r) => r.annee)).sort((a, b) => b.localeCompare(a)),
+    type: subjectTypeEnum.filter((t) => rows.some((r) => r.type === t)),
+  };
 }
 
 export async function getSubjectById(id: number) {
