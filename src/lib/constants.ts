@@ -40,3 +40,22 @@ export const CITE_PRICE_OPTIONS = [
  */
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://campusly-ucac.vercel.app";
 export const APP_DOMAIN = APP_URL.replace(/^https?:\/\//, "");
+
+/*
+ * The shape of a week at the UCAC: six days, two fixed blocks a day, and only
+ * the subject changes. The hours live here rather than in the database so the
+ * day the school shifts to 8h30 one line changes instead of a semester of
+ * rows.
+ */
+export const JOURS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"] as const;
+
+export const MOMENTS = [
+  { id: "matin", label: "Matin", heures: "8h–12h" },
+  { id: "apres_midi", label: "Après-midi", heures: "14h–18h" },
+] as const;
+
+export type MomentId = (typeof MOMENTS)[number]["id"];
+
+export function heuresDu(moment: string) {
+  return MOMENTS.find((m) => m.id === moment)?.heures ?? "";
+}

@@ -7,15 +7,19 @@ import { EmptyState, Badge } from "@/components/EmptyState";
 import { Icon } from "@/components/icons";
 import { ModerationCard } from "@/components/admin/ModerationCard";
 import { StockControl } from "@/components/admin/StockControl";
-import { ProgrammePublishForm } from "@/components/admin/ProgrammePublishForm";
+import { ProgrammeGridForm, type Cell } from "@/components/admin/ProgrammeGridForm";
 import {
   getCitesWithAvailability,
+  getClasseByLabel,
   getClasses,
   getClassesWithoutRecentProgramme,
   getModerationQueue,
   getPreferredClasse,
+  getProgrammeForWeek,
+  getProposerFacets,
   getSubjects,
 } from "@/lib/data";
+import { addDays, mondayOf, toISODate, weekRangeLabel } from "@/lib/semaine";
 import { distanceLabel, fcfa } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -196,6 +200,23 @@ async function CitesTab() {
   );
 }
 
+// The grid is keyed on a Monday, so the editor always opens on the week that
+// is running — the one a correction is most likely to be about.
+function toCells(programme: { creneaux: { jour: number; moment: string; matiere: string; enseignant: string | null; salle: string | null; seance: number | null; seances: number | null; cc: boolean }[] } | undefined) {
+  const cells: Record<string, Cell> = {};
+  for (const c of programme?.creneaux ?? []) {
+    cells[`${c.jour}-${c.moment}`] = {
+      matiere: c.matiere,
+      enseignant: c.enseignant ?? "",
+      salle: c.salle ?? "",
+      seance: c.seance ? String(c.seance) : "",
+      seances: c.seances ? String(c.seances) : "",
+      cc: c.cc,
+    };
+  }
+  return cells;
+}
+
 async function ProgrammeTab() {
   const [classes, classe, manquantes] = await Promise.all([
     getClasses(),
@@ -203,9 +224,29 @@ async function ProgrammeTab() {
     getClassesWithoutRecentProgramme(),
   ]);
 
+  const semaine = mondayOf(new Date());
+  const classeRow = await getClasseByLabel(classe);
+  const [courante, precedente, facets] = await Promise.all([
+    classeRow ? getProgrammeForWeek(classeRow.id, semaine) : Promise.resolve(undefined),
+    classeRow
+      ? getProgrammeForWeek(classeRow.id, addDays(semaine, -7))
+      : Promise.resolve(undefined),
+    getProposerFacets(),
+  ]);
+
   return (
     <>
-      <ProgrammePublishForm classes={classes.map((c) => c.label)} defaultClasse={classe} />
+      <ProgrammeGridForm
+        classes={classes.map((c) => c.label)}
+        defaultClasse={classe}
+        semaine={toISODate(semaine)}
+        semaineLabel={`Semaine ${weekRangeLabel(semaine)}`}
+        initial={toCells(courante)}
+        initialWeekLabel={courante?.weekLabel ?? ""}
+        initialSalle={courante?.salleDefaut ?? ""}
+        previous={toCells(precedente)}
+        matieres={facets.matiere ?? []}
+      />
       <div className="mb-1 mt-7 text-base font-extrabold">Classes sans programme récent</div>
       {manquantes.map(({ classe: c, manquant }) => (
         <div key={c.id} className="flex items-center justify-between border-t border-line-3 py-3.5">

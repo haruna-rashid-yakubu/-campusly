@@ -1,9 +1,10 @@
-import { and, desc, eq, isNotNull, ne, notInArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, ne, notInArray, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { db } from "@/db";
 import {
   classes,
   cites,
+  creneaux,
   programmePublications,
   roomTypes,
   subjectSubmissions,
@@ -241,15 +242,28 @@ export async function getClasseByLabel(label: string) {
   return row;
 }
 
+// Ordered by the week itself, not by when it was published: a correction
+// pushed on Wednesday for the current week must not make last week the
+// "latest" one again.
 export async function getLatestProgramme(classeId: number) {
-  const [row] = await db
-    .select()
-    .from(programmePublications)
-    .where(eq(programmePublications.classeId, classeId))
-    .orderBy(desc(programmePublications.publishedAt))
-    .limit(1);
-  return row;
+  return db.query.programmePublications.findFirst({
+    where: eq(programmePublications.classeId, classeId),
+    orderBy: (p, { desc }) => desc(p.semaine),
+    with: { creneaux: { orderBy: [asc(creneaux.jour), asc(creneaux.moment)] } },
+  });
 }
+
+export async function getProgrammeForWeek(classeId: number, semaine: Date) {
+  return db.query.programmePublications.findFirst({
+    where: and(
+      eq(programmePublications.classeId, classeId),
+      eq(programmePublications.semaine, semaine)
+    ),
+    with: { creneaux: { orderBy: [asc(creneaux.jour), asc(creneaux.moment)] } },
+  });
+}
+
+export type ProgrammeWithCreneaux = NonNullable<Awaited<ReturnType<typeof getLatestProgramme>>>;
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 

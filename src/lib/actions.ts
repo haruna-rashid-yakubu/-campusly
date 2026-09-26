@@ -6,16 +6,19 @@ import { eq, sql } from "drizzle-orm";
 import { auth, signIn, signOut } from "@/auth";
 import { db } from "@/db";
 import {
+  creneaux,
   roomTypes,
   subjectSubmissions,
   subjects,
   programmePublications,
   pushSubscriptions,
   subjectTypeEnum,
+  momentEnum,
   users,
 } from "@/db/schema";
 import { deleteFile, uploadFile } from "@/lib/blob";
-import { ensureClassesForFiliere, getClasseByLabel } from "@/lib/data";
+import { ensureClassesForFiliere, getClasseByLabel, getProgrammeForWeek } from "@/lib/data";
+import { fromISODate, mondayOf, weekRangeLabel } from "@/lib/semaine";
 import { BANNER_COOKIE, CLASSE_COOKIE } from "@/lib/constants";
 import { sendPushToAdmins, sendPushToClasse, sendPushToUser } from "@/lib/push";
 
@@ -299,34 +302,106 @@ export async function adjustRoomStock(roomTypeId: number, delta: number) {
   revalidatePath(`/logements/${row.citeId}`);
 }
 
-export async function publishProgramme(classeLabel: string, weekLabel: string, formData: FormData) {
+export type CreneauInput = {
+  jour: number;
+  moment: (typeof momentEnum)[number];
+  matiere: string;
+  enseignant?: string;
+  salle?: string;
+  seance?: number | null;
+  seances?: number | null;
+  cc?: boolean;
+};
+
+/*
+ * One week of one promo, saved in one go: the photo of the noticeboard and
+ * the grid that drives the reminders. Both are optional on their own — a week
+ * can go up as a photo while the grid is still being typed, and a grid is
+ * worth having even when nobody photographed the sheet.
+ *
+ * Keyed on (classe, Monday), so saving again corrects the week in place
+ * rather than stacking a second version students would have to tell apart.
+ */
+export async function saveProgramme(formData: FormData) {
   await requireAdmin();
 
+  const classeLabel = String(formData.get("classeLabel") ?? "");
   const classe = await getClasseByLabel(classeLabel);
   if (!classe) throw new Error("Classe inconnue.");
 
+  const semaine = mondayOf(fromISODate(String(formData.get("semaine") ?? "")));
+  if (Number.isNaN(semaine.getTime())) throw new Error("Semaine invalide.");
+
+  const weekLabel = String(formData.get("weekLabel") ?? "").trim() || `Semaine ${weekRangeLabel(semaine)}`;
+  const salleDefaut = String(formData.get("salleDefaut") ?? "").trim() || null;
+
+  let grid: CreneauInput[] = [];
+  try {
+    grid = JSON.parse(String(formData.get("creneaux") ?? "[]")) as CreneauInput[];
+  } catch {
+    throw new Error("Grille illisible.");
+  }
+
   const file = formData.get("file") as File | null;
-  if (!file || file.size === 0) throw new Error("Ajoute une photo du programme.");
+  const existing = await getProgrammeForWeek(classe.id, semaine);
+  const uploaded = file && file.size > 0 ? await uploadFile(file, "programme") : null;
+  if (!uploaded && !existing && grid.length === 0) {
+    throw new Error("Ajoute une photo ou remplis au moins une case.");
+  }
 
-  const uploaded = await uploadFile(file, "programme");
+  const [row] = await db
+    .insert(programmePublications)
+    .values({
+      classeId: classe.id,
+      semaine,
+      weekLabel,
+      salleDefaut,
+      photoUrl: uploaded?.url ?? null,
+    })
+    .onConflictDoUpdate({
+      target: [programmePublications.classeId, programmePublications.semaine],
+      set: {
+        weekLabel,
+        salleDefaut,
+        // A save without a new photo keeps the one already there.
+        ...(uploaded ? { photoUrl: uploaded.url } : {}),
+        publishedAt: new Date(),
+      },
+    })
+    .returning();
 
-  await db.insert(programmePublications).values({
-    classeId: classe.id,
-    photoUrl: uploaded.url,
-    weekLabel,
-  });
+  // The grid is replaced wholesale rather than diffed: a cell that was emptied
+  // has no row to update, and "no row" is exactly how the app reads "no class".
+  await db.delete(creneaux).where(eq(creneaux.programmeId, row.id));
+  const cells = grid
+    .filter((c) => c.matiere?.trim())
+    .map((c) => ({
+      programmeId: row.id,
+      jour: c.jour,
+      moment: c.moment,
+      matiere: c.matiere.trim(),
+      enseignant: c.enseignant?.trim() || null,
+      salle: c.salle?.trim() || null,
+      seance: c.seance ?? null,
+      seances: c.seances ?? null,
+      cc: c.cc ?? false,
+    }));
+  if (cells.length) await db.insert(creneaux).values(cells);
 
   revalidatePath("/admin");
   revalidatePath("/programme");
 
   // Only the promo concerned. Sent to everyone, this was four notifications a
   // week about other people's timetables — the fastest way to get the app's
-  // notifications switched off altogether.
-  await sendPushToClasse(classe.id, {
-    title: `Programme de la semaine — ${classeLabel}`,
-    body: weekLabel,
-    url: "/programme",
-  });
+  // notifications switched off altogether. Silent on a correction, so fixing a
+  // room at 21h does not buzz a hundred phones a second time.
+  if (!existing) {
+    await sendPushToClasse(classe.id, {
+      title: `Programme de la semaine — ${classeLabel}`,
+      body: weekLabel,
+      url: "/programme",
+    });
+  }
 }
 
 export async function subscribePush(subscription: {

@@ -8,7 +8,9 @@ export default async function ProgrammePleinPage() {
   const classe = await getPreferredClasse();
   const classeRow = await getClasseByLabel(classe);
   const programme = classeRow ? await getLatestProgramme(classeRow.id) : null;
-  if (!programme) notFound();
+  // A week can now exist as a grid with no photograph behind it, and there is
+  // nothing to show full screen in that case.
+  if (!programme?.photoUrl) notFound();
 
   return <FullscreenViewer title={classe} fileUrl={programme.photoUrl} closeHref="/programme" />;
 }

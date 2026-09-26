@@ -6,6 +6,8 @@ import {
   boolean,
   primaryKey,
   serial,
+  date,
+  unique,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import type { AdapterAccountType } from "next-auth/adapters";
@@ -176,17 +178,66 @@ export const pushSubscriptions = pgTable("push_subscription", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-export const programmePublications = pgTable("programme_publication", {
-  id: serial("id").primaryKey(),
-  classeId: integer("classe_id")
-    .notNull()
-    .references(() => classes.id, { onDelete: "cascade" }),
-  photoUrl: text("photo_url").notNull(),
-  weekLabel: text("week_label").notNull(), // "Semaine du 21 au 26 sept."
-  publishedAt: timestamp("published_at", { mode: "date" })
-    .notNull()
-    .defaultNow(),
-});
+/*
+ * One week of one promo. The photo of the sheet on the noticeboard stays —
+ * it is the original, and it is what students trust — but a photo cannot be
+ * read by a cron job at 20h, so the same week also carries a grid of slots.
+ * Either half can exist alone: a week with only a photo still displays, a
+ * week with only a grid still sends its reminders.
+ */
+export const programmePublications = pgTable(
+  "programme_publication",
+  {
+    id: serial("id").primaryKey(),
+    classeId: integer("classe_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    // The Monday. Stored separately from the label because "Semaine 25" is
+    // the school's own counting, useless for working out what "tomorrow" is.
+    semaine: date("semaine", { mode: "date" }).notNull(),
+    photoUrl: text("photo_url"),
+    weekLabel: text("week_label").notNull(), // "Semaine 25" / "Semaine du 4 au 9 mai"
+    // The room named once in the header of the sheet; a slot may override it.
+    salleDefaut: text("salle_defaut"),
+    publishedAt: timestamp("published_at", { mode: "date" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [unique("programme_classe_semaine").on(t.classeId, t.semaine)]
+);
+
+export const momentEnum = ["matin", "apres_midi"] as const;
+
+/*
+ * A slot in the 12-cell grid: six days by two fixed blocks, 8h-12h and
+ * 14h-18h. Only the subject varies, and a block can be empty — which is why
+ * an empty block is simply the absence of a row rather than a flag.
+ *
+ * The hours are not stored. They never move, and keeping them as a constant
+ * means the day the school shifts to 8h30 one line changes instead of a
+ * semester of data.
+ */
+export const creneaux = pgTable(
+  "creneau",
+  {
+    id: serial("id").primaryKey(),
+    programmeId: integer("programme_id")
+      .notNull()
+      .references(() => programmePublications.id, { onDelete: "cascade" }),
+    jour: integer("jour").notNull(), // 1 = lundi … 6 = samedi
+    moment: text("moment", { enum: momentEnum }).notNull(),
+    matiere: text("matiere").notNull(),
+    enseignant: text("enseignant"),
+    salle: text("salle"), // overrides salleDefaut when set — "Labo 1"
+    // "(4/6)" on the sheet: which session of the course this is. It is what
+    // makes "the CC is coming" knowable without anyone typing a date.
+    seance: integer("seance"),
+    seances: integer("seances"),
+    // Set by hand when someone actually knows the CC falls here.
+    cc: boolean("cc").notNull().default(false),
+  },
+  (t) => [unique("creneau_slot").on(t.programmeId, t.jour, t.moment)]
+);
 
 // --- Relations ---------------------------------------------------------------
 
@@ -222,6 +273,14 @@ export const classesRelations = relations(classes, ({ many }) => ({
   publications: many(programmePublications),
 }));
 
-export const programmePublicationsRelations = relations(programmePublications, ({ one }) => ({
+export const programmePublicationsRelations = relations(programmePublications, ({ one, many }) => ({
   classe: one(classes, { fields: [programmePublications.classeId], references: [classes.id] }),
+  creneaux: many(creneaux),
+}));
+
+export const creneauxRelations = relations(creneaux, ({ one }) => ({
+  programme: one(programmePublications, {
+    fields: [creneaux.programmeId],
+    references: [programmePublications.id],
+  }),
 }));

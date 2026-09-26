@@ -5,6 +5,7 @@ import { ClasseSwitcher } from "@/components/ClasseSwitcher";
 import { ShareSheet } from "@/components/ShareSheet";
 import { ToastButton } from "@/components/ToastButton";
 import { DownloadButton } from "@/components/DownloadButton";
+import { ProgrammeGrid } from "@/components/ProgrammeGrid";
 import { Icon } from "@/components/icons";
 import { getClasseByLabel, getClasses, getLatestProgramme, getPreferredClasse } from "@/lib/data";
 
@@ -37,18 +38,44 @@ export default async function ProgrammePage() {
 
       {programme ? (
         <>
+          {/* The grid first: it reads at a glance on a phone, which a
+              photograph of a wall-mounted sheet never does. */}
           <div className="px-5 pt-3">
-            <Link
-              href="/programme/plein"
-              className="press-scale relative block h-[420px] overflow-hidden rounded-[20px] bg-line-3"
-            >
-              <Image src={programme.photoUrl} alt="Programme de la semaine" fill className="object-cover" />
-              <span className="absolute bottom-3 right-3 flex h-10 items-center gap-1.5 rounded-[13px] bg-ink/80 px-3.5 text-[12.5px] font-bold text-white">
-                <Icon name="full" size={18} strokeWidth={2} />
-                Plein écran
-              </span>
-            </Link>
+            <ProgrammeGrid
+              creneaux={programme.creneaux}
+              salleDefaut={programme.salleDefaut}
+            />
+
+            {programme.photoUrl && (
+              <>
+                <div className="mb-2 mt-2 text-[13px] font-bold text-ink-soft">
+                  La photo affichée aux valves
+                </div>
+                <Link
+                  href="/programme/plein"
+                  className="press-scale relative block h-[300px] overflow-hidden rounded-[20px] bg-line-3"
+                >
+                  <Image
+                    src={programme.photoUrl}
+                    alt="Programme de la semaine"
+                    fill
+                    className="object-cover"
+                  />
+                  <span className="absolute bottom-3 right-3 flex h-10 items-center gap-1.5 rounded-[13px] bg-ink/80 px-3.5 text-[12.5px] font-bold text-white">
+                    <Icon name="full" size={18} strokeWidth={2} />
+                    Plein écran
+                  </span>
+                </Link>
+              </>
+            )}
+
+            {programme.creneaux.length === 0 && !programme.photoUrl && (
+              <p className="py-6 text-center text-[14.5px] text-slate-light">
+                Rien d&rsquo;enregistré pour cette semaine.
+              </p>
+            )}
           </div>
+
           <div className="fixed inset-x-0 z-[4] flex gap-2.5 bg-white px-5 pb-[18px] pt-4" style={{ bottom: "calc(76px + var(--safe-bottom))" }}>
             <DownloadButton fileUrl={programme.photoUrl} />
             <ShareSheet>
