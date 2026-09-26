@@ -114,10 +114,19 @@ export async function getSubjectById(id: number) {
 // useful than anything else in the filière, so they're fetched separately
 // and shown first.
 export async function getRelatedSubjects(subjectId: number, matiere: string, filiere: string) {
+  // Scoped to the filière as well as the matière: a course name can exist on
+  // both sides of the campus, and suggesting the English paper to a LEG
+  // student is exactly what the default filter upstream is there to prevent.
   const sameMatiere = await db
     .select()
     .from(subjects)
-    .where(and(ne(subjects.id, subjectId), eq(subjects.matiere, matiere)))
+    .where(
+      and(
+        ne(subjects.id, subjectId),
+        eq(subjects.matiere, matiere),
+        eq(subjects.filiere, filiere)
+      )
+    )
     .orderBy(desc(subjects.annee))
     .limit(6);
 

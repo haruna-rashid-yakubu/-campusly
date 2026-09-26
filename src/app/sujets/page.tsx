@@ -4,7 +4,13 @@ import { auth } from "@/auth";
 import { Icon } from "@/components/icons";
 import { Badge, EmptyState } from "@/components/EmptyState";
 import { SujetsFilterBar } from "@/components/SujetsFilterBar";
-import { getSubjectFacets, getSubjects, getUserSubmissions } from "@/lib/data";
+import {
+  getPreferredClasse,
+  getSubjectFacets,
+  getSubjects,
+  getUserSubmissions,
+} from "@/lib/data";
+import { filiereDeClasse } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Anciens sujets d'examens",
@@ -28,10 +34,20 @@ export default async function SujetsPage({
   }>;
 }) {
   const params = await searchParams;
-  const session = await auth();
+  const [session, classe] = await Promise.all([auth(), getPreferredClasse()]);
+
+  /*
+   * The list opens on the student's own filière. A LEG student searching
+   * "compta" was getting BME papers written in English, which they cannot
+   * read — the two sections do not share a language, let alone a syllabus.
+   * The chip stays visible and clearable, so nothing is hidden: it is a
+   * starting point, not a wall.
+   */
+  const filiereDefaut = filiereDeClasse(classe);
+  const filiere = params.filiere === "toutes" ? undefined : params.filiere || filiereDefaut;
 
   const [subjects, submissions, facets] = await Promise.all([
-    getSubjects(params),
+    getSubjects({ ...params, filiere }),
     session?.user ? getUserSubmissions(session.user.id) : Promise.resolve([]),
     getSubjectFacets(),
   ]);
@@ -66,12 +82,16 @@ export default async function SujetsPage({
             <Icon name="plus" size={20} strokeWidth={2.2} />
           </Link>
         </div>
-        <SujetsFilterBar facets={facets} />
+        <SujetsFilterBar facets={facets} defaults={{ filiere: filiereDefaut }} />
       </div>
 
       <div className="relative px-5 pt-1">
         {subjects.length === 0 ? (
-          <EmptyState icon="doc" title="Aucun sujet ici" body="Personne n'a encore envoyé de sujet pour cette recherche. Tu en as un sur ton téléphone ?">
+          <EmptyState
+            icon="doc"
+            title={filiere ? `Rien en ${filiere} pour l'instant` : "Aucun sujet ici"}
+            body="Personne n'a encore envoyé de sujet pour cette recherche. Tu en as un sur ton téléphone ?"
+          >
             <Link
               href="/sujets/proposer"
               className="press-scale mt-5 inline-flex h-[50px] items-center gap-2 rounded-2xl bg-teal px-5 text-[15px] font-bold text-white"
@@ -79,6 +99,14 @@ export default async function SujetsPage({
               <Icon name="plus" size={20} strokeWidth={2.2} />
               Proposer un sujet
             </Link>
+            {filiere && (
+              <Link
+                href="/sujets?filiere=toutes"
+                className="mt-1.5 block h-11 text-[14.5px] font-bold leading-[44px] text-teal-dark"
+              >
+                Voir les autres filières
+              </Link>
+            )}
             {hasFilters && (
               <Link href="/sujets" className="mt-1.5 block h-11 text-[14.5px] font-bold leading-[44px] text-teal-dark">
                 Effacer les filtres

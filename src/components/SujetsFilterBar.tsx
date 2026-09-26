@@ -15,7 +15,22 @@ const RESET_LABEL: Record<string, string> = {
   enseignant: "Tous",
 };
 
-export function SujetsFilterBar({ facets }: { facets: Record<string, string[]> }) {
+/*
+ * "toutes" rather than an absent parameter, because absent already means
+ * something else here: a facet can arrive with a default (the student's own
+ * filière), so removing the parameter would put the default back instead of
+ * clearing it. The sentinel is what lets someone actually look outside their
+ * own filière.
+ */
+const ALL = "toutes";
+
+export function SujetsFilterBar({
+  facets,
+  defaults,
+}: {
+  facets: Record<string, string[]>;
+  defaults?: Record<string, string>;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -66,14 +81,20 @@ export function SujetsFilterBar({ facets }: { facets: Record<string, string[]> }
           // render a chip that opens an empty picker.
           .filter(([, options]) => options.length > 0)
           .map(([key, options]) => {
-            const current = searchParams.get(key) ?? "";
+            const fallback = defaults?.[key];
+            const raw = searchParams.get(key);
+            const current = raw ?? fallback ?? "";
+            const cleared = raw === ALL;
+            // Clearing a facet that has a default must be written down, not
+            // deleted, or the default silently reapplies on the next render.
+            const resetValue = fallback ? ALL : "";
             return (
               <PickerButton
                 key={key}
                 title={SUBJECT_FILTER_LABELS[key]}
-                value={current}
+                value={cleared ? "" : current}
                 options={[
-                  { label: RESET_LABEL[key], value: "" },
+                  { label: RESET_LABEL[key], value: resetValue },
                   ...options.map((o) => ({ label: o, value: o })),
                 ]}
                 onSelect={(v) =>
@@ -81,8 +102,8 @@ export function SujetsFilterBar({ facets }: { facets: Record<string, string[]> }
                 }
                 trigger={(open) => (
                   <Chip
-                    label={current || SUBJECT_FILTER_LABELS[key]}
-                    active={!!current}
+                    label={cleared || !current ? SUBJECT_FILTER_LABELS[key] : current}
+                    active={!cleared && !!current}
                     onClick={open}
                   />
                 )}

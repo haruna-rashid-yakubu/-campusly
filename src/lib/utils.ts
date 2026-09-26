@@ -21,3 +21,11 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 export function isWithinLastWeek(date: Date): boolean {
   return Date.now() - date.getTime() < WEEK_MS;
 }
+
+/*
+ * "LEG · L2" -> "LEG". The classe label is the only place the filière is
+ * recorded for a person, since the picker offers promos rather than filières.
+ */
+export function filiereDeClasse(classe: string) {
+  return classe.split("·")[0]?.trim() ?? "";
+}
