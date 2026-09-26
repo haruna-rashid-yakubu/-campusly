@@ -41,7 +41,15 @@ export default async function LogementsPage({
 
       <div className="px-5 pt-2.5">
         {cites.length === 0 ? (
-          <EmptyState icon="bed" title="Rien avec ces filtres" body="Élargis la distance ou le budget pour voir plus de cités.">
+          <EmptyState
+            icon="bed"
+            title={hasFilters ? "Rien avec ces filtres" : "Aucune cité référencée"}
+            body={
+              hasFilters
+                ? "Élargis la distance ou le budget pour voir plus de cités."
+                : "On référence les cités une par une, après être passé sur place. Tu en connais une ? Dis-le-nous."
+            }
+          >
             {hasFilters && (
               <Link
                 href="/logements"

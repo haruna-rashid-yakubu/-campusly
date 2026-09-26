@@ -75,7 +75,14 @@ export async function getSubjectFacets() {
   return {
     filiere: uniq(rows.map((r) => r.filiere)).sort((a, b) => a.localeCompare(b, "fr")),
     niveau: uniq(rows.map((r) => r.niveau)).sort((a, b) => a.localeCompare(b, "fr")),
-    annee: uniq(rows.map((r) => r.annee)).sort((a, b) => b.localeCompare(a)),
+    // Years descending, with the papers whose year could not be read pushed
+    // to the end rather than sorted in as if "Année inconnue" were a date.
+    annee: uniq(rows.map((r) => r.annee)).sort((a, b) => {
+      const na = Number(a);
+      const nb = Number(b);
+      if (Number.isNaN(na) !== Number.isNaN(nb)) return Number.isNaN(na) ? 1 : -1;
+      return Number.isNaN(na) ? a.localeCompare(b, "fr") : nb - na;
+    }),
     type: subjectTypeEnum.filter((t) => rows.some((r) => r.type === t)),
     // enseignant is nullable — most older papers have no name on them yet.
     enseignant: uniq(rows.map((r) => r.enseignant).filter((e): e is string => Boolean(e))).sort(
@@ -100,7 +107,9 @@ export async function getProposerFacets() {
     filiere: uniq(rows.map((r) => r.filiere)),
     niveau: uniq(rows.map((r) => r.niveau)),
     matiere: [...uniq(rows.map((r) => r.matiere)), "Autre matière"],
-    annee: Array.from({ length: 6 }, (_, i) => String(thisYear - i)),
+    // The escape hatch matters: an undated photocopy is still worth sending,
+    // and a student forced to pick a year will pick a wrong one.
+    annee: [...Array.from({ length: 6 }, (_, i) => String(thisYear - i)), "Année inconnue"],
     type: [...subjectTypeEnum],
   };
 }

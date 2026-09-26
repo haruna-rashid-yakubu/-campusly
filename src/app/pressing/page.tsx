@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Icon } from "@/components/icons";
-import { Badge } from "@/components/EmptyState";
+import { Badge, EmptyState } from "@/components/EmptyState";
 import { getPressings } from "@/lib/data";
 import { fcfa } from "@/lib/utils";
 
@@ -25,6 +25,16 @@ export default async function PressingPage() {
       </div>
 
       <div className="px-5 pt-2">
+        {/* Nothing listed is a shelf still being built, not a broken page. The
+            demo entries that used to sit here carried invented phone numbers,
+            and a student who calls one of those does not come back. */}
+        {pressings.length === 0 && (
+          <EmptyState
+            icon="shirt"
+            title="Aucun pressing référencé"
+            body="On ajoute les pressings un par un, avec leurs vrais tarifs. Tu en connais un près du campus ?"
+          />
+        )}
         {pressings.map((p) => (
           <div key={p.id} className="mb-3.5 rounded-[22px] border border-line p-4">
             <div className="flex items-start justify-between gap-2.5">
