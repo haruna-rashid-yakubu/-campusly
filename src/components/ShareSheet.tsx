@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { Sheet } from "@/components/Sheet";
 import { useToast } from "@/components/Toast";
-
-const APP_URL = "https://campusly.app";
+import { APP_DOMAIN, APP_URL } from "@/lib/constants";
 
 export function ShareSheet({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -57,7 +56,7 @@ export function ShareSheet({ children }: { children: React.ReactNode }) {
         open={open}
         onClose={() => setOpen(false)}
         title="Partager Campusly"
-        subtitle="campusly.app — ton campus dans une appli."
+        subtitle={`${APP_DOMAIN} — ton campus dans une appli.`}
       >
         {options.map((o) => (
           <button

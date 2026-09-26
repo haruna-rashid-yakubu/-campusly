@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getSubjects, getCitesWithAvailability } from "@/lib/data";
-
-const SITE_URL = "https://campusly-ucac.vercel.app";
+import { APP_URL as SITE_URL } from "@/lib/constants";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [subjects, cites] = await Promise.all([getSubjects(), getCitesWithAvailability()]);

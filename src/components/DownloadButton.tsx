@@ -5,11 +5,11 @@ import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
 import { Sheet } from "@/components/Sheet";
 import { downloadFile } from "@/lib/download";
+import { APP_URL } from "@/lib/constants";
 
 const FREE_DOWNLOADS = 3;
 const COUNT_KEY = "campusly:downloads";
 const SHARED_KEY = "campusly:shared";
-const APP_URL = "https://campusly.app";
 
 function getCount() {
   if (typeof window === "undefined") return 0;

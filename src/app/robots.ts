@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { APP_URL } from "@/lib/constants";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -7,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/admin", "/sujets/proposer", "/sujets/mes-envois", "/notifications"],
     },
-    sitemap: "https://campusly-ucac.vercel.app/sitemap.xml",
+    sitemap: `${APP_URL}/sitemap.xml`,
   };
 }

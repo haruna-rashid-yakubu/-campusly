@@ -8,6 +8,7 @@ import { LoginPromptSheet } from "@/components/LoginPromptSheet";
 import { OfflineOverlay } from "@/components/OfflineOverlay";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { TabBarGate } from "@/components/TabBarGate";
+import { APP_URL } from "@/lib/constants";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -15,12 +16,11 @@ const manrope = Manrope({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-const SITE_URL = "https://campusly-ucac.vercel.app";
 const SITE_DESCRIPTION =
   "Campusly — l'appli étudiante de l'UCAC Nkolbisson : anciens sujets d'examens, logements vérifiés autour du campus, pressings partenaires et programme de la semaine.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  metadataBase: new URL(APP_URL),
   title: {
     default: "Campusly — Your campus. One app.",
     template: "%s · Campusly",
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "fr_FR",
-    url: SITE_URL,
+    url: APP_URL,
     siteName: "Campusly",
     title: "Campusly — Your campus. One app.",
     description: SITE_DESCRIPTION,

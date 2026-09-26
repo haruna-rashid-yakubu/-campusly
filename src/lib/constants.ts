@@ -29,3 +29,14 @@ export const CITE_PRICE_OPTIONS = [
   { label: "≤ 40 000 FCFA", value: "40000" },
   { label: "Peu importe", value: "" },
 ];
+
+/*
+ * The one place the app's public address lives. It used to be hardcoded as
+ * "campusly.app" in the three share/install screens — a domain that was never
+ * bought and answers with an Apache "Forbidden", so every link a student
+ * shared led nowhere. Reading it from the environment means the day a real
+ * domain is bought (or the app is renamed), it's one Vercel setting and not a
+ * hunt through components.
+ */
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://campusly-ucac.vercel.app";
+export const APP_DOMAIN = APP_URL.replace(/^https?:\/\//, "");

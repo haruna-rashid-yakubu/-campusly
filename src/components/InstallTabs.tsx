@@ -5,6 +5,7 @@ import { Icon } from "@/components/icons";
 import { InstallButton } from "@/components/InstallButton";
 import { CopyLinkButton } from "@/components/CopyLinkButton";
 import type { InstallTab } from "@/lib/ua";
+import { APP_DOMAIN } from "@/lib/constants";
 
 const TABS: { id: InstallTab; label: string }[] = [
   { id: "Android", label: "Android" },
@@ -19,7 +20,7 @@ const ANDROID_STEPS = [
 ];
 
 const IPHONE_STEPS = [
-  { n: "1", texte: "Ouvre campusly.app dans Safari.", visuel: "campusly.app", align: "flex-start" },
+  { n: "1", texte: `Ouvre ${APP_DOMAIN} dans Safari.`, visuel: APP_DOMAIN, align: "flex-start" },
   { n: "2", texte: "Touche le bouton Partager, en bas de l'écran.", visuel: "⬆︎", align: "center" },
   { n: "3", texte: "Choisis « Sur l'écran d'accueil », puis Ajouter.", visuel: "Sur l'écran d'accueil", align: "flex-start" },
 ];
@@ -58,7 +59,7 @@ export function InstallTabs({ defaultTab }: { defaultTab: InstallTab }) {
               Tu es dans une appli qui ne sait pas installer les applications. Copie le lien, ouvre Safari
               et colle-le.
             </p>
-            <CopyLinkButton url="campusly.app/installer" />
+            <CopyLinkButton url={`${APP_DOMAIN}/installer`} />
           </div>
           <div className="mb-3 mt-6 text-base font-extrabold">Puis, dans Safari</div>
         </>
