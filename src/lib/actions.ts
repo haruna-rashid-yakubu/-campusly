@@ -11,11 +11,13 @@ import {
   subjects,
   programmePublications,
   pushSubscriptions,
+  subjectTypeEnum,
+  users,
 } from "@/db/schema";
 import { deleteFile, uploadFile } from "@/lib/blob";
 import { ensureClassesForFiliere, getClasseByLabel } from "@/lib/data";
 import { BANNER_COOKIE, CLASSE_COOKIE } from "@/lib/constants";
-import { sendPushToAdmins, sendPushToAll, sendPushToUser } from "@/lib/push";
+import { sendPushToAdmins, sendPushToClasse, sendPushToUser } from "@/lib/push";
 
 async function requireUser() {
   const session = await auth();
@@ -42,6 +44,24 @@ export async function appSignOut() {
 export async function setClasse(label: string) {
   const store = await cookies();
   store.set(CLASSE_COOKIE, label, { path: "/", maxAge: 60 * 60 * 24 * 365 });
+
+  // The cookie alone is unreadable from a cron job, so the choice is mirrored
+  // onto the account. Signed-out visitors keep only the cookie until they
+  // sign in, at which point their next pick fills this in.
+  const session = await auth();
+  if (session?.user?.id) {
+    const classe = await getClasseByLabel(label);
+    if (classe) {
+      await db.update(users).set({ classeId: classe.id }).where(eq(users.id, session.user.id));
+      // Their devices carry a stamp from whenever they enabled notifications;
+      // left behind, it would still describe the promo they just left.
+      await db
+        .update(pushSubscriptions)
+        .set({ classeId: classe.id })
+        .where(eq(pushSubscriptions.userId, session.user.id));
+    }
+  }
+
   revalidatePath("/");
   revalidatePath("/programme");
   revalidatePath("/admin");
@@ -53,7 +73,10 @@ export async function dismissInstallBanner() {
   revalidatePath("/");
 }
 
-const SUBJECT_TYPES = ["Partiel", "Examen", "Rattrapage"] as const;
+// Taken from the schema rather than retyped: this list had drifted and was
+// missing "TD", so an admin could neither publish nor edit a TD even though
+// TDs are in the bank and the picker offered the type.
+const SUBJECT_TYPES = subjectTypeEnum;
 
 export async function proposeSubject(formData: FormData) {
   const user = await requireUser();
@@ -296,9 +319,12 @@ export async function publishProgramme(classeLabel: string, weekLabel: string, f
   revalidatePath("/admin");
   revalidatePath("/programme");
 
-  await sendPushToAll({
-    title: "Nouveau programme publié",
-    body: `${classeLabel} — ${weekLabel}`,
+  // Only the promo concerned. Sent to everyone, this was four notifications a
+  // week about other people's timetables — the fastest way to get the app's
+  // notifications switched off altogether.
+  await sendPushToClasse(classe.id, {
+    title: `Programme de la semaine — ${classeLabel}`,
+    body: weekLabel,
     url: "/programme",
   });
 }
@@ -309,10 +335,19 @@ export async function subscribePush(subscription: {
 }) {
   const session = await auth();
 
+  // Stamped with the promo showing on this device at the moment notifications
+  // were turned on. Without it, a subscription with no account behind it is
+  // unreachable by anything promo-specific.
+  const store = await cookies();
+  const label = store.get(CLASSE_COOKIE)?.value;
+  const classe = label ? await getClasseByLabel(label) : undefined;
+  const classeId = classe?.id ?? null;
+
   await db
     .insert(pushSubscriptions)
     .values({
       userId: session?.user?.id ?? null,
+      classeId,
       endpoint: subscription.endpoint,
       p256dh: subscription.keys.p256dh,
       auth: subscription.keys.auth,
@@ -321,6 +356,7 @@ export async function subscribePush(subscription: {
       target: pushSubscriptions.endpoint,
       set: {
         userId: session?.user?.id ?? null,
+        classeId,
         p256dh: subscription.keys.p256dh,
         auth: subscription.keys.auth,
       },

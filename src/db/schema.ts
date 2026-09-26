@@ -23,6 +23,10 @@ export const users = pgTable("user", {
   role: text("role", { enum: ["etudiant", "admin"] })
     .notNull()
     .default("etudiant"),
+  // The promo the student picked. It used to live only in a cookie, which the
+  // server cannot read when it wakes up at 20h to send tomorrow's schedule —
+  // it would see nothing but anonymous rows.
+  classeId: integer("classe_id").references(() => classes.id, { onDelete: "set null" }),
 });
 
 export const accounts = pgTable(
@@ -162,6 +166,10 @@ export const pressingTarifs = pgTable("pressing_tarif", {
 export const pushSubscriptions = pgTable("push_subscription", {
   id: serial("id").primaryKey(),
   userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  // Carried on the subscription as well as the user: user_id is nullable, so
+  // someone who turned notifications on without ever signing in still has to
+  // receive their own promo's programme and nobody else's.
+  classeId: integer("classe_id").references(() => classes.id, { onDelete: "set null" }),
   endpoint: text("endpoint").notNull().unique(),
   p256dh: text("p256dh").notNull(),
   auth: text("auth").notNull(),

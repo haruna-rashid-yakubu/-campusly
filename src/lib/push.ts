@@ -1,7 +1,7 @@
 import webpush from "web-push";
 import { db } from "@/db";
 import { pushSubscriptions, users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 let configured = false;
 
@@ -50,6 +50,31 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
     .select()
     .from(pushSubscriptions)
     .where(eq(pushSubscriptions.userId, userId));
+  await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
+}
+
+/*
+ * Everyone in one promo. A device qualifies through the account it is signed
+ * into, or failing that through the classe stamped on the subscription —
+ * notifications can be turned on without ever signing in, and matching only
+ * on the account would silently drop those people.
+ */
+export async function sendPushToClasse(classeId: number, payload: PushPayload) {
+  if (!ensureConfigured()) return;
+  const subs = await db
+    .select({
+      endpoint: pushSubscriptions.endpoint,
+      p256dh: pushSubscriptions.p256dh,
+      auth: pushSubscriptions.auth,
+    })
+    .from(pushSubscriptions)
+    .leftJoin(users, eq(users.id, pushSubscriptions.userId))
+    // The account wins when there is one: it follows the person across their
+    // devices, while the stamp on the subscription can only ever describe the
+    // device at the moment notifications were switched on. Falling back to it
+    // is what keeps account-less devices reachable.
+    .where(sql`coalesce(${users.classeId}, ${pushSubscriptions.classeId}) = ${classeId}`);
+
   await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
 }
 
