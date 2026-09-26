@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
-import { subscribePush, unsubscribePush } from "@/lib/actions";
+import { getPushPrefs, setPushPrefs, subscribePush, unsubscribePush } from "@/lib/actions";
 
 const SUBSCRIBED_KEY = "campusly:notif-subscribed";
 
@@ -31,15 +31,63 @@ function readStatus(): Status {
   return "default";
 }
 
+type Prefs = { programme: boolean; rappel: boolean };
+
+const PREF_ROWS: { key: keyof Prefs; titre: string; detail: string }[] = [
+  {
+    key: "programme",
+    titre: "Programme de la semaine",
+    detail: "Quand le programme de ta promo est publié.",
+  },
+  {
+    key: "rappel",
+    titre: "Rappel du soir",
+    detail: "Chaque soir à 20h, tes cours du lendemain et les CC qui approchent.",
+  },
+];
+
 export function NotificationControls() {
   const { show } = useToast();
   const [status, setStatus] = useState<Status>("unsupported");
   const [busy, setBusy] = useState(false);
+  const [prefs, setPrefs] = useState<Prefs | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setStatus(readStatus());
   }, []);
+
+  // The preferences live on the subscription, so they can only be read once
+  // the browser hands over the endpoint that identifies this device.
+  useEffect(() => {
+    if (status !== "active") return;
+    let cancelled = false;
+    navigator.serviceWorker.ready
+      .then((r) => r.pushManager.getSubscription())
+      .then(async (sub) => {
+        if (!sub || cancelled) return;
+        const loaded = await getPushPrefs(sub.endpoint);
+        if (!cancelled) setPrefs(loaded);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [status]);
+
+  const togglePref = async (key: keyof Prefs) => {
+    if (!prefs) return;
+    const next = { ...prefs, [key]: !prefs[key] };
+    setPrefs(next);
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) await setPushPrefs(subscription.endpoint, { [key]: next[key] });
+    } catch {
+      setPrefs(prefs);
+      show("Réglage non enregistré", "warn");
+    }
+  };
 
   const enable = async () => {
     setBusy(true);
@@ -115,13 +163,43 @@ export function NotificationControls() {
           Activer
         </button>
       )}
+      {status === "active" && prefs && (
+        <div className="mt-3.5 border-t border-line-3 pt-1">
+          {PREF_ROWS.map((row) => (
+            <button
+              key={row.key}
+              onClick={() => togglePref(row.key)}
+              className="flex w-full items-start gap-3 border-0 border-b border-line-3 bg-transparent py-3 text-left last:border-b-0"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block text-[14.5px] font-bold">{row.titre}</span>
+                <span className="mt-0.5 block text-[12.5px] leading-snug text-slate-light">
+                  {row.detail}
+                </span>
+              </span>
+              {/* A switch rather than a checkbox: it is the only control on
+                  this card that changes something the person will feel. */}
+              <span
+                aria-hidden
+                className="mt-0.5 flex h-[26px] w-[44px] flex-none items-center rounded-full p-[3px] transition-colors"
+                style={{ backgroundColor: prefs[row.key] ? "#14B8AC" : "#E2E8F0" }}
+              >
+                <span
+                  className="h-5 w-5 rounded-full bg-white transition-transform"
+                  style={{ transform: prefs[row.key] ? "translateX(18px)" : "none" }}
+                />
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
       {status === "active" && (
         <button
           onClick={disable}
           disabled={busy}
           className="press-scale mt-3.5 flex h-[46px] w-full items-center justify-center rounded-[13px] border-[1.5px] border-line-4 bg-white text-[14.5px] font-bold text-ink active:bg-surface-3 disabled:opacity-60"
         >
-          Désactiver
+          Tout désactiver
         </button>
       )}
     </div>

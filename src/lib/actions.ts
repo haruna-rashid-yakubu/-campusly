@@ -400,7 +400,7 @@ export async function saveProgramme(formData: FormData) {
       title: `Programme de la semaine — ${classeLabel}`,
       body: weekLabel,
       url: "/programme",
-    });
+    }, "programme");
   }
 }
 
@@ -436,6 +436,35 @@ export async function subscribePush(subscription: {
         auth: subscription.keys.auth,
       },
     });
+}
+
+/*
+ * Written against the endpoint rather than the account, because the
+ * preferences belong to the device: the endpoint is the only identifier a
+ * signed-out browser has, and it is already unique.
+ */
+export async function setPushPrefs(
+  endpoint: string,
+  prefs: { programme?: boolean; rappel?: boolean }
+) {
+  await db
+    .update(pushSubscriptions)
+    .set({
+      ...(prefs.programme === undefined ? {} : { prefProgramme: prefs.programme }),
+      ...(prefs.rappel === undefined ? {} : { prefRappel: prefs.rappel }),
+    })
+    .where(eq(pushSubscriptions.endpoint, endpoint));
+}
+
+export async function getPushPrefs(endpoint: string) {
+  const [row] = await db
+    .select({
+      programme: pushSubscriptions.prefProgramme,
+      rappel: pushSubscriptions.prefRappel,
+    })
+    .from(pushSubscriptions)
+    .where(eq(pushSubscriptions.endpoint, endpoint));
+  return row ?? { programme: true, rappel: true };
 }
 
 export async function unsubscribePush(endpoint: string) {

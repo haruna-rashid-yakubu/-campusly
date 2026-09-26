@@ -127,7 +127,7 @@ export async function envoyerRappelsDuSoir(now = new Date()) {
       title: `Demain ${jourLabel(jour)} — ${classe.label}`,
       body: messageDuSoir(programme.creneaux, jour, programme.salleDefaut),
       url: "/programme",
-    });
+    }, "rappel");
     envoyes += 1;
   }
 

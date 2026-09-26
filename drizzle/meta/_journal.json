@@ -43,6 +43,13 @@
       "when": 1790436096857,
       "tag": "0005_slimy_betty_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790448640622,
+      "tag": "0006_nifty_lilith",
+      "breakpoints": true
     }
   ]
 }

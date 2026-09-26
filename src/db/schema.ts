@@ -172,6 +172,16 @@ export const pushSubscriptions = pgTable("push_subscription", {
   // someone who turned notifications on without ever signing in still has to
   // receive their own promo's programme and nobody else's.
   classeId: integer("classe_id").references(() => classes.id, { onDelete: "set null" }),
+  /*
+   * Per device, not per account: this is the thing that actually buzzes, and
+   * someone may want the evening reminder on their phone and nothing on the
+   * tablet. Both default to on — the person just asked for notifications.
+   *
+   * Only the promo-wide alerts are listed. "Ton sujet a été publié" answers
+   * something the student did themselves and is not noise to be filtered.
+   */
+  prefProgramme: boolean("pref_programme").notNull().default(true),
+  prefRappel: boolean("pref_rappel").notNull().default(true),
   endpoint: text("endpoint").notNull().unique(),
   p256dh: text("p256dh").notNull(),
   auth: text("auth").notNull(),

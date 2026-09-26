@@ -1,7 +1,7 @@
 import webpush from "web-push";
 import { db } from "@/db";
 import { pushSubscriptions, users } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 let configured = false;
 
@@ -59,8 +59,16 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
  * notifications can be turned on without ever signing in, and matching only
  * on the account would silently drop those people.
  */
-export async function sendPushToClasse(classeId: number, payload: PushPayload) {
+export type PushKind = "programme" | "rappel";
+
+export async function sendPushToClasse(
+  classeId: number,
+  payload: PushPayload,
+  kind: PushKind
+) {
   if (!ensureConfigured()) return;
+  const pref =
+    kind === "programme" ? pushSubscriptions.prefProgramme : pushSubscriptions.prefRappel;
   const subs = await db
     .select({
       endpoint: pushSubscriptions.endpoint,
@@ -73,7 +81,12 @@ export async function sendPushToClasse(classeId: number, payload: PushPayload) {
     // devices, while the stamp on the subscription can only ever describe the
     // device at the moment notifications were switched on. Falling back to it
     // is what keeps account-less devices reachable.
-    .where(sql`coalesce(${users.classeId}, ${pushSubscriptions.classeId}) = ${classeId}`);
+    .where(
+      and(
+        sql`coalesce(${users.classeId}, ${pushSubscriptions.classeId}) = ${classeId}`,
+        eq(pref, true)
+      )
+    );
 
   await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
 }

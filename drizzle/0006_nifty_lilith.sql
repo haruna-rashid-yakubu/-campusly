@@ -1,0 +1,2 @@
+ALTER TABLE "push_subscription" ADD COLUMN "pref_programme" boolean DEFAULT true NOT NULL;--> statement-breakpoint
+ALTER TABLE "push_subscription" ADD COLUMN "pref_rappel" boolean DEFAULT true NOT NULL;
