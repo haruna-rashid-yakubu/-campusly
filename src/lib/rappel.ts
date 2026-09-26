@@ -24,13 +24,21 @@ export function nowInWAT(now = new Date()) {
  * notification uses. ICT and Info are family tags rather than abbreviations,
  * though: "Algorithmics and Programming (ICT)" must not become "ICT".
  */
-const FAMILY_TAGS = new Set(["ICT", "INFO"]);
 const MAX_PUSH_LABEL = 34;
 
+/*
+ * Only an acronym counts: uppercase letters and digits, two to ten of them.
+ * Trailing parentheses are used for other things in the bank — "Regional
+ * economic integration (sujet B)", "Démographie (sujet A)" — and a
+ * notification announcing "sujet B" would name no subject at all. The family
+ * tags ICT and Info sit at the front of a title, not the end, so they never
+ * reach here.
+ */
+const ACRONYM = /\(([A-Z0-9][A-Z0-9.&-]{1,9})\)\s*$/;
+
 export function matiereCourte(matiere: string) {
-  const match = matiere.match(/\(([^)]{2,12})\)\s*$/);
-  const tag = match?.[1]?.trim();
-  if (tag && !FAMILY_TAGS.has(tag.toUpperCase())) return tag;
+  const tag = matiere.match(ACRONYM)?.[1]?.trim();
+  if (tag) return tag;
 
   const full = matiere.trim();
   if (full.length <= MAX_PUSH_LABEL) return full;
