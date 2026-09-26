@@ -2,9 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
-import { auth } from "@/auth";
 import { ToastProvider } from "@/components/Toast";
-import { LoginPromptSheet } from "@/components/LoginPromptSheet";
 import { OfflineOverlay } from "@/components/OfflineOverlay";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { TabBarGate } from "@/components/TabBarGate";
@@ -70,9 +68,10 @@ export const viewport: Viewport = {
   themeColor: "#14B8AC",
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-
+// No auth() here any more: nothing in the shell depends on the session now
+// that the login sheet is gone, and calling it opted every page into a
+// database round-trip before the first byte.
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" className={`${manrope.variable} h-full`}>
       <body className="h-full font-sans antialiased">
@@ -80,7 +79,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
           <TabBarGate />
           <OfflineOverlay />
-          <LoginPromptSheet signedIn={!!session?.user} />
         </ToastProvider>
         <ServiceWorkerRegister />
         <SpeedInsights />

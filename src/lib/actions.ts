@@ -13,7 +13,7 @@ import {
   pushSubscriptions,
 } from "@/db/schema";
 import { deleteFile, uploadFile } from "@/lib/blob";
-import { getClasseByLabel } from "@/lib/data";
+import { ensureClassesForFiliere, getClasseByLabel } from "@/lib/data";
 import { BANNER_COOKIE, CLASSE_COOKIE } from "@/lib/constants";
 import { sendPushToAdmins, sendPushToAll, sendPushToUser } from "@/lib/push";
 
@@ -156,6 +156,11 @@ export async function moderateSubject(
       })
       .returning();
 
+    // Publishing into a filière nobody has published into yet also opens that
+    // promo, otherwise its students have no classe to select and never see
+    // the paper that was just put online for them.
+    await ensureClassesForFiliere(published.filiere, published.niveau);
+
     await db
       .update(subjectSubmissions)
       .set({ status: "publie", reviewedAt: new Date(), publishedSubjectId: published.id })
@@ -215,6 +220,10 @@ export async function updateSubject(subjectId: number, edits: SubjectEdits) {
       enseignant: enseignant ? enseignant : null,
     })
     .where(eq(subjects.id, subjectId));
+
+  // Retyping the filière on an existing paper is the other way a new one
+  // appears, so the promo has to be opened here too.
+  await ensureClassesForFiliere(filiere, niveau);
 
   revalidatePath("/admin");
   revalidatePath("/sujets");

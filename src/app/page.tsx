@@ -5,6 +5,7 @@ import { Icon } from "@/components/icons";
 import { ClasseSwitcher } from "@/components/ClasseSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ShareSheet } from "@/components/ShareSheet";
+import { SignInButton } from "@/components/SignInButton";
 import { SignOutButton } from "@/components/SignOutButton";
 import {
   getClasseByLabel,
@@ -70,7 +71,7 @@ export default async function AccueilPage() {
             <div className="text-[26px] font-extrabold leading-tight tracking-tight">
               {firstName ? `Salut ${firstName},` : "Salut,"}
             </div>
-            {session?.user && <SignOutButton />}
+            {session?.user ? <SignOutButton /> : <SignInButton />}
           </div>
           <ClasseSwitcher value={classe} classes={classesRows.map((c) => c.label)} />
         </div>

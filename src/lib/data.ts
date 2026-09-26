@@ -206,6 +206,32 @@ export async function getPressings() {
   });
 }
 
+// The three years of a licence. A niveau outside this list — "Terminale" on
+// the Concours d'entrée papers — is not a promo: it has no weekly programme,
+// so turning it into a classe would only add a row the Programme tab nags
+// about forever.
+const LICENCE_LEVELS = ["L1", "L2", "L3"] as const;
+
+/*
+ * A filière with no classe row is invisible: its students cannot pick their
+ * promo, so they never reach their own papers or their programme. LEG sat in
+ * exactly that state with 26 papers published and no way to select it.
+ *
+ * Publishing a paper is therefore what brings a promo into existence, and for
+ * a licence all three years are created at once — an L3 student has to be
+ * able to pick L3 before anyone has sent a single L3 paper.
+ */
+export async function ensureClassesForFiliere(filiere: string, niveau: string) {
+  const name = filiere.trim();
+  if (!name) return;
+  if (!LICENCE_LEVELS.includes(niveau.trim() as (typeof LICENCE_LEVELS)[number])) return;
+
+  await db
+    .insert(classes)
+    .values(LICENCE_LEVELS.map((level) => ({ label: `${name} · ${level}` })))
+    .onConflictDoNothing();
+}
+
 export async function getClasses() {
   return db.select().from(classes).orderBy(classes.id);
 }
