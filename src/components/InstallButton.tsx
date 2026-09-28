@@ -29,7 +29,7 @@ export function InstallButton() {
       onClick={async () => {
         await deferred.prompt();
         const choice = await deferred.userChoice;
-        if (choice.outcome === "accepted") show("Campusly ajoutée à ton écran d'accueil");
+        if (choice.outcome === "accepted") show("Nota ajoutée à ton écran d'accueil");
         setDeferred(null);
       }}
       className="press-scale mt-4 flex h-[54px] w-full items-center justify-center gap-2.5 rounded-2xl bg-teal text-[15.5px] font-bold text-white active:bg-teal-press"

@@ -15,13 +15,13 @@ const manrope = Manrope({
 });
 
 const SITE_DESCRIPTION =
-  "Campusly — l'appli étudiante de l'UCAC Nkolbisson : anciens sujets d'examens, logements vérifiés autour du campus, pressings partenaires et programme de la semaine.";
+  "Nota — l'appli étudiante de l'UCAC Nkolbisson : anciens sujets d'examens, logements vérifiés autour du campus, pressings partenaires et programme de la semaine.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Campusly — Your campus. One app.",
-    template: "%s · Campusly",
+    default: "Nota — ton campus dans une appli",
+    template: "%s · Nota",
   },
   description: SITE_DESCRIPTION,
   keywords: [
@@ -37,19 +37,19 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Campusly",
+    title: "Nota",
   },
   openGraph: {
     type: "website",
     locale: "fr_FR",
     url: APP_URL,
-    siteName: "Campusly",
-    title: "Campusly — Your campus. One app.",
+    siteName: "Nota",
+    title: "Nota — ton campus dans une appli",
     description: SITE_DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Campusly — Your campus. One app.",
+    title: "Nota — ton campus dans une appli",
     description: SITE_DESCRIPTION,
   },
   robots: {

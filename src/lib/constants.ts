@@ -1,3 +1,9 @@
+/*
+ * These keys keep the old name on purpose. They are written on the student's
+ * phone, not shown to them: renaming them would log every existing user out
+ * of their promo and reset their download count, to change a string nobody
+ * ever sees.
+ */
 export const CLASSE_COOKIE = "campusly_classe";
 export const DEFAULT_CLASSE = "BME · L2";
 export const BANNER_COOKIE = "campusly_banner_dismissed";

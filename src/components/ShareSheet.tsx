@@ -14,7 +14,7 @@ export function ShareSheet({ children }: { children: React.ReactNode }) {
       label: "WhatsApp",
       run: () => {
         window.open(
-          `https://wa.me/?text=${encodeURIComponent("Campusly — ton campus dans une appli : " + APP_URL)}`,
+          `https://wa.me/?text=${encodeURIComponent("Nota — ton campus dans une appli : " + APP_URL)}`,
           "_blank",
           "noopener,noreferrer"
         );
@@ -36,7 +36,7 @@ export function ShareSheet({ children }: { children: React.ReactNode }) {
       run: async () => {
         if (navigator.share) {
           try {
-            await navigator.share({ title: "Campusly", url: APP_URL });
+            await navigator.share({ title: "Nota", url: APP_URL });
           } catch {
             /* cancelled */
           }
@@ -55,7 +55,7 @@ export function ShareSheet({ children }: { children: React.ReactNode }) {
       <Sheet
         open={open}
         onClose={() => setOpen(false)}
-        title="Partager Campusly"
+        title="Partager Nota"
         subtitle={`${APP_DOMAIN} — ton campus dans une appli.`}
       >
         {options.map((o) => (

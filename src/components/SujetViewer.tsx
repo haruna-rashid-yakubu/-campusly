@@ -85,7 +85,7 @@ export function SujetViewer({
           label={mode === "correction" ? "Télécharger le corrigé" : "Télécharger"}
         />
         <WhatsAppShareButton
-          text={`Regarde ce sujet sur Campusly : ${matiere} (${filiere} · ${niveau})`}
+          text={`Regarde ce sujet sur Nota : ${matiere} (${filiere} · ${niveau})`}
           aria-label="Partager sur WhatsApp"
           className="press-scale grid h-[54px] w-[54px] flex-none place-items-center rounded-2xl border-[1.5px] border-line-4 bg-white active:bg-teal-tint-soft"
         >

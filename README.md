@@ -1,4 +1,4 @@
-# Campusly
+# Nota
 
 Student super-app for UCAC Nkolbisson — anciens sujets, logements, pressing, and the weekly
 programme, built as an installable PWA.

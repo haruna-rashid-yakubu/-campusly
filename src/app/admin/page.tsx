@@ -47,7 +47,7 @@ export default async function AdminPage({
     return (
       <div className="min-h-dvh">
         <BackHeader title="Administration" fallbackHref="/" border />
-        <EmptyState icon="lock" title="Réservé à l'équipe Campusly" body="Ton compte n'a pas les droits d'administration." />
+        <EmptyState icon="lock" title="Réservé à l'équipe Nota" body="Ton compte n'a pas les droits d'administration." />
       </div>
     );
   }

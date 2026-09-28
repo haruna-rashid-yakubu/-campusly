@@ -33,7 +33,7 @@ export default function OpengraphImage() {
           />
           <path d="M32 12.4 19 17.5 32 22.6l13-5.1z" fill="#0A7F77" />
         </svg>
-        <div style={{ marginTop: 28, fontSize: 72, fontWeight: 800, color: "#fff" }}>Campusly</div>
+        <div style={{ marginTop: 28, fontSize: 72, fontWeight: 800, color: "#fff" }}>Nota</div>
         <div style={{ marginTop: 10, fontSize: 30, color: "#CFF3EF" }}>Your campus. One app.</div>
       </div>
     ),

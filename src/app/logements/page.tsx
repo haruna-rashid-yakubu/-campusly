@@ -77,7 +77,7 @@ export default async function LogementsPage({
                   {c.verified && (
                     <span className="absolute left-3 top-3 flex h-7 items-center gap-1.5 rounded-[9px] bg-white px-2.5 text-[11.5px] font-extrabold text-teal-dark">
                       <Icon name="shield" size={14} strokeWidth={1.9} />
-                      Vérifié par Campusly
+                      Vérifié par Nota
                     </span>
                   )}
                   <span
@@ -111,7 +111,7 @@ export default async function LogementsPage({
               </Link>
             ))}
             <div className="pb-2.5 pt-1 text-center text-[12.5px] text-slate-light">
-              Annonces ajoutées et vérifiées par l&rsquo;équipe Campusly
+              Annonces ajoutées et vérifiées par l&rsquo;équipe Nota
             </div>
           </>
         )}

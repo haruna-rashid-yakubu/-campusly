@@ -1,5 +1,6 @@
 import webpush from "web-push";
 import { db } from "@/db";
+import { APP_URL } from "@/lib/constants";
 import { pushSubscriptions, users } from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
@@ -11,7 +12,10 @@ function ensureConfigured() {
   const privateKey = process.env.VAPID_PRIVATE_KEY;
   if (!publicKey || !privateKey) return false;
   webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT ?? "mailto:contact@campusly.app",
+    // The push services want a way to reach whoever operates the app. It used
+    // to be an address at a domain that was never owned; the site itself is
+    // both valid here and true.
+    process.env.VAPID_SUBJECT ?? APP_URL,
     publicKey,
     privateKey
   );

@@ -29,7 +29,7 @@ export default async function ReviewSubmissionPage({
         <BackHeader title="Relire un envoi" fallbackHref="/" border />
         <EmptyState
           icon="lock"
-          title="Réservé à l'équipe Campusly"
+          title="Réservé à l'équipe Nota"
           body="Ton compte n'a pas les droits d'administration."
         />
       </div>

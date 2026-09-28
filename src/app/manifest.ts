@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Campusly — Your campus. One app.",
-    short_name: "Campusly",
+    name: "Nota — ton campus dans une appli",
+    short_name: "Nota",
     description: "L'appli étudiante de l'UCAC Nkolbisson : sujets, logements, pressing, programme.",
     start_url: "/",
     scope: "/",

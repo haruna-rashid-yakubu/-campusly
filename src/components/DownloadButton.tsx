@@ -8,6 +8,7 @@ import { downloadFile } from "@/lib/download";
 import { APP_URL } from "@/lib/constants";
 
 const FREE_DOWNLOADS = 3;
+// Old key names, kept deliberately — see the note in lib/constants.
 const COUNT_KEY = "campusly:downloads";
 const SHARED_KEY = "campusly:shared";
 
@@ -70,13 +71,13 @@ export function DownloadButton({
 
   const handleShare = () => {
     window.open(
-      `https://wa.me/?text=${encodeURIComponent("Campusly — ton campus dans une appli : " + APP_URL)}`,
+      `https://wa.me/?text=${encodeURIComponent("Nota — ton campus dans une appli : " + APP_URL)}`,
       "_blank",
       "noopener,noreferrer"
     );
     window.localStorage.setItem(SHARED_KEY, "1");
     setGateOpen(false);
-    show("Merci d'avoir partagé Campusly ! Retélécharge pour continuer.");
+    show("Merci d'avoir partagé Nota ! Retélécharge pour continuer.");
   };
 
   return (
@@ -94,14 +95,14 @@ export function DownloadButton({
         open={gateOpen}
         onClose={() => setGateOpen(false)}
         title="Continue à télécharger"
-        subtitle="Tu as atteint la limite de téléchargements gratuits. Partage Campusly avec tes camarades pour débloquer les téléchargements illimités."
+        subtitle="Tu as atteint la limite de téléchargements gratuits. Partage Nota avec tes camarades pour débloquer les téléchargements illimités."
       >
         <button
           onClick={handleShare}
           className="press-scale mt-1 flex h-[52px] w-full items-center justify-center gap-2.5 rounded-2xl bg-teal text-[15px] font-bold text-white active:bg-teal-press"
         >
           <Icon name="share" size={18} strokeWidth={1.9} />
-          Partager Campusly
+          Partager Nota
         </button>
       </Sheet>
     </>
