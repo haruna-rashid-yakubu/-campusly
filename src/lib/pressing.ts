@@ -13,8 +13,8 @@ export const PRESSING_CONDITIONS = `🧺 PRESSING CAMPUSLY — Conditions du ser
 Le linge est pesé au moment de la récupération, devant vous.
 
 👕 Ce qui est inclus
-Vos habits sont lavés, essorés et livrés. Ils ne sont NI séchés NI repassés.
-Étendez-les dès la livraison : nous ne sommes pas responsables des mauvaises odeurs ou de l'humidité si le linge reste mouillé trop longtemps.
+Vos habits sont lavés, essorés et livrés : essorés, pas mouillés. Ils ne sont NI séchés NI repassés.
+Étendez-les dès la livraison : nous ne sommes pas responsables des mauvaises odeurs ou de l'humidité si le linge n'est pas étendu à temps.
 
 💳 Paiement
 Le paiement se fait après la pesée, avant la prise en charge du linge (Mobile Money, Orange Money ou espèces). Pas de paiement = pas de prise en charge.
@@ -51,7 +51,7 @@ En commandant, vous acceptez ces conditions.`;
 /** The three lines worth seeing without opening anything. */
 export const PRESSING_RESUME = [
   "500 F le kilo pour les couleurs, 800 F pour les blancs",
-  "Lavé et essoré — ni séché, ni repassé",
+  "Lavé et essoré — pas mouillé, mais ni séché ni repassé",
   "Paiement après la pesée, avant la prise en charge",
 ];
 
