@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Icon } from "@/components/icons";
-import { Badge, EmptyState } from "@/components/EmptyState";
+import { Badge } from "@/components/EmptyState";
+import { auth } from "@/auth";
+import { PressingCommande } from "@/components/PressingCommande";
 import { getPressings } from "@/lib/data";
 import { fcfa } from "@/lib/utils";
 
@@ -13,27 +15,26 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function PressingPage() {
-  const pressings = await getPressings();
+  const [pressings, session] = await Promise.all([getPressings(), auth()]);
 
   return (
     <div className="min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
       <div className="sticky top-0 z-10 bg-white px-5" style={{ paddingTop: "calc(20px + var(--safe-top))" }}>
         <div className="text-[24px] font-extrabold tracking-tight">Pressing</div>
         <div className="mt-0.5 pb-3 text-[13.5px] text-slate-light">
-          Tarifs indicatifs · à confirmer sur place
+          Récupération, lavage et livraison sur le campus
         </div>
       </div>
 
       <div className="px-5 pt-2">
-        {/* Nothing listed is a shelf still being built, not a broken page. The
-            demo entries that used to sit here carried invented phone numbers,
-            and a student who calls one of those does not come back. */}
-        {pressings.length === 0 && (
-          <EmptyState
-            icon="shirt"
-            title="Aucun pressing référencé"
-            body="On ajoute les pressings un par un, avec leurs vrais tarifs. Tu en connais un près du campus ?"
-          />
+        {/* The service itself leads: it is the one someone can actually order
+            from. Partner pressings, when there are any, come after. */}
+        <PressingCommande nom={session?.user?.name} />
+
+        {pressings.length > 0 && (
+          <div className="mb-3 mt-8 text-base font-extrabold tracking-tight">
+            Autres pressings autour du campus
+          </div>
         )}
         {pressings.map((p) => (
           <div key={p.id} className="mb-3.5 rounded-[22px] border border-line p-4">
