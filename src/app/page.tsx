@@ -5,6 +5,7 @@ import { Icon } from "@/components/icons";
 import { ClasseSwitcher } from "@/components/ClasseSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ShareSheet } from "@/components/ShareSheet";
+import { InstallNudge } from "@/components/InstallNudge";
 import { SignInButton } from "@/components/SignInButton";
 import { SignOutButton } from "@/components/SignOutButton";
 import {
@@ -199,6 +200,9 @@ export default async function AccueilPage() {
       </div>
 
       <div className="px-5 pb-7 pt-5">
+        {/* After the screen has done its job, never before it. */}
+        <InstallNudge />
+
         <ShareSheet>
           <button className="press-scale flex h-[52px] w-full items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-teal bg-white text-[15px] font-bold text-teal-dark active:bg-teal-tint-soft">
             <Icon name="share" size={19} strokeWidth={1.9} />

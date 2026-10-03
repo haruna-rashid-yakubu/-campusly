@@ -64,6 +64,13 @@
       "when": 1791019243632,
       "tag": "0008_real_tag",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791068257802,
+      "tag": "0009_smooth_tombstone",
+      "breakpoints": true
     }
   ]
 }

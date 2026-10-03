@@ -388,6 +388,7 @@ export async function getAudience() {
     aujourdhui: number;
     sept_jours: number;
     nouveaux_sept_jours: number;
+    installes_sept_jours: number;
     fideles: number;
     ouvertures_sept_jours: number;
   }>(sql`
@@ -396,6 +397,9 @@ export async function getAudience() {
       count(distinct device_id) filter (where jour = current_date)::int as aujourdhui,
       count(distinct device_id) filter (where jour > current_date - 7)::int as sept_jours,
       count(distinct device_id) filter (where premiere_visite and jour > current_date - 7)::int as nouveaux_sept_jours,
+      -- Opened from the home screen at least once this week: the only read
+      -- we get on installation, since nothing reports the install itself.
+      count(distinct device_id) filter (where standalone and jour > current_date - 7)::int as installes_sept_jours,
       coalesce(sum(ouvertures) filter (where jour > current_date - 7), 0)::int as ouvertures_sept_jours,
       -- Someone who came back on a different day. The only number that says
       -- whether the app stuck, as opposed to whether a link got clicked.
@@ -428,6 +432,7 @@ export async function getAudience() {
       aujourdhui: 0,
       sept_jours: 0,
       nouveaux_sept_jours: 0,
+      installes_sept_jours: 0,
       fideles: 0,
       ouvertures_sept_jours: 0,
     }),

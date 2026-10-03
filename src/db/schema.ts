@@ -290,6 +290,16 @@ export const visites = pgTable(
     jour: date("jour", { mode: "date" }).notNull(),
     ouvertures: integer("ouvertures").notNull().default(1),
     premiereVisite: boolean("premiere_visite").notNull().default(false),
+    /*
+     * Opened from the home screen rather than a browser tab. True for the day
+     * as soon as it happens once, since the question is whether the device
+     * has the app installed at all.
+     *
+     * On iOS the installed app generally keeps its own storage, so it carries
+     * a different device id from the same phone's Safari: this counts
+     * installed apps in use, not the share of students who installed.
+     */
+    standalone: boolean("standalone").notNull().default(false),
     vuA: timestamp("vu_a", { mode: "date" }).notNull().defaultNow(),
   },
   (t) => [unique("visite_device_jour").on(t.deviceId, t.jour)]

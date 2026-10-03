@@ -320,6 +320,7 @@ async function AudienceTab() {
         <Chiffre valeur={a.sept_jours} legende="Appareils ces 7 jours" />
         <Chiffre valeur={a.total} legende="Appareils depuis le début" />
         <Chiffre valeur={a.fideles} legende="Revenus un autre jour" />
+        <Chiffre valeur={a.installes_sept_jours} legende="Ouvrent depuis l'écran d'accueil" />
       </div>
 
       <p className="mt-3 text-[12.5px] leading-snug text-slate-light">

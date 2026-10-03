@@ -86,7 +86,7 @@ export async function setClasse(label: string) {
  * Failure here must never reach the reader. Counting is the least important
  * thing happening on the page.
  */
-export async function enregistrerVisite() {
+export async function enregistrerVisite(standalone = false) {
   try {
     const store = await cookies();
     const existant = store.get(DEVICE_COOKIE)?.value;
@@ -110,12 +110,17 @@ export async function enregistrerVisite() {
         classeId: classe?.id ?? null,
         jour: startOfDay(nowInWAT()),
         premiereVisite: !existant,
+        standalone,
       })
       .onConflictDoUpdate({
         target: [visites.deviceId, visites.jour],
         set: {
           ouvertures: sql`${visites.ouvertures} + 1`,
           classeId: classe?.id ?? null,
+          // Installed counts for the whole day once it has happened: someone
+          // who opens from the home screen and later follows a link into a
+          // browser tab has still installed the app.
+          standalone: sql`${visites.standalone} or ${standalone}`,
           vuA: new Date(),
         },
       });
