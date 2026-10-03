@@ -6,6 +6,7 @@ import { ShareSheet } from "@/components/ShareSheet";
 import { ToastButton } from "@/components/ToastButton";
 import { DownloadButton } from "@/components/DownloadButton";
 import { ProgrammeGrid } from "@/components/ProgrammeGrid";
+import { NotifNudge } from "@/components/NotifNudge";
 import { Icon } from "@/components/icons";
 import { getClasseByLabel, getClasses, getLatestProgramme, getPreferredClasse } from "@/lib/data";
 
@@ -64,6 +65,13 @@ export default async function ProgrammePage() {
             <ProgrammeGrid
               creneaux={programme.creneaux}
               salleDefaut={programme.salleDefaut}
+            />
+
+            {/* Offered here because the week it is about is on screen: there
+                is nothing to explain. */}
+            <NotifNudge
+              titre="Tu veux qu'on te le rappelle ?"
+              detail="Chaque soir à 20h, tes cours du lendemain et les CC qui approchent."
             />
 
             {programme.creneaux.length === 0 && !programme.photoUrl && (

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { PickerButton } from "@/components/PickerButton";
 import { Icon } from "@/components/icons";
+import { NotifNudge } from "@/components/NotifNudge";
 import { useToast } from "@/components/Toast";
 import { proposeSubject } from "@/lib/actions";
 import { PROPOSER_LABELS } from "@/lib/constants";
@@ -112,6 +113,12 @@ export function ProposerForm({
             <p className="mt-2 text-[14.5px] leading-relaxed text-slate">
               Ton sujet sera visible après validation par l&rsquo;équipe Campusly.
             </p>
+            <NotifNudge
+              compact
+              titre="On te prévient quand il est publié"
+              detail="Tu sauras dès que ton sujet est en ligne, sans avoir à revenir vérifier."
+            />
+
             <button
               onClick={() => router.push("/sujets/mes-envois")}
               className="press-scale mt-5 h-[52px] w-full rounded-2xl bg-teal text-[15px] font-bold text-white active:bg-teal-press"
