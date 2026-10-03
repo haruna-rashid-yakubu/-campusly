@@ -11,7 +11,7 @@ export default async function InstallerPage() {
 
   return (
     <div className="min-h-dvh">
-      <BackHeader title="Installer Nota" fallbackHref="/" />
+      <BackHeader title="Installer Campusly" fallbackHref="/" />
       <InstallTabs defaultTab={defaultTab} />
     </div>
   );

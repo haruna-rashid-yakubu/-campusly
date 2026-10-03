@@ -147,9 +147,9 @@ export function NotificationControls() {
             {status === "unsupported" &&
               "Pas disponible sur ce navigateur ou cet appareil."}
             {status === "denied" &&
-              "Bloquées pour Nota — active-les dans les réglages de ton navigateur."}
+              "Bloquées pour Campusly — active-les dans les réglages de ton navigateur."}
             {status === "default" &&
-              "Sois prévenu dès qu'un programme ou un sujet est publié sur Nota."}
+              "Sois prévenu dès qu'un programme ou un sujet est publié sur Campusly."}
             {status === "active" && "Tu recevras une notification sur cet appareil."}
           </div>
         </div>

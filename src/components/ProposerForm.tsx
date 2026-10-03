@@ -110,7 +110,7 @@ export function ProposerForm({
             </span>
             <div className="text-[19px] font-extrabold tracking-tight">Sujet envoyé</div>
             <p className="mt-2 text-[14.5px] leading-relaxed text-slate">
-              Ton sujet sera visible après validation par l&rsquo;équipe Nota.
+              Ton sujet sera visible après validation par l&rsquo;équipe Campusly.
             </p>
             <button
               onClick={() => router.push("/sujets/mes-envois")}

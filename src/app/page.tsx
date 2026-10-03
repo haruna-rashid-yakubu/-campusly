@@ -50,7 +50,7 @@ export default async function AccueilPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Logo size={36} />
-            <span className="text-xl font-extrabold tracking-tight">Nota</span>
+            <span className="text-xl font-extrabold tracking-tight">Campusly</span>
           </div>
           <div className="flex items-center">
             {session?.user?.role === "admin" && (
@@ -84,7 +84,7 @@ export default async function AccueilPage() {
               <Logo size={40} />
             </span>
             <div className="flex-1 pr-1.5">
-              <div className="text-[15.5px] font-extrabold">Installe Nota</div>
+              <div className="text-[15.5px] font-extrabold">Installe Campusly</div>
               <div className="mt-0.5 text-[13.5px] leading-relaxed text-teal-active">
                 Sur ton écran d&rsquo;accueil : plus rapide, moins de data.
               </div>
@@ -202,7 +202,7 @@ export default async function AccueilPage() {
         <ShareSheet>
           <button className="press-scale flex h-[52px] w-full items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-teal bg-white text-[15px] font-bold text-teal-dark active:bg-teal-tint-soft">
             <Icon name="share" size={19} strokeWidth={1.9} />
-            Partager Nota
+            Partager Campusly
           </button>
         </ShareSheet>
       </div>

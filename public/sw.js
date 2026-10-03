@@ -55,7 +55,7 @@ self.addEventListener("fetch", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  let data = { title: "Nota", body: "Nouvelle notification.", url: "/" };
+  let data = { title: "Campusly", body: "Nouvelle notification.", url: "/" };
   if (event.data) {
     try {
       data = { ...data, ...event.data.json() };

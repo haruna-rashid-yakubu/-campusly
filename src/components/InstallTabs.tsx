@@ -16,7 +16,7 @@ const TABS: { id: InstallTab; label: string }[] = [
 const ANDROID_STEPS = [
   { n: "1", texte: "Ouvre le menu de Chrome, en haut à droite.", visuel: "⋮", align: "flex-end" },
   { n: "2", texte: "Touche « Ajouter à l'écran d'accueil ».", visuel: "Ajouter à l'écran d'accueil", align: "flex-start" },
-  { n: "3", texte: "Valide : l'icône Nota apparaît sur ton écran.", visuel: "Installer", align: "center" },
+  { n: "3", texte: "Valide : l'icône Campusly apparaît sur ton écran.", visuel: "Installer", align: "center" },
 ];
 
 const IPHONE_STEPS = [

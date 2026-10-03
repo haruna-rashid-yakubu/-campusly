@@ -31,7 +31,7 @@ export default async function AdminSubjectPage({
         <BackHeader title="Modifier un sujet" fallbackHref="/" border />
         <EmptyState
           icon="lock"
-          title="Réservé à l'équipe Nota"
+          title="Réservé à l'équipe Campusly"
           body="Ton compte n'a pas les droits d'administration."
         />
       </div>

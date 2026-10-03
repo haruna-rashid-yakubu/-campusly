@@ -31,7 +31,7 @@ async function requireUser() {
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") {
-    throw new Error("Réservé à l'équipe Nota.");
+    throw new Error("Réservé à l'équipe Campusly.");
   }
   return session.user;
 }
@@ -194,7 +194,7 @@ export async function moderateSubject(
 
     await sendPushToUser(submission.userId, {
       title: "Ton sujet a été publié !",
-      body: `${submission.matiere} · ${submission.annee} est maintenant en ligne sur Nota.`,
+      body: `${submission.matiere} · ${submission.annee} est maintenant en ligne sur Campusly.`,
       url: `/sujets/${published.id}`,
     });
   } else {
