@@ -7,7 +7,13 @@ import { EmptyState, Badge } from "@/components/EmptyState";
 import { Icon } from "@/components/icons";
 import { ModerationCard } from "@/components/admin/ModerationCard";
 import { StockControl } from "@/components/admin/StockControl";
-import { ProgrammeGridForm, type Cell } from "@/components/admin/ProgrammeGridForm";
+import {
+  cellKey,
+  halfKey,
+  ProgrammeGridForm,
+  type Cell,
+} from "@/components/admin/ProgrammeGridForm";
+import { DEMI_JOURNEES } from "@/lib/constants";
 import {
   getCitesWithAvailability,
   getClasseByLabel,
@@ -205,10 +211,26 @@ async function CitesTab() {
 
 // The grid is keyed on a Monday, so the editor always opens on the week that
 // is running — the one a correction is most likely to be about.
-function toCells(programme: { creneaux: { jour: number; moment: string; matiere: string; abrege: string | null; enseignant: string | null; salle: string | null; seance: number | null; seances: number | null; cc: boolean }[] } | undefined) {
+type CreneauRow = {
+  jour: number;
+  debut: number;
+  fin: number;
+  matiere: string;
+  abrege: string | null;
+  enseignant: string | null;
+  salle: string | null;
+  seance: number | null;
+  seances: number | null;
+  cc: boolean;
+};
+
+function toCells(programme: { creneaux: CreneauRow[] } | undefined) {
   const cells: Record<string, Cell> = {};
+  // A half-day counts as split when its course does not span both slots —
+  // that is what tells the editor to open it as two fields rather than one.
+  const divise: string[] = [];
   for (const c of programme?.creneaux ?? []) {
-    cells[`${c.jour}-${c.moment}`] = {
+    cells[cellKey(c.jour, c.debut)] = {
       matiere: c.matiere,
       abrege: c.abrege ?? "",
       enseignant: c.enseignant ?? "",
@@ -217,8 +239,15 @@ function toCells(programme: { creneaux: { jour: number; moment: string; matiere:
       seances: c.seances ? String(c.seances) : "",
       cc: c.cc,
     };
+    if (c.debut === c.fin) {
+      const demi = DEMI_JOURNEES.find((d) => (d.slots as readonly number[]).includes(c.debut));
+      if (demi) {
+        const k = halfKey(c.jour, demi.id);
+        if (!divise.includes(k)) divise.push(k);
+      }
+    }
   }
-  return cells;
+  return { cells, divise };
 }
 
 async function ProgrammeTab() {
@@ -238,6 +267,9 @@ async function ProgrammeTab() {
     getProposerFacets(),
   ]);
 
+  const actuelle = toCells(courante);
+  const derniere = toCells(precedente);
+
   return (
     <>
       <ProgrammeGridForm
@@ -245,10 +277,12 @@ async function ProgrammeTab() {
         defaultClasse={classe}
         semaine={toISODate(semaine)}
         semaineLabel={`Semaine ${weekRangeLabel(semaine)}`}
-        initial={toCells(courante)}
+        initial={actuelle.cells}
+        initialDivise={actuelle.divise}
         initialWeekLabel={courante?.weekLabel ?? ""}
         initialSalle={courante?.salleDefaut ?? ""}
-        previous={toCells(precedente)}
+        previous={derniere.cells}
+        previousDivise={derniere.divise}
         matieres={facets.matiere ?? []}
       />
       <div className="mb-1 mt-7 text-base font-extrabold">Classes sans programme récent</div>

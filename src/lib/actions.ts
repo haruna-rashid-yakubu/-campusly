@@ -13,14 +13,13 @@ import {
   programmePublications,
   pushSubscriptions,
   subjectTypeEnum,
-  momentEnum,
   users,
   visites,
 } from "@/db/schema";
 import { deleteFile, uploadFile } from "@/lib/blob";
 import { ensureClassesForFiliere, getClasseByLabel, getProgrammeForWeek } from "@/lib/data";
 import { fromISODate, mondayOf, nowInWAT, startOfDay, weekRangeLabel } from "@/lib/semaine";
-import { BANNER_COOKIE, CLASSE_COOKIE, DEVICE_COOKIE } from "@/lib/constants";
+import { BANNER_COOKIE, CLASSE_COOKIE, DEVICE_COOKIE, momentDuSlot } from "@/lib/constants";
 import { sendPushToAdmins, sendPushToClasse, sendPushToUser } from "@/lib/push";
 
 async function requireUser() {
@@ -354,7 +353,8 @@ export async function adjustRoomStock(roomTypeId: number, delta: number) {
 
 export type CreneauInput = {
   jour: number;
-  moment: (typeof momentEnum)[number];
+  debut: number;
+  fin: number;
   matiere: string;
   abrege?: string;
   enseignant?: string;
@@ -429,7 +429,11 @@ export async function saveProgramme(formData: FormData) {
     .map((c) => ({
       programmeId: row.id,
       jour: c.jour,
-      moment: c.moment,
+      debut: c.debut,
+      fin: c.fin,
+      // Still written so the old column stays valid and this change stays
+      // reversible; nothing reads it.
+      moment: momentDuSlot(c.debut),
       matiere: c.matiere.trim(),
       abrege: c.abrege?.trim() || null,
       enseignant: c.enseignant?.trim() || null,

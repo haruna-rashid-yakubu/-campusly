@@ -58,13 +58,31 @@ export const APP_DOMAIN = APP_URL.replace(/^https?:\/\//, "");
  */
 export const JOURS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"] as const;
 
-export const MOMENTS = [
-  { id: "matin", label: "Matin", heures: "8h–12h" },
-  { id: "apres_midi", label: "Après-midi", heures: "14h–18h" },
+/*
+ * The day in two-hour slots. A course is a range over them, so the same
+ * structure holds a four-hour block and a morning split between two
+ * subjects — both are printed on the faculty's own sheets.
+ */
+export const CRENEAUX = [
+  { i: 1, de: "8h", a: "10h" },
+  { i: 2, de: "10h", a: "12h" },
+  { i: 3, de: "14h", a: "16h" },
+  { i: 4, de: "16h", a: "18h" },
 ] as const;
 
-export type MomentId = (typeof MOMENTS)[number]["id"];
+/** 1→2 gives "8h–12h"; 1→1 gives "8h–10h". */
+export function heuresDe(debut: number, fin: number) {
+  const a = CRENEAUX.find((c) => c.i === debut);
+  const b = CRENEAUX.find((c) => c.i === fin);
+  return a && b ? `${a.de}–${b.a}` : "";
+}
 
-export function heuresDu(moment: string) {
-  return MOMENTS.find((m) => m.id === moment)?.heures ?? "";
+/** Slots 1-2 are the morning, 3-4 the afternoon. */
+export const DEMI_JOURNEES = [
+  { id: "matin", label: "Matin", slots: [1, 2] },
+  { id: "apres_midi", label: "Après-midi", slots: [3, 4] },
+] as const;
+
+export function momentDuSlot(slot: number) {
+  return slot <= 2 ? ("matin" as const) : ("apres_midi" as const);
 }

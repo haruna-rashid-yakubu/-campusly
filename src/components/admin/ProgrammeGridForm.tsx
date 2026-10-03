@@ -5,7 +5,7 @@ import { PickerButton } from "@/components/PickerButton";
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
 import { saveProgramme, type CreneauInput } from "@/lib/actions";
-import { JOURS, MOMENTS } from "@/lib/constants";
+import { DEMI_JOURNEES, heuresDe, JOURS } from "@/lib/constants";
 
 export type Cell = {
   matiere: string;
@@ -27,8 +27,10 @@ const EMPTY: Cell = {
   cc: false,
 };
 
-/** "lundi-matin" — the 12 keys of the grid. */
-const keyOf = (jour: number, moment: string) => `${jour}-${moment}`;
+/** Keyed on the slot a course starts in: "3-1" is Wednesday 8h. */
+export const cellKey = (jour: number, debut: number) => `${jour}-${debut}`;
+/** A half-day that holds two courses instead of one block: "3-matin". */
+export const halfKey = (jour: number, moment: string) => `${jour}-${moment}`;
 
 export function ProgrammeGridForm({
   classes,
@@ -36,9 +38,11 @@ export function ProgrammeGridForm({
   semaine,
   semaineLabel,
   initial,
+  initialDivise,
   initialWeekLabel,
   initialSalle,
   previous,
+  previousDivise,
   matieres,
 }: {
   classes: string[];
@@ -46,21 +50,24 @@ export function ProgrammeGridForm({
   semaine: string;
   semaineLabel: string;
   initial: Record<string, Cell>;
+  initialDivise: string[];
   initialWeekLabel: string;
   initialSalle: string;
   previous: Record<string, Cell>;
+  previousDivise: string[];
   matieres: string[];
 }) {
   const [classe, setClasse] = useState(defaultClasse);
   const [weekLabel, setWeekLabel] = useState(initialWeekLabel);
   const [salleDefaut, setSalleDefaut] = useState(initialSalle);
   const [cells, setCells] = useState<Record<string, Cell>>(initial);
+  const [divise, setDivise] = useState<Set<string>>(new Set(initialDivise));
   const [openDetails, setOpenDetails] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [pending, startTransition] = useTransition();
   const { show } = useToast();
 
-  const filled = useMemo(
+  const remplies = useMemo(
     () => Object.values(cells).filter((c) => c.matiere.trim()).length,
     [cells]
   );
@@ -69,23 +76,54 @@ export function ProgrammeGridForm({
   const setCell = (key: string, patch: Partial<Cell>) =>
     setCells((prev) => ({ ...prev, [key]: { ...(prev[key] ?? EMPTY), ...patch } }));
 
+  /*
+   * Splitting a half-day keeps whatever was typed in the first slot and opens
+   * a second one beside it. Closing it drops the second, because a four-hour
+   * block cannot hold two subjects and silently keeping one would publish a
+   * week nobody entered.
+   */
+  const toggleDivise = (jour: number, moment: string, slots: readonly number[]) => {
+    const k = halfKey(jour, moment);
+    setDivise((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) {
+        next.delete(k);
+        setCells((c) => {
+          const copie = { ...c };
+          delete copie[cellKey(jour, slots[1])];
+          return copie;
+        });
+      } else {
+        next.add(k);
+      }
+      return next;
+    });
+  };
+
   const submit = () => {
     const payload: CreneauInput[] = [];
-    for (const jour of JOURS.map((_, i) => i + 1)) {
-      for (const moment of MOMENTS) {
-        const c = cells[keyOf(jour, moment.id)];
-        if (!c?.matiere.trim()) continue;
-        payload.push({
-          jour,
-          moment: moment.id,
-          matiere: c.matiere,
-          abrege: c.abrege,
-          enseignant: c.enseignant,
-          salle: c.salle,
-          seance: c.seance ? Number(c.seance) : null,
-          seances: c.seances ? Number(c.seances) : null,
-          cc: c.cc,
-        });
+    for (let jour = 1; jour <= JOURS.length; jour += 1) {
+      for (const demi of DEMI_JOURNEES) {
+        const estDivise = divise.has(halfKey(jour, demi.id));
+        const portions = estDivise
+          ? demi.slots.map((s) => ({ debut: s, fin: s }))
+          : [{ debut: demi.slots[0], fin: demi.slots[1] }];
+        for (const { debut, fin } of portions) {
+          const c = cells[cellKey(jour, debut)];
+          if (!c?.matiere.trim()) continue;
+          payload.push({
+            jour,
+            debut,
+            fin,
+            matiere: c.matiere,
+            abrege: c.abrege,
+            enseignant: c.enseignant,
+            salle: c.salle,
+            seance: c.seance ? Number(c.seance) : null,
+            seances: c.seances ? Number(c.seances) : null,
+            cc: c.cc,
+          });
+        }
       }
     }
     if (payload.length === 0 && !file) {
@@ -109,6 +147,84 @@ export function ProgrammeGridForm({
         show(e instanceof Error ? e.message : "Erreur à l'enregistrement", "warn");
       }
     });
+  };
+
+  const champ = (key: string) => {
+    const cell = cells[key] ?? EMPTY;
+    const open = openDetails === key;
+    return (
+      <>
+        <div className="flex items-center gap-2">
+          <input
+            list="matieres-connues"
+            value={cell.matiere}
+            onChange={(e) => setCell(key, { matiere: e.target.value })}
+            placeholder="Pas de cours"
+            className="h-[46px] min-w-0 flex-1 rounded-[13px] border-[1.5px] border-line-2 bg-white px-3 text-[14.5px] outline-none focus:border-teal"
+          />
+          {cell.matiere.trim() && (
+            <button
+              onClick={() => setCell(key, EMPTY)}
+              aria-label="Vider la case"
+              className="grid h-[46px] w-[46px] flex-none place-items-center rounded-[13px] border-[1.5px] border-line-2 text-slate-light active:bg-surface-2"
+            >
+              <Icon name="x" size={17} strokeWidth={2.2} />
+            </button>
+          )}
+        </div>
+        {open && (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <input
+              value={cell.enseignant}
+              onChange={(e) => setCell(key, { enseignant: e.target.value })}
+              placeholder="Enseignant"
+              className="col-span-2 h-[44px] rounded-[13px] border-[1.5px] border-line-2 px-3 text-[14px] outline-none focus:border-teal"
+            />
+            {/* Only worth filling for a title too long to send. */}
+            <input
+              value={cell.abrege}
+              onChange={(e) => setCell(key, { abrege: e.target.value })}
+              placeholder="Nom court pour la notification"
+              className="col-span-2 h-[44px] rounded-[13px] border-[1.5px] border-line-2 px-3 text-[14px] outline-none focus:border-teal"
+            />
+            <input
+              value={cell.salle}
+              onChange={(e) => setCell(key, { salle: e.target.value })}
+              placeholder={salleDefaut || "Salle"}
+              className="h-[44px] rounded-[13px] border-[1.5px] border-line-2 px-3 text-[14px] outline-none focus:border-teal"
+            />
+            <div className="flex items-center gap-1.5">
+              <input
+                value={cell.seance}
+                onChange={(e) => setCell(key, { seance: e.target.value })}
+                inputMode="numeric"
+                placeholder="n°"
+                className="h-[44px] w-full min-w-0 rounded-[13px] border-[1.5px] border-line-2 px-3 text-[14px] outline-none focus:border-teal"
+              />
+              <span className="text-[13px] text-slate-light">/</span>
+              <input
+                value={cell.seances}
+                onChange={(e) => setCell(key, { seances: e.target.value })}
+                inputMode="numeric"
+                placeholder="sur"
+                className="h-[44px] w-full min-w-0 rounded-[13px] border-[1.5px] border-line-2 px-3 text-[14px] outline-none focus:border-teal"
+              />
+            </div>
+            <button
+              onClick={() => setCell(key, { cc: !cell.cc })}
+              className="col-span-2 flex h-[44px] items-center justify-center gap-2 rounded-[13px] border-[1.5px] text-[13.5px] font-bold"
+              style={{
+                borderColor: cell.cc ? "#0A7F77" : "#E2E8F0",
+                color: cell.cc ? "#0A7F77" : "#64748B",
+              }}
+            >
+              <Icon name={cell.cc ? "check" : "flag"} size={16} strokeWidth={2.2} />
+              {cell.cc ? "CC ici" : "Marquer un CC"}
+            </button>
+          </div>
+        )}
+      </>
+    );
   };
 
   return (
@@ -154,7 +270,10 @@ export function ProgrammeGridForm({
 
       {hasPrevious && (
         <button
-          onClick={() => setCells(previous)}
+          onClick={() => {
+            setCells(previous);
+            setDivise(new Set(previousDivise));
+          }}
           className="press-scale mt-3.5 flex h-11 w-full items-center justify-center gap-2 rounded-[13px] border-[1.5px] border-line-2 text-[13.5px] font-bold active:bg-surface-2"
         >
           <Icon name="cal" size={17} strokeWidth={2} />
@@ -170,7 +289,7 @@ export function ProgrammeGridForm({
 
       <div className="mb-2 mt-6 flex items-baseline justify-between">
         <span className="text-base font-extrabold tracking-tight">La semaine</span>
-        <span className="text-[12.5px] text-slate-light">{filled} / 12 cases</span>
+        <span className="text-[12.5px] text-slate-light">{remplies} remplies</span>
       </div>
 
       {JOURS.map((jourLabel, i) => {
@@ -178,92 +297,43 @@ export function ProgrammeGridForm({
         return (
           <div key={jourLabel} className="mb-3 overflow-hidden rounded-[18px] border border-line">
             <div className="bg-surface px-3.5 py-2 text-[13.5px] font-extrabold">{jourLabel}</div>
-            {MOMENTS.map((moment) => {
-              const key = keyOf(jour, moment.id);
-              const cell = cells[key] ?? EMPTY;
-              const open = openDetails === key;
+            {DEMI_JOURNEES.map((demi) => {
+              const estDivise = divise.has(halfKey(jour, demi.id));
+              const portions = estDivise
+                ? demi.slots.map((s) => ({ debut: s, fin: s }))
+                : [{ debut: demi.slots[0], fin: demi.slots[1] }];
               return (
-                <div key={key} className="border-t border-line-3 px-3.5 py-2.5">
+                <div key={demi.id} className="border-t border-line-3 px-3.5 py-2.5">
                   <div className="mb-1 flex items-center justify-between">
-                    <span className="text-[12px] font-bold text-slate-light">
-                      {moment.label} · {moment.heures}
-                    </span>
+                    <span className="text-[12px] font-bold text-slate-light">{demi.label}</span>
+                    {/* Most half-days are one block; the split is there for the
+                        ones the faculty prints as two. */}
                     <button
-                      onClick={() => setOpenDetails(open ? null : key)}
+                      onClick={() => toggleDivise(jour, demi.id, demi.slots)}
                       className="text-[12px] font-bold text-teal-dark"
                     >
-                      {open ? "Moins" : "Détails"}
+                      {estDivise ? "Réunir" : "Diviser en deux"}
                     </button>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      list="matieres-connues"
-                      value={cell.matiere}
-                      onChange={(e) => setCell(key, { matiere: e.target.value })}
-                      placeholder="Pas de cours"
-                      className="h-[46px] min-w-0 flex-1 rounded-[13px] border-[1.5px] border-line-2 bg-white px-3 text-[14.5px] outline-none focus:border-teal"
-                    />
-                    {cell.matiere.trim() && (
-                      <button
-                        onClick={() => setCell(key, EMPTY)}
-                        aria-label="Vider la case"
-                        className="grid h-[46px] w-[46px] flex-none place-items-center rounded-[13px] border-[1.5px] border-line-2 text-slate-light active:bg-surface-2"
-                      >
-                        <Icon name="x" size={17} strokeWidth={2.2} />
-                      </button>
-                    )}
-                  </div>
-                  {open && (
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      <input
-                        value={cell.enseignant}
-                        onChange={(e) => setCell(key, { enseignant: e.target.value })}
-                        placeholder="Enseignant"
-                        className="col-span-2 h-[44px] rounded-[13px] border-[1.5px] border-line-2 px-3 text-[14px] outline-none focus:border-teal"
-                      />
-                      {/* Only worth filling for a title too long to send. */}
-                      <input
-                        value={cell.abrege}
-                        onChange={(e) => setCell(key, { abrege: e.target.value })}
-                        placeholder="Nom court pour la notification"
-                        className="col-span-2 h-[44px] rounded-[13px] border-[1.5px] border-line-2 px-3 text-[14px] outline-none focus:border-teal"
-                      />
-                      <input
-                        value={cell.salle}
-                        onChange={(e) => setCell(key, { salle: e.target.value })}
-                        placeholder={salleDefaut || "Salle"}
-                        className="h-[44px] rounded-[13px] border-[1.5px] border-line-2 px-3 text-[14px] outline-none focus:border-teal"
-                      />
-                      <div className="flex items-center gap-1.5">
-                        <input
-                          value={cell.seance}
-                          onChange={(e) => setCell(key, { seance: e.target.value })}
-                          inputMode="numeric"
-                          placeholder="n°"
-                          className="h-[44px] w-full min-w-0 rounded-[13px] border-[1.5px] border-line-2 px-3 text-[14px] outline-none focus:border-teal"
-                        />
-                        <span className="text-[13px] text-slate-light">/</span>
-                        <input
-                          value={cell.seances}
-                          onChange={(e) => setCell(key, { seances: e.target.value })}
-                          inputMode="numeric"
-                          placeholder="sur"
-                          className="h-[44px] w-full min-w-0 rounded-[13px] border-[1.5px] border-line-2 px-3 text-[14px] outline-none focus:border-teal"
-                        />
+                  {portions.map(({ debut, fin }) => {
+                    const key = cellKey(jour, debut);
+                    return (
+                      <div key={key} className={debut === demi.slots[0] ? "" : "mt-2.5"}>
+                        <div className="mb-1 flex items-center justify-between">
+                          <span className="text-[11.5px] font-bold uppercase tracking-wide text-slate-light">
+                            {heuresDe(debut, fin)}
+                          </span>
+                          <button
+                            onClick={() => setOpenDetails(openDetails === key ? null : key)}
+                            className="text-[12px] font-bold text-teal-dark"
+                          >
+                            {openDetails === key ? "Moins" : "Détails"}
+                          </button>
+                        </div>
+                        {champ(key)}
                       </div>
-                      <button
-                        onClick={() => setCell(key, { cc: !cell.cc })}
-                        className="col-span-2 flex h-[44px] items-center justify-center gap-2 rounded-[13px] border-[1.5px] text-[13.5px] font-bold"
-                        style={{
-                          borderColor: cell.cc ? "#0A7F77" : "#E2E8F0",
-                          color: cell.cc ? "#0A7F77" : "#64748B",
-                        }}
-                      >
-                        <Icon name={cell.cc ? "check" : "flag"} size={16} strokeWidth={2.2} />
-                        {cell.cc ? "CC ici" : "Marquer un CC"}
-                      </button>
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
               );
             })}

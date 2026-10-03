@@ -235,6 +235,17 @@ export const creneaux = pgTable(
       .notNull()
       .references(() => programmePublications.id, { onDelete: "cascade" }),
     jour: integer("jour").notNull(), // 1 = lundi … 6 = samedi
+    /*
+     * The two-hour slots this course occupies: 1 = 8h-10h, 2 = 10h-12h,
+     * 3 = 14h-16h, 4 = 16h-18h. A course running 8h to 12h is one row with
+     * debut 1 and fin 2 — one session, not two — while a morning split
+     * between two courses is two rows, (1,1) and (2,2). Both shapes appear on
+     * the real sheets, sometimes on the same one.
+     */
+    debut: integer("debut").notNull(),
+    fin: integer("fin").notNull(),
+    // Kept and still written, derived from `debut`. Nothing reads it any
+    // more; it stays so this change can be undone without losing a week.
     moment: text("moment", { enum: momentEnum }).notNull(),
     matiere: text("matiere").notNull(),
     /*
@@ -254,7 +265,7 @@ export const creneaux = pgTable(
     // Set by hand when someone actually knows the CC falls here.
     cc: boolean("cc").notNull().default(false),
   },
-  (t) => [unique("creneau_slot").on(t.programmeId, t.jour, t.moment)]
+  (t) => [unique("creneau_slot").on(t.programmeId, t.jour, t.debut)]
 );
 
 /*

@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { classes } from "@/db/schema";
-import { heuresDu, MOMENTS } from "@/lib/constants";
+import { CRENEAUX, heuresDe } from "@/lib/constants";
 import { getProgrammeForWeek } from "@/lib/data";
 import { sendPushToClasse } from "@/lib/push";
 import { addDays, jourLabel, jourOf, mondayOf, nowInWAT } from "@/lib/semaine";
@@ -35,7 +35,8 @@ export function matiereCourte(matiere: string) {
 
 type Creneau = {
   jour: number;
-  moment: string;
+  debut: number;
+  fin: number;
   matiere: string;
   abrege?: string | null;
   salle: string | null;
@@ -65,7 +66,7 @@ function de(nom: string) {
 }
 
 export function alerteSeance(c: Creneau, nom: string): string | null {
-  if (c.cc) return `⚠️ CC ${de(nom)} — ${heuresDu(c.moment)}.`;
+  if (c.cc) return `⚠️ CC ${de(nom)} — ${heuresDe(c.debut, c.fin)}.`;
   if (!c.seance || !c.seances) return null;
   const restantes = c.seances - c.seance;
   if (restantes === 2) return `⚠️ Plus que 3 séances ${de(nom)}. Le CC arrive.`;
@@ -79,28 +80,47 @@ export function messageDuSoir(
   jour: number,
   salleDefaut: string | null
 ) {
+  const duJour = creneaux
+    .filter((c) => c.jour === jour)
+    .sort((a, b) => a.debut - b.debut);
+
   // A day with nothing in it is worth saying out loud, not worth four words
   // repeated twice. For someone who pays for transport from Nkolbisson this
   // is the most actionable message the app ever sends.
-  if (!creneaux.some((c) => c.jour === jour)) return "Pas de cours de la journée.";
+  if (duJour.length === 0) return "Pas de cours de la journée.";
 
   const lignes: string[] = [];
   const alertes: string[] = [];
 
-  for (const moment of MOMENTS) {
-    const c = creneaux.find((x) => x.jour === jour && x.moment === moment.id);
+  /*
+   * Walked slot by slot rather than half-day by half-day, because a morning
+   * can hold one course or two. Consecutive empty slots are merged into a
+   * single "pas de cours" so a free afternoon reads as one line, not two.
+   */
+  let slot = 1;
+  let vide: number[] = [];
+  const viderLesTrous = () => {
+    if (vide.length === 0) return;
+    lignes.push(`${heuresDe(vide[0], vide[vide.length - 1])} : pas de cours`);
+    vide = [];
+  };
+
+  while (slot <= CRENEAUX.length) {
+    const c = duJour.find((x) => x.debut === slot);
     if (!c) {
-      lignes.push(`${moment.label} : pas de cours`);
+      vide.push(slot);
+      slot += 1;
       continue;
     }
-    // A label set by hand wins: it is someone deciding what this course is
-    // called in a notification, which beats any rule for shortening a title.
+    viderLesTrous();
     const nom = c.abrege?.trim() || matiereCourte(c.matiere);
     const salle = c.salle ?? salleDefaut;
-    lignes.push(`${moment.label} : ${nom}, ${moment.heures}${salle ? `, ${salle}` : ""}`);
+    lignes.push(`${heuresDe(c.debut, c.fin)} : ${nom}${salle ? `, ${salle}` : ""}`);
     const alerte = alerteSeance(c, nom);
     if (alerte) alertes.push(alerte);
+    slot = c.fin + 1;
   }
+  viderLesTrous();
 
   return [...lignes, ...alertes].join("\n");
 }
