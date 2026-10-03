@@ -27,13 +27,13 @@ export function ProgrammeGrid({
   const at = (jour: number, moment: string) =>
     creneaux.find((c) => c.jour === jour && c.moment === moment);
 
-  // A day with nothing at all is dropped: Saturday is usually free, and six
-  // empty rows would push the real week off the screen.
-  const jours = JOURS.map((label, i) => ({ label, jour: i + 1 })).filter(
-    ({ jour }) => MOMENTS.some((m) => at(jour, m.id))
-  );
-
-  if (jours.length === 0) return null;
+  /*
+   * Every day from Monday to Saturday is listed, including the ones with
+   * nothing in them. Dropping an empty day saved screen space and cost
+   * clarity: a student who does not see Wednesday cannot tell "no class" from
+   * "nobody filled it in". Saying it plainly is the whole point.
+   */
+  const jours = JOURS.map((label, i) => ({ label, jour: i + 1 }));
 
   return (
     <div>

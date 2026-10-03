@@ -90,6 +90,11 @@ export function messageDuSoir(
   jour: number,
   salleDefaut: string | null
 ) {
+  // A day with nothing in it is worth saying out loud, not worth four words
+  // repeated twice. For someone who pays for transport from Nkolbisson this
+  // is the most actionable message the app ever sends.
+  if (!creneaux.some((c) => c.jour === jour)) return "Pas de cours de la journée.";
+
   const lignes: string[] = [];
   const alertes: string[] = [];
 
@@ -125,11 +130,6 @@ export async function envoyerRappelsDuSoir(now = new Date()) {
   for (const classe of toutes) {
     const programme = await getProgrammeForWeek(classe.id, semaine);
     if (!programme) continue;
-
-    // A promo whose whole day is empty is told nothing rather than told
-    // twice that it has nothing — the weekly grid already said so.
-    const aCours = programme.creneaux.some((c) => c.jour === jour);
-    if (!aCours) continue;
 
     await sendPushToClasse(classe.id, {
       title: `Demain ${jourLabel(jour)} — ${classe.label}`,
