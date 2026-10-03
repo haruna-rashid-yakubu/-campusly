@@ -1,7 +1,9 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "nodejs";
-export const dynamic = "force-static";
+// Not force-static: that empties the query string, so every device was served
+// the default size instead of its own and iOS silently ignored the image.
+export const dynamic = "force-dynamic";
 
 /*
  * The image iOS paints before any of the app exists.
@@ -78,6 +80,14 @@ export async function GET(request: Request) {
         </div>
       </div>
     ),
-    { width, height }
+    {
+      width,
+      height,
+      headers: {
+        // The screen never changes for a given size, so it is worth caching
+        // hard at the edge rather than re-rendering it on every cold start.
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    }
   );
 }
