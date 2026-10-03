@@ -17,7 +17,12 @@ import {
   visites,
 } from "@/db/schema";
 import { deleteFile, uploadFile } from "@/lib/blob";
-import { ensureClassesForFiliere, getClasseByLabel, getProgrammeForWeek } from "@/lib/data";
+import {
+  ensureClassesForFiliere,
+  getClasseByLabel,
+  getPreferredClasse,
+  getProgrammeForWeek,
+} from "@/lib/data";
 import { fromISODate, mondayOf, nowInWAT, startOfDay, weekRangeLabel } from "@/lib/semaine";
 import { BANNER_COOKIE, CLASSE_COOKIE, DEVICE_COOKIE, momentDuSlot } from "@/lib/constants";
 import { sendPushToAdmins, sendPushToClasse, sendPushToUser } from "@/lib/push";
@@ -466,12 +471,14 @@ export async function subscribePush(subscription: {
 }) {
   const session = await auth();
 
-  // Stamped with the promo showing on this device at the moment notifications
-  // were turned on. Without it, a subscription with no account behind it is
-  // unreachable by anything promo-specific.
-  const store = await cookies();
-  const label = store.get(CLASSE_COOKIE)?.value;
-  const classe = label ? await getClasseByLabel(label) : undefined;
+  /*
+   * Stamped with the promo this device is reading, not with the raw cookie:
+   * someone who switches notifications on before ever opening the picker has
+   * no cookie, and a null stamp means every promo-specific push skips them
+   * for good — while the screen in front of them names a promo. The fallback
+   * is what the programme page itself shows, so the two agree.
+   */
+  const classe = await getClasseByLabel(await getPreferredClasse());
   const classeId = classe?.id ?? null;
 
   await db
@@ -486,7 +493,10 @@ export async function subscribePush(subscription: {
     .onConflictDoUpdate({
       target: pushSubscriptions.endpoint,
       set: {
-        userId: session?.user?.id ?? null,
+        // Re-sent from a signed-out tab, this must not orphan a subscription
+        // from the account that owns it: keep whoever is already on the row
+        // when nobody is signed in now.
+        userId: session?.user?.id ?? sql`${pushSubscriptions.userId}`,
         classeId,
         p256dh: subscription.keys.p256dh,
         auth: subscription.keys.auth,

@@ -69,3 +69,32 @@ export async function enablePush(): Promise<PushStatus> {
   localStorage.setItem(SUBSCRIBED_KEY, "1");
   return "active";
 }
+
+/*
+ * Re-sends the subscription this device already has, so the server can stamp
+ * it with the promo now in the cookie.
+ *
+ * The stamp is written once, when notifications are switched on, and the
+ * server cannot reach back into a browser to change it. For a signed-in
+ * person the account carries the promo instead; for everyone else the stamp
+ * is all there is, so a student who picks their classe afterwards would keep
+ * the promo they left — or none at all, and hear nothing ever again. Calling
+ * this after a change is what keeps the two in step.
+ */
+export async function resyncPush() {
+  try {
+    if (typeof window === "undefined") return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    // `ready` never settles when nothing is registered, which would hang the
+    // caller; asking for the registration answers "none" instead.
+    const registration = await navigator.serviceWorker.getRegistration();
+    const subscription = await registration?.pushManager.getSubscription();
+    if (!subscription) return;
+    await subscribePush(
+      subscription.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } }
+    );
+  } catch {
+    // A failed resync leaves the old stamp in place, which is bad; a classe
+    // picker that throws instead of closing is worse.
+  }
+}

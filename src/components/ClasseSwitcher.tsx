@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Sheet } from "@/components/Sheet";
 import { Icon } from "@/components/icons";
 import { setClasse } from "@/lib/actions";
+import { resyncPush } from "@/lib/push-client";
 import { filiereDeClasse } from "@/lib/utils";
 
 /** "BME · L2" -> "L2". Falls back to the whole label if there is no separator. */
@@ -47,6 +48,11 @@ export function ClasseSwitcher({
     setOpen(false);
     startTransition(async () => {
       await setClasse(v);
+      // The subscription carries the promo it was created with, and only the
+      // browser can hand it back. Without this, a signed-out device that picks
+      // its classe after switching notifications on keeps the old stamp and
+      // never hears about its own programme.
+      await resyncPush();
       router.refresh();
     });
   };
