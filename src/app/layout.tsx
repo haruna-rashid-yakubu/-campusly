@@ -6,6 +6,7 @@ import { ToastProvider } from "@/components/Toast";
 import { OfflineOverlay } from "@/components/OfflineOverlay";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { TabBarGate } from "@/components/TabBarGate";
+import { ChoixClasseGate } from "@/components/ChoixClasseGate";
 import { AppleSplashLinks } from "@/components/AppleSplashLinks";
 import { Visite } from "@/components/Visite";
 import { APP_URL } from "@/lib/constants";
@@ -83,6 +84,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ToastProvider>
           {children}
           <TabBarGate />
+          {/* After the page, so its HTML is complete underneath, and last so
+              it paints over the tab bar rather than beside it. */}
+          <ChoixClasseGate />
           <OfflineOverlay />
         </ToastProvider>
         <ServiceWorkerRegister />
