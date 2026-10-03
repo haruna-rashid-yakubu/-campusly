@@ -6,6 +6,7 @@ import { ToastProvider } from "@/components/Toast";
 import { OfflineOverlay } from "@/components/OfflineOverlay";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { TabBarGate } from "@/components/TabBarGate";
+import { AppleSplashLinks } from "@/components/AppleSplashLinks";
 import { APP_URL } from "@/lib/constants";
 
 const manrope = Manrope({
@@ -74,6 +75,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" className={`${manrope.variable} h-full`}>
+      <head>
+        <AppleSplashLinks />
+      </head>
       <body className="h-full font-sans antialiased">
         <ToastProvider>
           {children}
