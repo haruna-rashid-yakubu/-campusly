@@ -23,10 +23,11 @@ import {
   getPreferredClasse,
   getProgrammeForWeek,
   getAudience,
+  getCouverture,
   getProposerFacets,
   getSubjects,
 } from "@/lib/data";
-import { addDays, mondayOf, toISODate, weekRangeLabel } from "@/lib/semaine";
+import { addDays, mondayOf, nowInWAT, toISODate, weekRangeLabel } from "@/lib/semaine";
 import { distanceLabel, fcfa } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -368,8 +369,79 @@ async function AudienceTab() {
 
       <p className="mt-6 text-[12px] leading-snug text-slate-light">
         On compte des appareils, pas des personnes : le même étudiant sur son téléphone et sur un
-        ordinateur compte deux fois, et effacer les données du navigateur en crée un troisième. À
-        lire comme un ordre de grandeur et une tendance.
+        ordinateur compte deux fois, et effacer les données du navigateur en crée un troisième.
+        Installer l&rsquo;appli sur l&rsquo;écran d&rsquo;accueil après l&rsquo;avoir ouverte dans
+        le navigateur en crée un de plus. À lire comme un ordre de grandeur et une tendance.
+      </p>
+
+      <CouvertureSection />
+    </>
+  );
+}
+
+/*
+ * The table to read before diffusing a link. Audience says who came;
+ * this says what they found.
+ */
+async function CouvertureSection() {
+  const semaine = mondayOf(nowInWAT());
+  const { classes, notifs } = await getCouverture(semaine);
+  const muets = notifs.total - notifs.joignables;
+  const vides = classes.filter((c) => !c.programme && c.annales === 0);
+
+  return (
+    <>
+      <div className="mb-2 mt-9 text-base font-extrabold tracking-tight">Notifications</div>
+      <div className="grid grid-cols-2 gap-2.5">
+        <Chiffre valeur={notifs.total} legende="Appareils abonnés" />
+        <Chiffre valeur={notifs.joignables} legende="Rattachés à une promo" />
+      </div>
+      <p className="mt-3 text-[12.5px] leading-snug text-slate-light">
+        {muets === 0
+          ? "Tous les abonnés sont rattachés à une promo : le programme et le rappel de 20h les atteignent."
+          : `${muets} abonné${muets > 1 ? "s ne sont" : " n'est"} rattaché${
+              muets > 1 ? "s" : ""
+            } à aucune promo. Ni le programme ni le rappel de 20h ne ${
+              muets > 1 ? "leur" : "lui"
+            } parvient — ça se répare tout seul à la prochaine ouverture.`}
+      </p>
+
+      <div className="mb-1 mt-7 text-base font-extrabold tracking-tight">
+        Ce que chaque promo trouve
+      </div>
+      <p className="mb-2 text-[12.5px] leading-snug text-slate-light">
+        Semaine du {weekRangeLabel(semaine)}.
+      </p>
+
+      <div className="flex items-center gap-2 border-b border-line-3 pb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-light">
+        <span className="flex-1">Promo</span>
+        <span className="w-11 text-right">7 j</span>
+        <span className="w-11 text-right">Notif</span>
+        <span className="w-14 text-right">Prog.</span>
+        <span className="w-14 text-right">Annales</span>
+      </div>
+      {classes.map((c) => {
+        const vide = !c.programme && c.annales === 0;
+        return (
+          <div
+            key={c.classe}
+            className="flex items-center gap-2 border-b border-line-3 py-2.5 text-[14px] tabular-nums"
+            style={{ color: vide ? "#B91C1C" : undefined }}
+          >
+            <span className="flex-1 font-semibold">{c.classe}</span>
+            <span className="w-11 text-right">{c.appareils}</span>
+            <span className="w-11 text-right">{c.abonnes}</span>
+            <span className="w-14 text-right font-bold">{c.programme ? "oui" : "—"}</span>
+            <span className="w-14 text-right">{c.annales}</span>
+          </div>
+        );
+      })}
+
+      <p className="mt-4 text-[12.5px] leading-snug text-slate-light">
+        {vides.length === 0
+          ? "Chaque promo a de quoi lire."
+          : `${vides.length} promo${vides.length > 1 ? "s" : ""} en rouge : ni programme cette ` +
+            `semaine, ni annales. Un étudiant qui choisit cette promo tombe sur une appli vide.`}
       </p>
     </>
   );

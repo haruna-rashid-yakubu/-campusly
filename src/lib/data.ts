@@ -12,6 +12,7 @@ import {
   subjectTypeEnum,
 } from "@/db/schema";
 import { BANNER_COOKIE, CLASSE_COOKIE, DEFAULT_CLASSE } from "@/lib/constants";
+import { toISODate } from "@/lib/semaine";
 
 export async function getPreferredClasse() {
   const store = await cookies();
@@ -432,5 +433,54 @@ export async function getAudience() {
     }),
     parJour: parJourResult.rows,
     parClasse: parClasseResult.rows,
+  };
+}
+
+/*
+ * What a student actually finds once they have named their promo.
+ *
+ * The question the audience numbers cannot answer: a promo can have readers,
+ * subscribers and still be an empty app — no timetable for the week, no past
+ * papers. That gap used to be invisible, because everyone who had not chosen
+ * was shown the default promo's week and so nobody landed on nothing. Now
+ * that the promo is asked for up front, an empty one is the first thing its
+ * students see, which makes this the table to read before a launch.
+ */
+export async function getCouverture(semaine: Date) {
+  const lignes = await db.execute<{
+    classe: string;
+    appareils: number;
+    abonnes: number;
+    programme: boolean;
+    annales: number;
+  }>(sql`
+    select c.label as classe,
+           (select count(distinct v.device_id)::int from visite v
+             where v.classe_id = c.id and v.jour > current_date - 7) as appareils,
+           (select count(*)::int from push_subscription ps
+              left join "user" u on u.id = ps.user_id
+             where coalesce(u.classe_id, ps.classe_id) = c.id) as abonnes,
+           exists(select 1 from programme_publication p
+                   where p.classe_id = c.id and p.semaine = ${toISODate(semaine)}) as programme,
+           (select count(*)::int from subject s
+             where s.filiere = split_part(c.label, ' · ', 1)
+               and s.niveau = split_part(c.label, ' · ', 2)) as annales
+    from classe c
+    order by c.label
+  `);
+
+  const notifsResult = await db.execute<{ total: number; joignables: number }>(sql`
+    select count(*)::int as total,
+           count(*) filter (
+             where coalesce(u.classe_id, ps.classe_id) is not null
+           )::int as joignables
+    from push_subscription ps
+    left join "user" u on u.id = ps.user_id
+  `);
+
+  const [notifs] = notifsResult.rows;
+  return {
+    classes: lignes.rows,
+    notifs: notifs ?? { total: 0, joignables: 0 },
   };
 }
