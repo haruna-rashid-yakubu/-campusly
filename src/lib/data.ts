@@ -372,3 +372,65 @@ export async function getRecentCite() {
   const minPrice = row.roomTypes.length ? Math.min(...row.roomTypes.map((r) => r.prixMensuel)) : 0;
   return { ...row, minPrice };
 }
+
+
+/*
+ * The audience, counted in devices. The same student on a phone and a laptop
+ * is two, and clearing site data makes a third — there is no honest way
+ * around that short of making everyone sign in, which would cost far more
+ * readers than the precision is worth. Read these as an order of magnitude
+ * and a direction, not as a headcount.
+ */
+export async function getAudience() {
+  const totauxResult = await db.execute<{
+    total: number;
+    aujourdhui: number;
+    sept_jours: number;
+    nouveaux_sept_jours: number;
+    fideles: number;
+    ouvertures_sept_jours: number;
+  }>(sql`
+    select
+      count(distinct device_id)::int as total,
+      count(distinct device_id) filter (where jour = current_date)::int as aujourdhui,
+      count(distinct device_id) filter (where jour > current_date - 7)::int as sept_jours,
+      count(distinct device_id) filter (where premiere_visite and jour > current_date - 7)::int as nouveaux_sept_jours,
+      coalesce(sum(ouvertures) filter (where jour > current_date - 7), 0)::int as ouvertures_sept_jours,
+      -- Someone who came back on a different day. The only number that says
+      -- whether the app stuck, as opposed to whether a link got clicked.
+      (select count(*)::int from (
+         select device_id from visite group by device_id having count(distinct jour) > 1
+       ) as revenus)::int as fideles
+    from visite
+  `);
+
+  const parJourResult = await db.execute<{ jour: string; appareils: number }>(sql`
+    select to_char(jour, 'YYYY-MM-DD') as jour, count(distinct device_id)::int as appareils
+    from visite where jour > current_date - 14
+    group by jour order by jour
+  `);
+
+  const parClasseResult = await db.execute<{ classe: string; appareils: number }>(sql`
+    select coalesce(c.label, 'Promo non choisie') as classe,
+           count(distinct v.device_id)::int as appareils
+    from visite v left join classe c on c.id = v.classe_id
+    where v.jour > current_date - 7
+    group by c.label order by appareils desc
+  `);
+
+  // The neon-http driver hands back { rows }, not an array.
+  const [totaux] = totauxResult.rows;
+
+  return {
+    ...(totaux ?? {
+      total: 0,
+      aujourdhui: 0,
+      sept_jours: 0,
+      nouveaux_sept_jours: 0,
+      fideles: 0,
+      ouvertures_sept_jours: 0,
+    }),
+    parJour: parJourResult.rows,
+    parClasse: parClasseResult.rows,
+  };
+}

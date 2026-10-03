@@ -15,11 +15,12 @@ import {
   subjectTypeEnum,
   momentEnum,
   users,
+  visites,
 } from "@/db/schema";
 import { deleteFile, uploadFile } from "@/lib/blob";
 import { ensureClassesForFiliere, getClasseByLabel, getProgrammeForWeek } from "@/lib/data";
-import { fromISODate, mondayOf, weekRangeLabel } from "@/lib/semaine";
-import { BANNER_COOKIE, CLASSE_COOKIE } from "@/lib/constants";
+import { fromISODate, mondayOf, nowInWAT, startOfDay, weekRangeLabel } from "@/lib/semaine";
+import { BANNER_COOKIE, CLASSE_COOKIE, DEVICE_COOKIE } from "@/lib/constants";
 import { sendPushToAdmins, sendPushToClasse, sendPushToUser } from "@/lib/push";
 
 async function requireUser() {
@@ -68,6 +69,55 @@ export async function setClasse(label: string) {
   revalidatePath("/");
   revalidatePath("/programme");
   revalidatePath("/admin");
+}
+
+/*
+ * One row per device per day, counting opens. Called once when the shell
+ * mounts, so it measures "someone opened the app" rather than page views —
+ * which is the question actually being asked.
+ *
+ * The day is Cameroon's, not the server's: a visit at 23h30 local belongs to
+ * that evening, and a server reasoning in UTC would file it under tomorrow.
+ *
+ * Failure here must never reach the reader. Counting is the least important
+ * thing happening on the page.
+ */
+export async function enregistrerVisite() {
+  try {
+    const store = await cookies();
+    const existant = store.get(DEVICE_COOKIE)?.value;
+    const deviceId = existant ?? crypto.randomUUID();
+    if (!existant) {
+      store.set(DEVICE_COOKIE, deviceId, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 365 * 2,
+        httpOnly: true,
+        sameSite: "lax",
+      });
+    }
+
+    const label = store.get(CLASSE_COOKIE)?.value;
+    const classe = label ? await getClasseByLabel(label) : undefined;
+
+    await db
+      .insert(visites)
+      .values({
+        deviceId,
+        classeId: classe?.id ?? null,
+        jour: startOfDay(nowInWAT()),
+        premiereVisite: !existant,
+      })
+      .onConflictDoUpdate({
+        target: [visites.deviceId, visites.jour],
+        set: {
+          ouvertures: sql`${visites.ouvertures} + 1`,
+          classeId: classe?.id ?? null,
+          vuA: new Date(),
+        },
+      });
+  } catch {
+    // Never let the counter break the page it is counting.
+  }
 }
 
 export async function dismissInstallBanner() {

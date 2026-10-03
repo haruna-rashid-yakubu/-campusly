@@ -7,6 +7,7 @@ import { OfflineOverlay } from "@/components/OfflineOverlay";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { TabBarGate } from "@/components/TabBarGate";
 import { AppleSplashLinks } from "@/components/AppleSplashLinks";
+import { Visite } from "@/components/Visite";
 import { APP_URL } from "@/lib/constants";
 
 const manrope = Manrope({
@@ -85,6 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <OfflineOverlay />
         </ToastProvider>
         <ServiceWorkerRegister />
+        <Visite />
         <SpeedInsights />
       </body>
     </html>

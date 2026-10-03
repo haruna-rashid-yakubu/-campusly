@@ -257,6 +257,33 @@ export const creneaux = pgTable(
   (t) => [unique("creneau_slot").on(t.programmeId, t.jour, t.moment)]
 );
 
+/*
+ * One row per device per day. Not per page view: the question is how many
+ * people opened the app, and a row that merely counts higher answers it just
+ * as well while keeping the table the size of the audience rather than the
+ * size of its browsing.
+ *
+ * The device id is a cookie, which makes this a count of devices, not of
+ * people — the same student on a phone and a laptop is two. No better proxy
+ * exists without asking everyone to sign in, which would cost far more
+ * readers than the precision is worth.
+ */
+export const visites = pgTable(
+  "visite",
+  {
+    id: serial("id").primaryKey(),
+    deviceId: text("device_id").notNull(),
+    // The promo showing at the time, so the audience can be read per promo —
+    // "who is actually using this" is a different question in each one.
+    classeId: integer("classe_id").references(() => classes.id, { onDelete: "set null" }),
+    jour: date("jour", { mode: "date" }).notNull(),
+    ouvertures: integer("ouvertures").notNull().default(1),
+    premiereVisite: boolean("premiere_visite").notNull().default(false),
+    vuA: timestamp("vu_a", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [unique("visite_device_jour").on(t.deviceId, t.jour)]
+);
+
 // --- Relations ---------------------------------------------------------------
 
 export const usersRelations = relations(users, ({ many }) => ({

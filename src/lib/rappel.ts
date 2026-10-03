@@ -3,19 +3,7 @@ import { classes } from "@/db/schema";
 import { heuresDu, MOMENTS } from "@/lib/constants";
 import { getProgrammeForWeek } from "@/lib/data";
 import { sendPushToClasse } from "@/lib/push";
-import { addDays, jourLabel, jourOf, mondayOf } from "@/lib/semaine";
-
-/*
- * Cameroon is UTC+1 all year, with no daylight saving. The cron fires at
- * 19:00 UTC, which is 20h locally, but a server running in UTC would still
- * compute "tomorrow" from its own midnight — and between 23h and midnight
- * UTC+1 that is the wrong day. Everything here works on local Cameroon time.
- */
-const WAT_OFFSET_MS = 60 * 60 * 1000;
-
-export function nowInWAT(now = new Date()) {
-  return new Date(now.getTime() + WAT_OFFSET_MS);
-}
+import { addDays, jourLabel, jourOf, mondayOf, nowInWAT } from "@/lib/semaine";
 
 /*
  * A long course title does not fit in a push notification. The convention in

@@ -9,6 +9,18 @@ import { JOURS } from "@/lib/constants";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/*
+ * Cameroon is UTC+1 all year, with no daylight saving. Anything that asks
+ * "what day is it" has to ask it here: a server reasoning from its own UTC
+ * midnight files an evening between 23h and minuit under tomorrow, which
+ * sends the wrong schedule and counts the visit on the wrong day.
+ */
+const WAT_OFFSET_MS = 60 * 60 * 1000;
+
+export function nowInWAT(now = new Date()) {
+  return new Date(now.getTime() + WAT_OFFSET_MS);
+}
+
 export function startOfDay(d: Date) {
   const copy = new Date(d);
   copy.setHours(0, 0, 0, 0);

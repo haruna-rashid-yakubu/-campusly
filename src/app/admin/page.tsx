@@ -16,6 +16,7 @@ import {
   getModerationQueue,
   getPreferredClasse,
   getProgrammeForWeek,
+  getAudience,
   getProposerFacets,
   getSubjects,
 } from "@/lib/data";
@@ -32,8 +33,9 @@ export const dynamic = "force-dynamic";
 const TABS = [
   { id: "sujets", label: "Envois" },
   { id: "publies", label: "Publiés" },
-  { id: "cites", label: "Cités" },
   { id: "prog", label: "Programme" },
+  { id: "monde", label: "Audience" },
+  { id: "cites", label: "Cités" },
 ] as const;
 
 export default async function AdminPage({
@@ -90,6 +92,7 @@ export default async function AdminPage({
         {tab === "publies" && <PubliesTab q={q} />}
         {tab === "cites" && <CitesTab />}
         {tab === "prog" && <ProgrammeTab />}
+        {tab === "monde" && <AudienceTab />}
       </div>
     </div>
   );
@@ -255,6 +258,85 @@ async function ProgrammeTab() {
           <Badge tone={manquant ? "danger" : "teal"}>{manquant ? "Manquant" : "Publié"}</Badge>
         </div>
       ))}
+    </>
+  );
+}
+
+
+function Chiffre({ valeur, legende }: { valeur: number; legende: string }) {
+  return (
+    <div className="rounded-[18px] border border-line p-3.5">
+      <div className="text-[26px] font-extrabold leading-none tracking-tight tabular-nums">
+        {valeur}
+      </div>
+      <div className="mt-1 text-[12px] leading-snug text-slate-light">{legende}</div>
+    </div>
+  );
+}
+
+async function AudienceTab() {
+  const a = await getAudience();
+  const maxJour = Math.max(1, ...a.parJour.map((j) => j.appareils));
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-2.5">
+        <Chiffre valeur={a.aujourdhui} legende="Appareils aujourd'hui" />
+        <Chiffre valeur={a.sept_jours} legende="Appareils ces 7 jours" />
+        <Chiffre valeur={a.total} legende="Appareils depuis le début" />
+        <Chiffre valeur={a.fideles} legende="Revenus un autre jour" />
+      </div>
+
+      <p className="mt-3 text-[12.5px] leading-snug text-slate-light">
+        « Revenus un autre jour » est le seul chiffre qui dit si l&rsquo;appli tient : le reste
+        mesure surtout si le lien a été cliqué. {a.nouveaux_sept_jours} nouvel
+        {a.nouveaux_sept_jours > 1 ? "s" : ""} appareil
+        {a.nouveaux_sept_jours > 1 ? "s" : ""} cette semaine, {a.ouvertures_sept_jours} ouverture
+        {a.ouvertures_sept_jours > 1 ? "s" : ""} au total.
+      </p>
+
+      <div className="mb-2 mt-7 text-base font-extrabold tracking-tight">14 derniers jours</div>
+      {a.parJour.length === 0 ? (
+        <p className="text-[14px] text-slate-light">Aucune visite enregistrée pour l&rsquo;instant.</p>
+      ) : (
+        <div className="flex h-[120px] items-end gap-1.5">
+          {a.parJour.map((j) => (
+            <div key={j.jour} className="flex flex-1 flex-col items-center gap-1">
+              <div
+                className="w-full rounded-t-[5px] bg-teal"
+                style={{ height: `${Math.round((j.appareils / maxJour) * 92)}px`, minHeight: 3 }}
+                title={`${j.jour} — ${j.appareils}`}
+              />
+              <span className="text-[9.5px] tabular-nums text-slate-light">
+                {j.jour.slice(8)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mb-1 mt-7 text-base font-extrabold tracking-tight">
+        Par promo, ces 7 jours
+      </div>
+      {a.parClasse.length === 0 ? (
+        <p className="mt-2 text-[14px] text-slate-light">Rien à afficher.</p>
+      ) : (
+        a.parClasse.map((c) => (
+          <div
+            key={c.classe}
+            className="flex items-center justify-between border-t border-line-3 py-3"
+          >
+            <span className="text-[14.5px] font-semibold">{c.classe}</span>
+            <span className="text-[14.5px] font-extrabold tabular-nums">{c.appareils}</span>
+          </div>
+        ))
+      )}
+
+      <p className="mt-6 text-[12px] leading-snug text-slate-light">
+        On compte des appareils, pas des personnes : le même étudiant sur son téléphone et sur un
+        ordinateur compte deux fois, et effacer les données du navigateur en crée un troisième. À
+        lire comme un ordre de grandeur et une tendance.
+      </p>
     </>
   );
 }

@@ -7,6 +7,9 @@
 export const CLASSE_COOKIE = "campusly_classe";
 export const DEFAULT_CLASSE = "BME · L2";
 export const BANNER_COOKIE = "campusly_banner_dismissed";
+// Identifies a browser, nothing more. httpOnly so no script can read it, and
+// it holds a random id with nothing derived from the person behind it.
+export const DEVICE_COOKIE = "campusly_device";
 
 export const SUBJECT_FILTER_LABELS: Record<string, string> = {
   filiere: "Filière",
