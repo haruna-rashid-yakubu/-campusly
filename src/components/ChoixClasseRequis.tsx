@@ -6,7 +6,7 @@ import { Logo } from "@/components/Logo";
 import { Icon } from "@/components/icons";
 import { setClasse } from "@/lib/actions";
 import { resyncPush } from "@/lib/push-client";
-import { hasTabBar } from "@/lib/nav";
+import { estUnLienPartage, hasTabBar } from "@/lib/nav";
 import { filiereDeClasse } from "@/lib/utils";
 
 /** "BME · L2" -> "L2". Falls back to the whole label if there is no separator. */
@@ -47,10 +47,19 @@ export function ChoixClasseRequis({ classes }: { classes: string[] }) {
     return [...groupes.entries()].map(([nom, labels]) => ({ nom, labels }));
   }, [classes]);
 
-  // Admin, the install guide and the fullscreen viewers are not the main app
-  // surface, and someone sent straight to one of them has a reason to be
-  // there that a promo question would only get in the way of.
-  const affiche = hasTabBar(pathname) && classes.length > 0;
+  /*
+   * Admin, the install guide and the fullscreen viewers are not the main app
+   * surface, and someone sent straight to one of them has a reason to be
+   * there that a promo question would only get in the way of.
+   *
+   * A link to one precise paper or cité is let through for the same reason,
+   * and it is the one that matters most: those links are how the app spreads.
+   * Someone opens "here is last year's stats paper" from a group chat, and a
+   * wall before the paper is a wall at the exact moment they wanted it. They
+   * get what they came for; the question waits until they look around, which
+   * is when it starts being worth answering.
+   */
+  const affiche = hasTabBar(pathname) && !estUnLienPartage(pathname) && classes.length > 0;
 
   useEffect(() => {
     if (!affiche) return;
