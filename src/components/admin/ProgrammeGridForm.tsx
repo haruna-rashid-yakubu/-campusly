@@ -9,6 +9,7 @@ import { JOURS, MOMENTS } from "@/lib/constants";
 
 export type Cell = {
   matiere: string;
+  abrege: string;
   enseignant: string;
   salle: string;
   seance: string;
@@ -16,7 +17,15 @@ export type Cell = {
   cc: boolean;
 };
 
-const EMPTY: Cell = { matiere: "", enseignant: "", salle: "", seance: "", seances: "", cc: false };
+const EMPTY: Cell = {
+  matiere: "",
+  abrege: "",
+  enseignant: "",
+  salle: "",
+  seance: "",
+  seances: "",
+  cc: false,
+};
 
 /** "lundi-matin" — the 12 keys of the grid. */
 const keyOf = (jour: number, moment: string) => `${jour}-${moment}`;
@@ -70,6 +79,7 @@ export function ProgrammeGridForm({
           jour,
           moment: moment.id,
           matiere: c.matiere,
+          abrege: c.abrege,
           enseignant: c.enseignant,
           salle: c.salle,
           seance: c.seance ? Number(c.seance) : null,
@@ -209,6 +219,13 @@ export function ProgrammeGridForm({
                         value={cell.enseignant}
                         onChange={(e) => setCell(key, { enseignant: e.target.value })}
                         placeholder="Enseignant"
+                        className="col-span-2 h-[44px] rounded-[13px] border-[1.5px] border-line-2 px-3 text-[14px] outline-none focus:border-teal"
+                      />
+                      {/* Only worth filling for a title too long to send. */}
+                      <input
+                        value={cell.abrege}
+                        onChange={(e) => setCell(key, { abrege: e.target.value })}
+                        placeholder="Nom court pour la notification"
                         className="col-span-2 h-[44px] rounded-[13px] border-[1.5px] border-line-2 px-3 text-[14px] outline-none focus:border-teal"
                       />
                       <input

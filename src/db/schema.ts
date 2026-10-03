@@ -237,6 +237,14 @@ export const creneaux = pgTable(
     jour: integer("jour").notNull(), // 1 = lundi … 6 = samedi
     moment: text("moment", { enum: momentEnum }).notNull(),
     matiere: text("matiere").notNull(),
+    /*
+     * What a notification calls this course. The screen keeps the official
+     * title — "Introduction à l'analyse de données à l'aide d'un tableur" —
+     * because that is what the noticeboard says and what students check
+     * against; a push has room for "Analyse de données" and nothing more.
+     * Empty means the title is short enough to send as it is.
+     */
+    abrege: text("abrege"),
     enseignant: text("enseignant"),
     salle: text("salle"), // overrides salleDefaut when set — "Labo 1"
     // "(4/6)" on the sheet: which session of the course this is. It is what

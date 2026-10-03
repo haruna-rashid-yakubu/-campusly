@@ -202,11 +202,12 @@ async function CitesTab() {
 
 // The grid is keyed on a Monday, so the editor always opens on the week that
 // is running — the one a correction is most likely to be about.
-function toCells(programme: { creneaux: { jour: number; moment: string; matiere: string; enseignant: string | null; salle: string | null; seance: number | null; seances: number | null; cc: boolean }[] } | undefined) {
+function toCells(programme: { creneaux: { jour: number; moment: string; matiere: string; abrege: string | null; enseignant: string | null; salle: string | null; seance: number | null; seances: number | null; cc: boolean }[] } | undefined) {
   const cells: Record<string, Cell> = {};
   for (const c of programme?.creneaux ?? []) {
     cells[`${c.jour}-${c.moment}`] = {
       matiere: c.matiere,
+      abrege: c.abrege ?? "",
       enseignant: c.enseignant ?? "",
       salle: c.salle ?? "",
       seance: c.seance ? String(c.seance) : "",

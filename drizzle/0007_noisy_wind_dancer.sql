@@ -1,0 +1,1 @@
+ALTER TABLE "creneau" ADD COLUMN "abrege" text;

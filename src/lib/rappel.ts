@@ -49,6 +49,7 @@ type Creneau = {
   jour: number;
   moment: string;
   matiere: string;
+  abrege?: string | null;
   salle: string | null;
   seance: number | null;
   seances: number | null;
@@ -104,7 +105,9 @@ export function messageDuSoir(
       lignes.push(`${moment.label} : pas de cours`);
       continue;
     }
-    const nom = matiereCourte(c.matiere);
+    // A label set by hand wins: it is someone deciding what this course is
+    // called in a notification, which beats any rule for shortening a title.
+    const nom = c.abrege?.trim() || matiereCourte(c.matiere);
     const salle = c.salle ?? salleDefaut;
     lignes.push(`${moment.label} : ${nom}, ${moment.heures}${salle ? `, ${salle}` : ""}`);
     const alerte = alerteSeance(c, nom);

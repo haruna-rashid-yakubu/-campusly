@@ -306,6 +306,7 @@ export type CreneauInput = {
   jour: number;
   moment: (typeof momentEnum)[number];
   matiere: string;
+  abrege?: string;
   enseignant?: string;
   salle?: string;
   seance?: number | null;
@@ -380,6 +381,7 @@ export async function saveProgramme(formData: FormData) {
       jour: c.jour,
       moment: c.moment,
       matiere: c.matiere.trim(),
+      abrege: c.abrege?.trim() || null,
       enseignant: c.enseignant?.trim() || null,
       salle: c.salle?.trim() || null,
       seance: c.seance ?? null,

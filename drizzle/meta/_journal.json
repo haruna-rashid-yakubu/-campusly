@@ -50,6 +50,13 @@
       "when": 1790448640622,
       "tag": "0006_nifty_lilith",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791016477208,
+      "tag": "0007_noisy_wind_dancer",
+      "breakpoints": true
     }
   ]
 }
