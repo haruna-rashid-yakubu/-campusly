@@ -33,6 +33,7 @@ import {
   sendPushToAdmins,
   sendPushToClasse,
   sendPushToDelegues,
+  sendPushToEmail,
   sendPushToUser,
 } from "@/lib/push";
 
@@ -749,7 +750,22 @@ export async function nommerDelegue(input: {
     nommePar: signature(admin),
   });
 
+  /*
+   * Tell them on their phone, the moment it happens. Being handed a
+   * responsibility you were never told about is no responsibility at all.
+   *
+   * There may be nobody behind the address yet — no account, or an account
+   * with notifications off — so the count comes back and the screen says which
+   * it was, rather than claiming a phone buzzed when none did.
+   */
+  const appareils = await sendPushToEmail(email, {
+    title: `Tu es délégué de ${classe.label}`,
+    body: "Tu peux publier l'emploi du temps de ta promo et valider les anciens sujets qu'elle envoie.",
+    url: "/admin",
+  });
+
   revalidatePath("/admin");
+  return { prevenu: appareils > 0, appareils };
 }
 
 export async function retirerDelegue(id: number) {

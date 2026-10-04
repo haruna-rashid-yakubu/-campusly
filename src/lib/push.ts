@@ -143,3 +143,27 @@ export async function sendPushToDelegues(classeId: number, payload: PushPayload)
     .where(ne(users.role, "admin"));
   await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
 }
+
+/*
+ * One person, found by the address rather than by an account.
+ *
+ * Naming a délégué happens before they have necessarily ever opened the app,
+ * so there may be no account and no device behind the address. The count comes
+ * back so the screen can say which of the two happened: a phone that buzzed,
+ * or someone who still has to be told by hand. Reporting "prévenu" when
+ * nothing left the server would be the worst of both.
+ */
+export async function sendPushToEmail(email: string, payload: PushPayload) {
+  if (!ensureConfigured()) return 0;
+  const subs = await db
+    .select({
+      endpoint: pushSubscriptions.endpoint,
+      p256dh: pushSubscriptions.p256dh,
+      auth: pushSubscriptions.auth,
+    })
+    .from(pushSubscriptions)
+    .innerJoin(users, eq(users.id, pushSubscriptions.userId))
+    .where(sql`lower(${users.email}) = ${email.toLowerCase()}`);
+  await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
+  return subs.length;
+}

@@ -35,8 +35,15 @@ export function DelegueForm({
   const ajouter = () => {
     startTransition(async () => {
       try {
-        await nommerDelegue({ email, classeLabel: classe, forcer });
-        show(`${email.trim().toLowerCase()} est délégué de ${classe}`);
+        const { prevenu } = await nommerDelegue({ email, classeLabel: classe, forcer });
+        // Saying "prévenu" when no phone was reached would send the admin away
+        // believing the person knows.
+        show(
+          prevenu
+            ? `${classe} — prévenu sur son téléphone`
+            : `${classe} — pas encore d'appareil, préviens-le toi-même`,
+          prevenu ? "success" : "warn"
+        );
         setEmail("");
         setForcer(false);
         router.refresh();
