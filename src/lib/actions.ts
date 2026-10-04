@@ -6,6 +6,7 @@ import { eq, sql } from "drizzle-orm";
 import { auth, signIn, signOut } from "@/auth";
 import { db } from "@/db";
 import {
+  cites,
   creneaux,
   roomTypes,
   subjectSubmissions,
@@ -540,4 +541,87 @@ export async function getPushPrefs(endpoint: string) {
 
 export async function unsubscribePush(endpoint: string) {
   await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+}
+
+export type ChambreInput = {
+  type: string;
+  surface: string;
+  prixMensuel: number;
+  stock: number;
+};
+
+/*
+ * Creates a cité and its room types in one go.
+ *
+ * A cité with no room type is not a listing anyone can act on — it has no
+ * price, so it cannot be sorted, filtered or compared — so the two are
+ * written together rather than leaving a shell behind to be completed later.
+ *
+ * Photos arrive already uploaded: the form sends them to the blob store
+ * first, because a form post carrying several phone photos is the one that
+ * times out on a campus connection.
+ */
+export async function creerCite(input: {
+  nom: string;
+  quartier: string;
+  distanceM: number;
+  description: string;
+  whatsapp: string;
+  photos: string[];
+  chambres: ChambreInput[];
+}) {
+  await requireAdmin();
+
+  const nom = input.nom.trim();
+  const quartier = input.quartier.trim();
+  if (!nom || !quartier) throw new Error("Le nom et le quartier sont obligatoires.");
+  if (!Number.isFinite(input.distanceM) || input.distanceM < 0) {
+    throw new Error("Distance invalide.");
+  }
+
+  const chambres = input.chambres
+    .map((c) => ({
+      type: c.type.trim(),
+      surface: c.surface.trim(),
+      prixMensuel: Math.round(c.prixMensuel),
+      stock: Math.max(0, Math.round(c.stock)),
+    }))
+    .filter((c) => c.type && c.prixMensuel > 0);
+
+  if (chambres.length === 0) {
+    throw new Error("Ajoute au moins un type de chambre avec un prix.");
+  }
+
+  const [cite] = await db
+    .insert(cites)
+    .values({
+      nom,
+      quartier,
+      distanceM: Math.round(input.distanceM),
+      description: input.description.trim(),
+      whatsapp: input.whatsapp.replace(/[^0-9]/g, ""),
+      photos: input.photos,
+    })
+    .returning({ id: cites.id });
+
+  await db.insert(roomTypes).values(
+    chambres.map((c, i) => ({ ...c, citeId: cite.id, sortOrder: i }))
+  );
+
+  revalidatePath("/admin");
+  revalidatePath("/logements");
+  return cite.id;
+}
+
+/*
+ * Takes one photo from the form and hands back its URL. Called once per
+ * photo so a slow upload fails on its own instead of taking the whole cité
+ * down with it.
+ */
+export async function televerserPhotoCite(data: FormData) {
+  await requireAdmin();
+  const file = data.get("file");
+  if (!(file instanceof File) || file.size === 0) throw new Error("Aucun fichier reçu.");
+  const uploaded = await uploadFile(file, "cites");
+  return uploaded.url;
 }

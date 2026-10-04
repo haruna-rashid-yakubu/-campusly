@@ -7,6 +7,7 @@ import { EmptyState, Badge } from "@/components/EmptyState";
 import { Icon } from "@/components/icons";
 import { ModerationCard } from "@/components/admin/ModerationCard";
 import { StockControl } from "@/components/admin/StockControl";
+import { CiteForm } from "@/components/admin/CiteForm";
 import {
   cellKey,
   halfKey,
@@ -203,9 +204,12 @@ async function CitesTab() {
           </div>
         </div>
       ))}
-      <div className="flex h-[54px] w-full items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-dashed border-teal-border bg-teal-tint-soft text-[15px] font-bold text-teal-dark">
-        L&rsquo;ajout de nouvelles cités se fait pour l&rsquo;instant hors de l&rsquo;appli — contacte l&rsquo;équipe technique.
-      </div>
+      {cites.length === 0 && (
+        <p className="mb-3.5 text-[14px] leading-snug text-slate-light">
+          Aucune cité référencée. La première que tu ajoutes apparaîtra aussitôt dans Logements.
+        </p>
+      )}
+      <CiteForm />
     </>
   );
 }
