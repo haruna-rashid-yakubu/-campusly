@@ -138,7 +138,8 @@ export function DelegueForm({
 
         <p className="mt-3 text-[12.5px] leading-snug text-slate-light">
           Le droit attend l&rsquo;adresse : la personne peut être nommée avant d&rsquo;avoir jamais
-          ouvert Campusly, et le trouvera à sa première connexion.
+          ouvert Campusly, et le trouvera à sa première connexion. Son compte et ses
+          notifications passent sur la promo choisie ici.
         </p>
       </div>
 

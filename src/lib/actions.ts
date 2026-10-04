@@ -780,6 +780,29 @@ export async function nommerDelegue(input: {
    * with notifications off — so the count comes back and the screen says which
    * it was, rather than claiming a phone buzzed when none did.
    */
+  /*
+   * The promo follows the role. Someone named délégué of LEG 3 is a LEG 3
+   * student, so the account and every device they have switch to it — the
+   * account decides which timetable they are shown, the device decides which
+   * promo's notifications reach them, and a délégué reading another promo's
+   * week is the one thing that must not happen.
+   *
+   * The promo just named wins, every time, including when two were allowed:
+   * guessing which of the two is really theirs would be worse than following
+   * the last instruction given.
+   */
+  const [compte] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(sql`lower(${users.email}) = ${email}`);
+  if (compte) {
+    await db.update(users).set({ classeId: classe.id }).where(eq(users.id, compte.id));
+    await db
+      .update(pushSubscriptions)
+      .set({ classeId: classe.id })
+      .where(eq(pushSubscriptions.userId, compte.id));
+  }
+
   const appareils = await sendPushToEmail(email, annonceDelegation(classe.label));
 
   // Told, or still owed. The null is what the delivery below looks for.
