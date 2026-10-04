@@ -34,7 +34,6 @@ export function DownloadButton({
   const { show } = useToast();
   const [, startTransition] = useTransition();
   const [gateOpen, setGateOpen] = useState(false);
-  const [downloading, setDownloading] = useState(false);
 
   if (!fileUrl) {
     return (
@@ -48,16 +47,18 @@ export function DownloadButton({
     );
   }
 
-  const runDownload = async () => {
-    setDownloading(true);
+  /*
+   * Stays synchronous on purpose: Safari only honours a download while the
+   * tap that asked for it is still live, and any await spends it. The
+   * bookkeeping happens after the click for the same reason.
+   */
+  const runDownload = () => {
     try {
-      await downloadFile(fileUrl);
+      downloadFile(fileUrl);
       window.localStorage.setItem(COUNT_KEY, String(getCount() + 1));
       if (onRecord) startTransition(onRecord);
     } catch {
       show("Téléchargement impossible", "warn");
-    } finally {
-      setDownloading(false);
     }
   };
 
@@ -84,11 +85,10 @@ export function DownloadButton({
     <>
       <button
         onClick={handleClick}
-        disabled={downloading}
-        className="press-scale flex h-[54px] flex-1 items-center justify-center gap-2 rounded-2xl bg-teal text-[15.5px] font-bold text-white active:bg-teal-press disabled:opacity-60"
+        className="press-scale flex h-[54px] flex-1 items-center justify-center gap-2 rounded-2xl bg-teal text-[15.5px] font-bold text-white active:bg-teal-press"
       >
         <Icon name="down" size={19} strokeWidth={1.9} />
-        {downloading ? "Téléchargement…" : label}
+        {label}
       </button>
 
       <Sheet

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
 import { downloadFile } from "@/lib/download";
@@ -17,18 +16,16 @@ export function FullscreenViewer({
   closeHref: string;
 }) {
   const { show } = useToast();
-  const [downloading, setDownloading] = useState(false);
   const isPdf = fileUrl ? /\.pdf(\?|$)/i.test(fileUrl) : false;
 
-  const handleDownload = async () => {
-    if (!fileUrl || downloading) return;
-    setDownloading(true);
+  // Synchronous for the same reason as the download button: an await here
+  // spends the tap that Safari requires the download to come from.
+  const handleDownload = () => {
+    if (!fileUrl) return;
     try {
-      await downloadFile(fileUrl);
+      downloadFile(fileUrl);
     } catch {
       show("Téléchargement impossible", "warn");
-    } finally {
-      setDownloading(false);
     }
   };
 
@@ -49,8 +46,7 @@ export function FullscreenViewer({
         {fileUrl ? (
           <button
             onClick={handleDownload}
-            disabled={downloading}
-            className="press-scale grid h-11 w-11 place-items-center disabled:opacity-60"
+            className="press-scale grid h-11 w-11 place-items-center"
             aria-label="Télécharger"
           >
             <Icon name="down" size={21} strokeWidth={2} />
