@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { auth, signIn, signOut } from "@/auth";
 import { db } from "@/db";
 import {
@@ -583,6 +583,17 @@ export async function subscribePush(subscription: {
         auth: subscription.keys.auth,
       },
     });
+
+  // This device may be the first one able to receive what this person was
+  // told weeks ago. Failing here must never cost them their notifications.
+  const email = session?.user?.email?.toLowerCase();
+  if (email) {
+    try {
+      await livrerDelegationsEnAttente(email);
+    } catch {
+      // The row keeps its null; the next device will carry it.
+    }
+  }
 }
 
 /*
@@ -758,14 +769,54 @@ export async function nommerDelegue(input: {
    * with notifications off — so the count comes back and the screen says which
    * it was, rather than claiming a phone buzzed when none did.
    */
-  const appareils = await sendPushToEmail(email, {
-    title: `Tu es délégué de ${classe.label}`,
-    body: "Tu peux publier l'emploi du temps de ta promo et valider les anciens sujets qu'elle envoie.",
-    url: "/admin",
-  });
+  const appareils = await sendPushToEmail(email, annonceDelegation(classe.label));
+
+  // Told, or still owed. The null is what the delivery below looks for.
+  if (appareils > 0) {
+    await db
+      .update(delegations)
+      .set({ notifieeAt: new Date() })
+      .where(and(eq(delegations.email, email), eq(delegations.classeId, classe.id)));
+  }
 
   revalidatePath("/admin");
   return { prevenu: appareils > 0, appareils };
+}
+
+/** One wording, so the alert reads the same whenever it finally lands. */
+function annonceDelegation(label: string) {
+  return {
+    title: `Tu es délégué de ${label}`,
+    body: "Tu peux publier l'emploi du temps de ta promo et valider les anciens sujets qu'elle envoie.",
+    url: "/admin",
+  };
+}
+
+/*
+ * The news that was owed.
+ *
+ * A délégué is almost always named before they have a phone registered — that
+ * is the whole point of naming on an address. Sending into the void and
+ * calling it done would mean they are told by nobody. So the alert waits on
+ * the row, and goes out the first time a device of theirs can receive one:
+ * they switch notifications on, and the banner appears, like any other app.
+ */
+async function livrerDelegationsEnAttente(email: string) {
+  const dues = await db
+    .select({ id: delegations.id, label: classes.label })
+    .from(delegations)
+    .innerJoin(classes, eq(classes.id, delegations.classeId))
+    .where(and(eq(delegations.email, email), isNull(delegations.notifieeAt)));
+
+  for (const due of dues) {
+    const appareils = await sendPushToEmail(email, annonceDelegation(due.label));
+    if (appareils > 0) {
+      await db
+        .update(delegations)
+        .set({ notifieeAt: new Date() })
+        .where(eq(delegations.id, due.id));
+    }
+  }
 }
 
 export async function retirerDelegue(id: number) {

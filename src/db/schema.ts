@@ -379,6 +379,10 @@ export const delegations = pgTable(
       .references(() => classes.id, { onDelete: "cascade" }),
     // Who named them, kept so a right nobody remembers granting can be traced.
     nommePar: text("nomme_par"),
+    // When the person was actually told on their phone. Null means the news is
+    // still waiting: they had no device registered when they were named, and
+    // the alert is delivered the moment they switch notifications on.
+    notifieeAt: timestamp("notifiee_at", { mode: "date" }),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
   (t) => [unique("delegation_email_classe").on(t.email, t.classeId)]

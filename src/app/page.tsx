@@ -11,6 +11,7 @@ import { SignInButton } from "@/components/SignInButton";
 import { SignOutButton } from "@/components/SignOutButton";
 import {
   getClasseByLabel,
+  getClasseLabels,
   getClasses,
   getLatestProgramme,
   getPreferredClasse,
@@ -32,6 +33,13 @@ export default async function AccueilPage() {
     getRecentSubjects(1),
     getRecentCite(),
   ]);
+
+  // Belt and braces on the délégué alert: someone may be named while their
+  // notifications are off, and would then never learn of it. The app says so
+  // itself, every time they open it, until they have been on the screen.
+  const mesPromosDeleguees = (await getClasseLabels(session?.user?.delegations ?? []))
+    .map((c) => c.label)
+    .join(" et ");
 
   const selectedClasse = await getClasseByLabel(classe);
   const latestProgramme = selectedClasse ? await getLatestProgramme(selectedClasse.id) : null;
@@ -79,6 +87,27 @@ export default async function AccueilPage() {
           <ClasseSwitcher value={classe} classes={classesRows.map((c) => c.label)} />
         </div>
       </div>
+
+      {mesPromosDeleguees && (
+        <Link
+          href="/admin"
+          className="anim-fade press-scale mx-5 mt-5 flex items-center gap-3 rounded-[20px] border border-teal-border bg-teal-tint-soft p-4 active:bg-teal-tint"
+        >
+          <span className="grid h-10 w-10 flex-none place-items-center rounded-[13px] bg-teal-tint text-teal-dark">
+            <Icon name="check" size={19} strokeWidth={2.2} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-extrabold">
+              Tu es délégué de {mesPromosDeleguees}
+            </span>
+            <span className="mt-0.5 block text-[13.5px] leading-snug text-slate">
+              Publie l&rsquo;emploi du temps de ta promo et valide les anciens sujets qu&rsquo;elle
+              envoie.
+            </span>
+          </span>
+          <Icon name="right" size={18} className="flex-none text-slate-light" />
+        </Link>
+      )}
 
       {!bannerDismissed && (
         <div className="anim-fade mx-5 mt-5 rounded-[20px] border border-teal-border bg-teal-tint p-4">
