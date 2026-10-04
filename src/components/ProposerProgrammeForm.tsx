@@ -54,7 +54,11 @@ export function ProposerProgrammeForm({
         data.append("semaine", semaine);
         data.append("note", note);
         data.append("file", fichier);
-        await proposerProgramme(data);
+        const r = await proposerProgramme(data);
+        if (!r.ok) {
+          show(r.message, "warn");
+          return;
+        }
         show("Envoyé — ton délégué va le publier");
         router.push("/programme");
         router.refresh();

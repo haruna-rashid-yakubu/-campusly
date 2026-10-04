@@ -26,7 +26,11 @@ export function PropositionCard({ proposition }: { proposition: PropositionRow }
   const repondre = (decision: "publie" | "refuse") => {
     startTransition(async () => {
       try {
-        await repondreProposition(proposition.id, decision, motif);
+        const r = await repondreProposition(proposition.id, decision, motif);
+        if (!r.ok) {
+          show(r.message, "warn");
+          return;
+        }
         show(
           decision === "publie"
             ? `${proposition.classeLabel} est en ligne`

@@ -35,14 +35,21 @@ export function DelegueForm({
   const ajouter = () => {
     startTransition(async () => {
       try {
-        const { prevenu } = await nommerDelegue({ email, classeLabel: classe, forcer });
+        const r = await nommerDelegue({ email, classeLabel: classe, forcer });
+        if (!r.ok) {
+          show(r.message, "warn");
+          // The list on screen may be the reason for the refusal; showing it
+          // stale next to "déjà déléguée" is how the message looks like a lie.
+          router.refresh();
+          return;
+        }
         // Saying "prévenu" when no phone was reached would send the admin away
         // believing the person knows.
         show(
-          prevenu
+          r.prevenu
             ? `${classe} — prévenu sur son téléphone`
             : `${classe} — pas encore d'appareil, préviens-le toi-même`,
-          prevenu ? "success" : "warn"
+          r.prevenu ? "success" : "warn"
         );
         setEmail("");
         setForcer(false);

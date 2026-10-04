@@ -66,6 +66,16 @@ async function requireDroitSurClasse(classeId: number) {
   throw new Error("Tu n'es pas délégué de cette promo.");
 }
 
+/*
+ * What a server action hands back when it refuses.
+ *
+ * Throwing is no good here: Next strips the message out of production builds
+ * on purpose, so every sentence written for the person in front of the screen
+ * reached them as "Minified React error #441". A refusal the user is meant to
+ * read is a result, not an exception — only a genuine fault should throw.
+ */
+export type Refus = { ok: false; message: string };
+
 /** The name to write next to a publication, with the e-mail as a fallback. */
 function signature(user: { name?: string | null; email?: string | null }) {
   return user.name?.trim() || user.email || null;
@@ -730,16 +740,16 @@ export async function nommerDelegue(input: {
   email: string;
   classeLabel: string;
   forcer?: boolean;
-}) {
+}): Promise<Refus | { ok: true; prevenu: boolean }> {
   const admin = await requireAdmin();
 
   const email = input.email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    throw new Error("Adresse e-mail invalide.");
+    return { ok: false, message: "Adresse e-mail invalide." };
   }
 
   const classe = await getClasseByLabel(input.classeLabel.trim());
-  if (!classe) throw new Error("Promo inconnue.");
+  if (!classe) return { ok: false, message: "Promo inconnue." };
 
   const existantes = await db
     .select({ classeId: delegations.classeId })
@@ -747,12 +757,13 @@ export async function nommerDelegue(input: {
     .where(eq(delegations.email, email));
 
   if (existantes.some((d) => d.classeId === classe.id)) {
-    throw new Error("Cette personne est déjà déléguée de cette promo.");
+    return { ok: false, message: "Elle est déjà déléguée de cette promo." };
   }
   if (existantes.length > 0 && !input.forcer) {
-    throw new Error(
-      "Cette personne est déjà déléguée d'une autre promo. Coche « deux promos » pour confirmer."
-    );
+    return {
+      ok: false,
+      message: "Déjà déléguée d'une autre promo. Coche « deux promos » pour confirmer.",
+    };
   }
 
   await db.insert(delegations).values({
@@ -780,7 +791,7 @@ export async function nommerDelegue(input: {
   }
 
   revalidatePath("/admin");
-  return { prevenu: appareils > 0, appareils };
+  return { ok: true, prevenu: appareils > 0 };
 }
 
 /** One wording, so the alert reads the same whenever it finally lands. */
@@ -833,17 +844,19 @@ export async function retirerDelegue(id: number) {
  * the app. Asking for the twelve cells as well would turn a ten-second errand
  * into homework, and the proposals would stop coming.
  */
-export async function proposerProgramme(formData: FormData) {
+export async function proposerProgramme(
+  formData: FormData
+): Promise<Refus | { ok: true }> {
   const user = await requireUser();
 
   const classe = await getClasseByLabel(String(formData.get("classeLabel") ?? "").trim());
-  if (!classe) throw new Error("Promo inconnue.");
+  if (!classe) return { ok: false, message: "Promo inconnue." };
 
   const semaine = mondayOf(fromISODate(String(formData.get("semaine") ?? "")));
-  if (Number.isNaN(semaine.getTime())) throw new Error("Semaine invalide.");
+  if (Number.isNaN(semaine.getTime())) return { ok: false, message: "Semaine invalide." };
 
   const file = formData.get("file") as File | null;
-  if (!file || file.size === 0) throw new Error("Ajoute la photo du tableau.");
+  if (!file || file.size === 0) return { ok: false, message: "Ajoute la photo du tableau." };
 
   const uploaded = await uploadFile(file, "propositions");
   const note = String(formData.get("note") ?? "").trim() || null;
@@ -873,7 +886,7 @@ export async function proposerProgramme(formData: FormData) {
 
   revalidatePath("/programme");
   revalidatePath("/admin");
-  return proposition.id;
+  return { ok: true };
 }
 
 /*
@@ -889,14 +902,19 @@ export async function repondreProposition(
   propositionId: number,
   decision: "publie" | "refuse",
   note?: string
-) {
+): Promise<Refus | { ok: true }> {
   const [proposition] = await db
     .select()
     .from(programmePropositions)
     .where(eq(programmePropositions.id, propositionId));
-  if (!proposition) throw new Error("Proposition introuvable.");
+  if (!proposition) return { ok: false, message: "Cette proposition n'existe plus." };
 
-  const auteur = await requireDroitSurClasse(proposition.classeId);
+  let auteur;
+  try {
+    auteur = await requireDroitSurClasse(proposition.classeId);
+  } catch {
+    return { ok: false, message: "Cette promo n'est pas la tienne." };
+  }
 
   if (decision === "publie") {
     const [classe] = await db
@@ -961,6 +979,7 @@ export async function repondreProposition(
 
   revalidatePath("/programme");
   revalidatePath("/admin");
+  return { ok: true };
 }
 
 /*
