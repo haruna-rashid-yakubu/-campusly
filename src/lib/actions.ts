@@ -2,12 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { auth, signIn, signOut } from "@/auth";
 import { db } from "@/db";
 import {
   cites,
+  classes,
   creneaux,
+  delegations,
   roomTypes,
   subjectSubmissions,
   subjects,
@@ -40,6 +42,45 @@ async function requireAdmin() {
     throw new Error("Réservé à l'équipe Campusly.");
   }
   return session.user;
+}
+
+/*
+ * The délégué check. An admin passes everywhere; a délégué passes only on the
+ * promos they were named for, which is the whole point of the role: the power
+ * is not "fewer buttons", it is "this promo and no other". Everything a
+ * délégué can do goes through here, so there is one place to read to know
+ * exactly how far the right reaches.
+ */
+async function requireDroitSurClasse(classeId: number) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Connecte-toi pour continuer.");
+  if (session.user.role === "admin") return session.user;
+  if (session.user.delegations?.includes(classeId)) return session.user;
+  throw new Error("Tu n'es pas délégué de cette promo.");
+}
+
+/** The name to write next to a publication, with the e-mail as a fallback. */
+function signature(user: { name?: string | null; email?: string | null }) {
+  return user.name?.trim() || user.email || null;
+}
+
+/*
+ * Which promos the caller may moderate papers for, as labels, or null for an
+ * admin, who may moderate all of them. Papers carry a filière and a niveau
+ * rather than a promo id, so the comparison happens on the label the two
+ * halves make up.
+ */
+async function porteeModeration(): Promise<string[] | null> {
+  const session = await auth();
+  if (!session?.user) throw new Error("Connecte-toi pour continuer.");
+  if (session.user.role === "admin") return null;
+  const ids = session.user.delegations ?? [];
+  if (ids.length === 0) throw new Error("Réservé à l'équipe Campusly.");
+  const rows = await db
+    .select({ label: classes.label })
+    .from(classes)
+    .where(inArray(classes.id, ids));
+  return rows.map((r) => r.label);
 }
 
 export async function googleSignIn() {
@@ -212,13 +253,29 @@ export async function moderateSubject(
   note?: string,
   edits?: SubjectEdits
 ) {
-  await requireAdmin();
+  const portee = await porteeModeration();
 
   const [submission] = await db
     .select()
     .from(subjectSubmissions)
     .where(eq(subjectSubmissions.id, submissionId));
   if (!submission) return;
+
+  /*
+   * A délégué answers for their own promo only — and the check covers the
+   * promo the paper is published INTO as well as the one it came from, since
+   * the review screen lets the filière and the niveau be corrected. Without
+   * the second half, retyping the filière would be a way out of the fence.
+   */
+  if (portee) {
+    const origine = `${submission.filiere} · ${submission.niveau}`;
+    const cible = `${edits?.filiere?.trim() || submission.filiere} · ${
+      edits?.niveau?.trim() || submission.niveau
+    }`;
+    if (!portee.includes(origine) || (decision === "publie" && !portee.includes(cible))) {
+      throw new Error("Cette épreuve n'est pas de ta promo.");
+    }
+  }
 
   if (decision === "publie") {
     const type = edits?.type ?? submission.type;
@@ -385,11 +442,13 @@ export type CreneauInput = {
  * rather than stacking a second version students would have to tell apart.
  */
 export async function saveProgramme(formData: FormData) {
-  await requireAdmin();
-
   const classeLabel = String(formData.get("classeLabel") ?? "");
   const classe = await getClasseByLabel(classeLabel);
   if (!classe) throw new Error("Classe inconnue.");
+
+  // Checked against the promo in the form, not against a role: this is where a
+  // délégué of LIG 2 is stopped from rewriting BME 1's week.
+  const auteur = await requireDroitSurClasse(classe.id);
 
   const semaine = mondayOf(fromISODate(String(formData.get("semaine") ?? "")));
   if (Number.isNaN(semaine.getTime())) throw new Error("Semaine invalide.");
@@ -419,6 +478,7 @@ export async function saveProgramme(formData: FormData) {
       weekLabel,
       salleDefaut,
       photoUrl: uploaded?.url ?? null,
+      publiePar: signature(auteur),
     })
     .onConflictDoUpdate({
       target: [programmePublications.classeId, programmePublications.semaine],
@@ -428,6 +488,7 @@ export async function saveProgramme(formData: FormData) {
         // A save without a new photo keeps the one already there.
         ...(uploaded ? { photoUrl: uploaded.url } : {}),
         publishedAt: new Date(),
+        publiePar: signature(auteur),
       },
     })
     .returning();
@@ -624,4 +685,62 @@ export async function televerserPhotoCite(data: FormData) {
   if (!(file instanceof File) || file.size === 0) throw new Error("Aucun fichier reçu.");
   const uploaded = await uploadFile(file, "cites");
   return uploaded.url;
+}
+
+/*
+ * Naming a délégué.
+ *
+ * The e-mail is taken as given rather than checked against an existing
+ * account: delegates are named the day the promo elects them, which is rarely
+ * the day they first open Campusly. The right sits waiting on the address and
+ * attaches itself the moment they sign in with it — so the one thing that
+ * matters is that the address be the one on their Google account.
+ *
+ * One promo per person is the rule, and `forcer` is how the rule is broken on
+ * purpose: a tronc commun like LEG 1 / GRH 1 is one timetable, so one student
+ * covering both is sensible. Refusing silently, or allowing it silently, would
+ * both be wrong — the caller has to say they meant it.
+ */
+export async function nommerDelegue(input: {
+  email: string;
+  classeLabel: string;
+  forcer?: boolean;
+}) {
+  const admin = await requireAdmin();
+
+  const email = input.email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error("Adresse e-mail invalide.");
+  }
+
+  const classe = await getClasseByLabel(input.classeLabel.trim());
+  if (!classe) throw new Error("Promo inconnue.");
+
+  const existantes = await db
+    .select({ classeId: delegations.classeId })
+    .from(delegations)
+    .where(eq(delegations.email, email));
+
+  if (existantes.some((d) => d.classeId === classe.id)) {
+    throw new Error("Cette personne est déjà déléguée de cette promo.");
+  }
+  if (existantes.length > 0 && !input.forcer) {
+    throw new Error(
+      "Cette personne est déjà déléguée d'une autre promo. Coche « deux promos » pour confirmer."
+    );
+  }
+
+  await db.insert(delegations).values({
+    email,
+    classeId: classe.id,
+    nommePar: signature(admin),
+  });
+
+  revalidatePath("/admin");
+}
+
+export async function retirerDelegue(id: number) {
+  await requireAdmin();
+  await db.delete(delegations).where(eq(delegations.id, id));
+  revalidatePath("/admin");
 }

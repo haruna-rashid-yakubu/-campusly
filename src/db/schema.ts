@@ -212,6 +212,9 @@ export const programmePublications = pgTable(
     publishedAt: timestamp("published_at", { mode: "date" })
       .notNull()
       .defaultNow(),
+    // Who pressed publish. A promo that turns up in the wrong room needs a
+    // name to ask, not a row that appeared by itself.
+    publiePar: text("publie_par"),
   },
   (t) => [unique("programme_classe_semaine").on(t.classeId, t.semaine)]
 );
@@ -349,4 +352,38 @@ export const creneauxRelations = relations(creneaux, ({ one }) => ({
     fields: [creneaux.programmeId],
     references: [programmePublications.id],
   }),
+}));
+
+/*
+ * A délégué: one student trusted with one promo's timetable and past papers.
+ *
+ * Kept as its own table rather than a third value in `user.role`, for two
+ * reasons. A délégué's power is not "more account", it is "this promo" — the
+ * row carries the scope, and a second row is how one person covers two promos
+ * when a tronc commun calls for it. And the invitation can be written before
+ * the person has ever signed in: the match is made on the e-mail Google gives
+ * back, so naming a délégué never has to wait for them to create an account.
+ *
+ * Removing the row removes the power, immediately and with no trace left on
+ * the student's own account.
+ */
+export const delegations = pgTable(
+  "delegation",
+  {
+    id: serial("id").primaryKey(),
+    // Lower-cased on the way in; Google hands back the address as the person
+    // typed it, and "Jean.Mbarga@" must not become a second délégué.
+    email: text("email").notNull(),
+    classeId: integer("classe_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    // Who named them, kept so a right nobody remembers granting can be traced.
+    nommePar: text("nomme_par"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [unique("delegation_email_classe").on(t.email, t.classeId)]
+);
+
+export const delegationsRelations = relations(delegations, ({ one }) => ({
+  classe: one(classes, { fields: [delegations.classeId], references: [classes.id] }),
 }));

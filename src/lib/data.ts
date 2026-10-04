@@ -1,9 +1,10 @@
-import { and, asc, desc, eq, isNotNull, ne, notInArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, ne, notInArray, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { db } from "@/db";
 import {
   classes,
   cites,
+  delegations,
   creneaux,
   programmePublications,
   roomTypes,
@@ -166,12 +167,45 @@ export async function getSubmissionById(id: number) {
   });
 }
 
-export async function getModerationQueue() {
-  return db.query.subjectSubmissions.findMany({
+/*
+ * The waiting papers. `promos` narrows the queue to a délégué's own promos —
+ * an empty screen is the honest answer when nobody in their year has sent
+ * anything, and far better than showing them work they cannot act on.
+ */
+export async function getModerationQueue(promos?: string[]) {
+  const rows = await db.query.subjectSubmissions.findMany({
     where: eq(subjectSubmissions.status, "en_attente"),
     orderBy: (s, { asc }) => asc(s.createdAt),
     with: { user: true },
   });
+  if (!promos) return rows;
+  return rows.filter((r) => promos.includes(`${r.filiere} · ${r.niveau}`));
+}
+
+/** Every délégué named, newest first, with the promo each one covers. */
+export async function getDelegations() {
+  return db
+    .select({
+      id: delegations.id,
+      email: delegations.email,
+      classeId: delegations.classeId,
+      classeLabel: classes.label,
+      nommePar: delegations.nommePar,
+      createdAt: delegations.createdAt,
+    })
+    .from(delegations)
+    .innerJoin(classes, eq(classes.id, delegations.classeId))
+    .orderBy(desc(delegations.createdAt));
+}
+
+/** The labels behind a set of promo ids, in the order the database returns. */
+export async function getClasseLabels(ids: number[]) {
+  if (ids.length === 0) return [];
+  const rows = await db
+    .select({ id: classes.id, label: classes.label })
+    .from(classes)
+    .where(inArray(classes.id, ids));
+  return rows;
 }
 
 export type CiteFilters = {

@@ -7,7 +7,12 @@ import { FilePreview } from "@/components/FilePreview";
 import { SignInRequired } from "@/components/SignInRequired";
 import { SubmissionReview } from "@/components/admin/SubmissionReview";
 import { subjectTypeEnum } from "@/db/schema";
-import { getProposerFacets, getSubjectFacets, getSubmissionById } from "@/lib/data";
+import {
+  getClasseLabels,
+  getProposerFacets,
+  getSubjectFacets,
+  getSubmissionById,
+} from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Relire un envoi",
@@ -23,7 +28,13 @@ export default async function ReviewSubmissionPage({
 }) {
   const session = await auth();
   if (!session?.user) return <SignInRequired backHref="/admin" title="Relire un envoi" />;
-  if (session.user.role !== "admin") {
+
+  const estAdmin = session.user.role === "admin";
+  const mesPromos = estAdmin
+    ? null
+    : (await getClasseLabels(session.user.delegations ?? [])).map((c) => c.label);
+
+  if (!estAdmin && (mesPromos?.length ?? 0) === 0) {
     return (
       <div className="min-h-dvh">
         <BackHeader title="Relire un envoi" fallbackHref="/" border />
@@ -46,6 +57,24 @@ export default async function ReviewSubmissionPage({
     getSubjectFacets(),
   ]);
   if (!submission) notFound();
+
+  /*
+   * Guessing an id must not be a way around the promo fence. The action
+   * refuses too, but a délégué should never get as far as reading someone
+   * else's promo's paper on screen.
+   */
+  if (mesPromos && !mesPromos.includes(`${submission.filiere} · ${submission.niveau}`)) {
+    return (
+      <div className="min-h-dvh">
+        <BackHeader title="Relire un envoi" fallbackHref="/admin?tab=sujets" border />
+        <EmptyState
+          icon="lock"
+          title="Pas ta promo"
+          body={`Cet envoi concerne ${submission.filiere} · ${submission.niveau}. Tu es délégué de ${mesPromos.join(", ")}.`}
+        />
+      </div>
+    );
+  }
 
   const decided = submission.status !== "en_attente";
 

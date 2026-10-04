@@ -5,6 +5,8 @@ declare module "next-auth" {
     user: {
       id: string;
       role: "etudiant" | "admin";
+      /** Ids of the promos this account is délégué of. Empty for most people. */
+      delegations: number[];
     } & DefaultSession["user"];
   }
 }

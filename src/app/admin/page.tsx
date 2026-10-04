@@ -8,6 +8,7 @@ import { Icon } from "@/components/icons";
 import { ModerationCard } from "@/components/admin/ModerationCard";
 import { StockControl } from "@/components/admin/StockControl";
 import { CiteForm } from "@/components/admin/CiteForm";
+import { DelegueForm } from "@/components/admin/DelegueForm";
 import {
   cellKey,
   halfKey,
@@ -18,7 +19,9 @@ import { DEMI_JOURNEES } from "@/lib/constants";
 import {
   getCitesWithAvailability,
   getClasseByLabel,
+  getClasseLabels,
   getClasses,
+  getDelegations,
   getClassesWithoutRecentProgramme,
   getModerationQueue,
   getPreferredClasse,
@@ -44,7 +47,18 @@ const TABS = [
   { id: "prog", label: "Programme" },
   { id: "monde", label: "Audience" },
   { id: "cites", label: "Cités" },
+  { id: "delegues", label: "Délégués" },
 ] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+
+/*
+ * A délégué is handed the two jobs the role exists for and nothing else. The
+ * promos list, the audience figures and the cités belong to whoever runs the
+ * whole app, and a screen that showed them greyed out would only invite the
+ * question of why.
+ */
+const TABS_DELEGUE: TabId[] = ["sujets", "prog"];
 
 export default async function AdminPage({
   searchParams,
@@ -53,7 +67,13 @@ export default async function AdminPage({
 }) {
   const session = await auth();
   if (!session?.user) return <SignInRequired backHref="/" title="Administration" />;
-  if (session.user.role !== "admin") {
+
+  const estAdmin = session.user.role === "admin";
+  const mesPromos = estAdmin
+    ? []
+    : (await getClasseLabels(session.user.delegations ?? [])).map((c) => c.label);
+
+  if (!estAdmin && mesPromos.length === 0) {
     return (
       <div className="min-h-dvh">
         <BackHeader title="Administration" fallbackHref="/" border />
@@ -62,13 +82,14 @@ export default async function AdminPage({
     );
   }
 
+  const onglets = estAdmin ? TABS : TABS.filter((t) => TABS_DELEGUE.includes(t.id));
   const { tab: rawTab, q } = await searchParams;
-  const tab = TABS.some((t) => t.id === rawTab) ? (rawTab as (typeof TABS)[number]["id"]) : "sujets";
+  const tab = onglets.some((t) => t.id === rawTab) ? (rawTab as TabId) : onglets[0].id;
 
   return (
     <div className="min-h-dvh">
       <BackHeader
-        title="Administration"
+        title={estAdmin ? "Administration" : "Espace délégué"}
         fallbackHref="/"
         right={
           <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-full bg-teal text-[15px] font-extrabold text-white">
@@ -78,7 +99,7 @@ export default async function AdminPage({
       />
       <div className="mb-4 px-5">
         <div className="flex gap-1.5 rounded-2xl bg-surface-2 p-1">
-          {TABS.map((t) => (
+          {onglets.map((t) => (
             <Link
               key={t.id}
               href={`/admin?tab=${t.id}`}
@@ -96,22 +117,24 @@ export default async function AdminPage({
       </div>
 
       <div className="px-5 pb-12">
-        {tab === "sujets" && <ModerationTab />}
+        {tab === "sujets" && <ModerationTab promos={estAdmin ? undefined : mesPromos} />}
         {tab === "publies" && <PubliesTab q={q} />}
         {tab === "cites" && <CitesTab />}
-        {tab === "prog" && <ProgrammeTab />}
+        {tab === "prog" && <ProgrammeTab promos={estAdmin ? undefined : mesPromos} />}
         {tab === "monde" && <AudienceTab />}
+        {tab === "delegues" && <DeleguesTab />}
       </div>
     </div>
   );
 }
 
-async function ModerationTab() {
-  const queue = await getModerationQueue();
+async function ModerationTab({ promos }: { promos?: string[] }) {
+  const queue = await getModerationQueue(promos);
   return (
     <>
       <div className="mb-3 text-[13px] text-slate-light">
         {queue.length} sujet{queue.length > 1 ? "s" : ""} en attente
+        {promos ? ` · ${promos.join(", ")}` : ""}
       </div>
       {queue.length === 0 ? (
         <EmptyState icon="check" title="File vide" body="Tout est traité. Les nouveaux envois arrivent ici." />
@@ -255,12 +278,17 @@ function toCells(programme: { creneaux: CreneauRow[] } | undefined) {
   return { cells, divise };
 }
 
-async function ProgrammeTab() {
-  const [classes, classe, manquantes] = await Promise.all([
+async function ProgrammeTab({ promos }: { promos?: string[] }) {
+  const [toutes, preferee, manquantes] = await Promise.all([
     getClasses(),
     getPreferredClasse(),
-    getClassesWithoutRecentProgramme(),
+    promos ? Promise.resolve([]) : getClassesWithoutRecentProgramme(),
   ]);
+
+  // A délégué fills the grid for their own promos; the picker simply has
+  // nothing else in it, so there is no wrong promo to choose by accident.
+  const labels = promos ?? toutes.map((c) => c.label);
+  const classe = labels.includes(preferee) ? preferee : labels[0];
 
   const semaine = mondayOf(new Date());
   const classeRow = await getClasseByLabel(classe);
@@ -278,7 +306,7 @@ async function ProgrammeTab() {
   return (
     <>
       <ProgrammeGridForm
-        classes={classes.map((c) => c.label)}
+        classes={labels}
         defaultClasse={classe}
         semaine={toISODate(semaine)}
         semaineLabel={`Semaine ${weekRangeLabel(semaine)}`}
@@ -290,7 +318,9 @@ async function ProgrammeTab() {
         previousDivise={derniere.divise}
         matieres={facets.matiere ?? []}
       />
-      <div className="mb-1 mt-7 text-base font-extrabold">Classes sans programme récent</div>
+      {manquantes.length > 0 && (
+        <div className="mb-1 mt-7 text-base font-extrabold">Classes sans programme récent</div>
+      )}
       {manquantes.map(({ classe: c, manquant }) => (
         <div key={c.id} className="flex items-center justify-between border-t border-line-3 py-3.5">
           <span className="text-[14.5px] font-semibold">{c.label}</span>
@@ -449,5 +479,20 @@ async function CouvertureSection() {
             `semaine, ni annales. Un étudiant qui choisit cette promo tombe sur une appli vide.`}
       </p>
     </>
+  );
+}
+
+async function DeleguesTab() {
+  const [delegues, classes] = await Promise.all([getDelegations(), getClasses()]);
+  return (
+    <DelegueForm
+      classes={classes.map((c) => c.label)}
+      delegues={delegues.map((d) => ({
+        id: d.id,
+        email: d.email,
+        classeLabel: d.classeLabel,
+        nommePar: d.nommePar,
+      }))}
+    />
   );
 }

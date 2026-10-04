@@ -55,7 +55,8 @@ export default async function AccueilPage() {
             <span className="text-xl font-extrabold tracking-tight">Campusly</span>
           </div>
           <div className="flex items-center">
-            {session?.user?.role === "admin" && (
+            {(session?.user?.role === "admin" ||
+              (session?.user?.delegations?.length ?? 0) > 0) && (
               <Link
                 href="/admin"
                 className="press-scale grid h-11 w-11 place-items-center text-ink-soft"
