@@ -56,8 +56,8 @@ export function InstallTabs({ defaultTab }: { defaultTab: InstallTab }) {
             </span>
             <div className="mt-4 text-xl font-extrabold tracking-tight">Ouvre ce lien dans Safari</div>
             <p className="mt-2 text-[14.5px] leading-relaxed text-slate">
-              Tu es dans une appli qui ne sait pas installer les applications. Copie le lien, ouvre Safari
-              et colle-le.
+              Le menu Partager de cette appli n&rsquo;a pas « Sur l&rsquo;écran d&rsquo;accueil » : seul
+              Safari l&rsquo;a. Copie le lien, ouvre Safari et colle-le.
             </p>
             <CopyLinkButton url={`${APP_DOMAIN}/installer`} />
           </div>

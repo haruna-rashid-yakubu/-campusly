@@ -6,6 +6,7 @@ import { ClasseSwitcher } from "@/components/ClasseSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ShareSheet } from "@/components/ShareSheet";
 import { InstallNudge } from "@/components/InstallNudge";
+import { OuvrirDansSafari } from "@/components/OuvrirDansSafari";
 import { SignInButton } from "@/components/SignInButton";
 import { SignOutButton } from "@/components/SignOutButton";
 import {
@@ -201,6 +202,7 @@ export default async function AccueilPage() {
 
       <div className="px-5 pb-7 pt-5">
         {/* After the screen has done its job, never before it. */}
+        <OuvrirDansSafari />
         <InstallNudge />
 
         <ShareSheet>
