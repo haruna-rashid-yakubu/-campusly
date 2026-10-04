@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { cites, roomTypes } from "@/db/schema";
 import { uploadFile } from "@/lib/blob";
@@ -90,4 +91,46 @@ export async function POST(request: Request) {
     .values(chambres.map((c, i) => ({ ...c, citeId: cite.id, sortOrder: i })));
 
   return NextResponse.json({ ok: true, id: cite.id, photos: photos.length });
+}
+
+/*
+ * Appends photos to a cité that is already published.
+ *
+ * Listings are not finished the day they go up: a landlord sends the bathroom
+ * a week later, or films a room that was occupied at the time. Without this
+ * the only way to add a picture would be to publish the cité a second time,
+ * which would leave students choosing between two of the same building.
+ */
+export async function PATCH(request: Request) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
+  const form = await request.formData();
+  const id = Number((form.get("cite_id") ?? "").toString());
+  if (!Number.isInteger(id) || id <= 0) {
+    return NextResponse.json({ error: "cite_id manquant ou invalide." }, { status: 400 });
+  }
+
+  const [cite] = await db.select().from(cites).where(eq(cites.id, id));
+  if (!cite) return NextResponse.json({ error: "Cité introuvable." }, { status: 404 });
+
+  const fichiers = form.getAll("photo").filter((f): f is File => f instanceof File && f.size > 0);
+  if (fichiers.length === 0) {
+    return NextResponse.json({ error: "Aucune photo reçue." }, { status: 400 });
+  }
+
+  const ajoutees: string[] = [];
+  for (const fichier of fichiers) {
+    const uploaded = await uploadFile(fichier, "cites");
+    ajoutees.push(uploaded.url);
+  }
+
+  // Appended rather than replaced: the pictures already there were chosen,
+  // and an upload that arrives late should not quietly discard them.
+  const photos = [...cite.photos, ...ajoutees];
+  await db.update(cites).set({ photos }).where(eq(cites.id, id));
+
+  return NextResponse.json({ ok: true, id, ajoutees: ajoutees.length, total: photos.length });
 }
