@@ -79,6 +79,16 @@ export default async function ProgrammePage() {
                 Rien d&rsquo;enregistré pour cette semaine.
               </p>
             )}
+
+            {/* The week on screen can be last week's, or wrong. Whoever walks
+                past the board can fix that in one photograph. */}
+            <Link
+              href="/programme/proposer"
+              className="press-scale mb-2 flex h-[50px] w-full items-center justify-center gap-2 rounded-2xl border-[1.5px] border-line-4 bg-white text-[14.5px] font-bold text-ink-soft active:bg-surface-2"
+            >
+              <Icon name="cal" size={18} strokeWidth={1.9} />
+              Envoyer la photo du tableau
+            </Link>
           </div>
 
           <div className="fixed inset-x-0 z-[4] flex gap-2.5 bg-white px-5 pb-[18px] pt-4" style={{ bottom: "calc(76px + var(--safe-bottom))" }}>
@@ -104,10 +114,17 @@ export default async function ProgrammePage() {
           <p className="mx-auto mt-2.5 max-w-xs text-[14.5px] leading-relaxed text-slate-light">
             Dès que la photo est affichée aux valves, on la met ici.
           </p>
+          <Link
+            href="/programme/proposer"
+            className="press-scale mx-auto mt-5 flex h-[52px] w-full max-w-xs items-center justify-center gap-2.5 rounded-2xl bg-teal text-[15px] font-bold text-white active:bg-teal-press"
+          >
+            <Icon name="cal" size={19} strokeWidth={1.9} />
+            Envoyer la photo du tableau
+          </Link>
           <ToastButton
             message="On te prévient dès la publication"
             icon="bell"
-            className="press-scale mx-auto mt-5 flex h-[50px] items-center gap-2.5 rounded-2xl border-[1.5px] border-teal px-5 text-[14.5px] font-bold text-teal-dark"
+            className="press-scale mx-auto mt-2.5 flex h-[50px] items-center gap-2.5 rounded-2xl px-5 text-[14.5px] font-bold text-teal-dark"
           >
             Me prévenir
           </ToastButton>

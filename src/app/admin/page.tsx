@@ -9,6 +9,7 @@ import { ModerationCard } from "@/components/admin/ModerationCard";
 import { StockControl } from "@/components/admin/StockControl";
 import { CiteForm } from "@/components/admin/CiteForm";
 import { DelegueForm } from "@/components/admin/DelegueForm";
+import { PropositionCard } from "@/components/admin/PropositionCard";
 import {
   cellKey,
   halfKey,
@@ -29,6 +30,7 @@ import {
   getAudience,
   getCouverture,
   getProposerFacets,
+  getPropositionsProgramme,
   getSubjects,
 } from "@/lib/data";
 import { addDays, mondayOf, nowInWAT, toISODate, weekRangeLabel } from "@/lib/semaine";
@@ -279,10 +281,11 @@ function toCells(programme: { creneaux: CreneauRow[] } | undefined) {
 }
 
 async function ProgrammeTab({ promos }: { promos?: string[] }) {
-  const [toutes, preferee, manquantes] = await Promise.all([
+  const [toutes, preferee, manquantes, propositions] = await Promise.all([
     getClasses(),
     getPreferredClasse(),
     promos ? Promise.resolve([]) : getClassesWithoutRecentProgramme(),
+    getPropositionsProgramme(promos),
   ]);
 
   // A délégué fills the grid for their own promos; the picker simply has
@@ -305,6 +308,30 @@ async function ProgrammeTab({ promos }: { promos?: string[] }) {
 
   return (
     <>
+      {/* The queue comes first: answering a photo someone already took beats
+          typing the same week in by hand. */}
+      {propositions.length > 0 && (
+        <>
+          <div className="mb-2.5 text-base font-extrabold">
+            {propositions.length} photo{propositions.length > 1 ? "s" : ""} du tableau à valider
+          </div>
+          {propositions.map((p) => (
+            <PropositionCard
+              key={p.id}
+              proposition={{
+                id: p.id,
+                classeLabel: p.classeLabel,
+                semaineLabel: `Semaine ${weekRangeLabel(p.semaine)}`,
+                photoUrl: p.photoUrl,
+                note: p.note,
+                auteur: p.auteur,
+              }}
+            />
+          ))}
+          <div className="mb-3.5 mt-6 border-t border-line-3" />
+        </>
+      )}
+
       <ProgrammeGridForm
         classes={labels}
         defaultClasse={classe}

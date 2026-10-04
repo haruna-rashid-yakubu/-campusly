@@ -9,7 +9,10 @@ const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https://*.public.blob.vercel-storage.com",
+  // blob: is for the preview of a photo the student has just taken, before it
+  // is uploaded — the URL is minted by this page from a file the person chose,
+  // and nothing else can produce one.
+  "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
   "font-src 'self' data:",
   "connect-src 'self' https://*.public.blob.vercel-storage.com",
   "frame-src https://docs.google.com",

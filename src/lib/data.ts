@@ -4,13 +4,15 @@ import { db } from "@/db";
 import {
   classes,
   cites,
-  delegations,
   creneaux,
+  delegations,
+  programmePropositions,
   programmePublications,
   roomTypes,
   subjectSubmissions,
   subjects,
   subjectTypeEnum,
+  users,
 } from "@/db/schema";
 import { BANNER_COOKIE, CLASSE_COOKIE, DEFAULT_CLASSE } from "@/lib/constants";
 import { toISODate } from "@/lib/semaine";
@@ -522,4 +524,28 @@ export async function getCouverture(semaine: Date) {
     classes: lignes.rows,
     notifs: notifs ?? { total: 0, joignables: 0 },
   };
+}
+
+/*
+ * Timetable photos waiting for an answer. `promos` narrows the queue to a
+ * délégué's own promos; an admin passes nothing and sees every one.
+ */
+export async function getPropositionsProgramme(promos?: string[]) {
+  const rows = await db
+    .select({
+      id: programmePropositions.id,
+      classeLabel: classes.label,
+      semaine: programmePropositions.semaine,
+      photoUrl: programmePropositions.photoUrl,
+      note: programmePropositions.note,
+      createdAt: programmePropositions.createdAt,
+      auteur: users.name,
+    })
+    .from(programmePropositions)
+    .innerJoin(classes, eq(classes.id, programmePropositions.classeId))
+    .innerJoin(users, eq(users.id, programmePropositions.userId))
+    .where(eq(programmePropositions.status, "en_attente"))
+    .orderBy(asc(programmePropositions.createdAt));
+  if (!promos) return rows;
+  return rows.filter((r) => promos.includes(r.classeLabel));
 }

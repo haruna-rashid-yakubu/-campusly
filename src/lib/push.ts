@@ -1,8 +1,8 @@
 import webpush from "web-push";
 import { db } from "@/db";
 import { APP_URL } from "@/lib/constants";
-import { pushSubscriptions, users } from "@/db/schema";
-import { and, eq, sql } from "drizzle-orm";
+import { delegations, pushSubscriptions, users } from "@/db/schema";
+import { and, eq, ne, sql } from "drizzle-orm";
 
 let configured = false;
 
@@ -108,5 +108,38 @@ export async function sendPushToAdmins(payload: PushPayload) {
     .from(pushSubscriptions)
     .innerJoin(users, eq(users.id, pushSubscriptions.userId))
     .where(eq(users.role, "admin"));
+  await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
+}
+
+/*
+ * The délégués of one promo. They are the people who can actually act on what
+ * just arrived for that promo, and nobody else needs to hear about it — an
+ * admin gets the same alert through sendPushToAdmins, so between the two every
+ * pair of hands that can do something is reached exactly once.
+ *
+ * Matched on the e-mail, the way the right itself is: a délégué named before
+ * they ever signed in has no row to join on until they do, and then it simply
+ * starts working.
+ */
+export async function sendPushToDelegues(classeId: number, payload: PushPayload) {
+  if (!ensureConfigured()) return;
+  const subs = await db
+    .select({
+      endpoint: pushSubscriptions.endpoint,
+      p256dh: pushSubscriptions.p256dh,
+      auth: pushSubscriptions.auth,
+    })
+    .from(pushSubscriptions)
+    .innerJoin(users, eq(users.id, pushSubscriptions.userId))
+    .innerJoin(
+      delegations,
+      and(
+        eq(delegations.classeId, classeId),
+        sql`${delegations.email} = lower(${users.email})`
+      )
+    )
+    // An admin who is also délégué would otherwise be buzzed twice for the
+    // same event.
+    .where(ne(users.role, "admin"));
   await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
 }

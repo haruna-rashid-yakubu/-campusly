@@ -387,3 +387,41 @@ export const delegations = pgTable(
 export const delegationsRelations = relations(delegations, ({ one }) => ({
   classe: one(classes, { fields: [delegations.classeId], references: [classes.id] }),
 }));
+
+/*
+ * A week's timetable, photographed by whoever got to the noticeboard first.
+ *
+ * The board is posted on campus and read by everyone; the bottleneck has
+ * never been knowing what it says, only getting it into the app. So a student
+ * sends the photo and the promo's délégué — or an admin — turns it into the
+ * published week. The proposal carries no grid: asking a student to retype
+ * twelve cells is how you get no proposals at all.
+ */
+export const propositionStatusEnum = ["en_attente", "publie", "refuse"] as const;
+
+export const programmePropositions = pgTable("programme_proposition", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  classeId: integer("classe_id")
+    .notNull()
+    .references(() => classes.id, { onDelete: "cascade" }),
+  // The Monday of the week on the sheet.
+  semaine: date("semaine", { mode: "date" }).notNull(),
+  photoUrl: text("photo_url").notNull(),
+  note: text("note"),
+  status: text("status", { enum: propositionStatusEnum })
+    .notNull()
+    .default("en_attente"),
+  // Who answered, and what they said back.
+  reponsePar: text("reponse_par"),
+  reponseNote: text("reponse_note"),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  reviewedAt: timestamp("reviewed_at", { mode: "date" }),
+});
+
+export const programmePropositionsRelations = relations(programmePropositions, ({ one }) => ({
+  user: one(users, { fields: [programmePropositions.userId], references: [users.id] }),
+  classe: one(classes, { fields: [programmePropositions.classeId], references: [classes.id] }),
+}));

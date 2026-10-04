@@ -10,6 +10,7 @@ import {
   classes,
   creneaux,
   delegations,
+  programmePropositions,
   roomTypes,
   subjectSubmissions,
   subjects,
@@ -28,7 +29,12 @@ import {
 } from "@/lib/data";
 import { fromISODate, mondayOf, nowInWAT, startOfDay, weekRangeLabel } from "@/lib/semaine";
 import { BANNER_COOKIE, CLASSE_COOKIE, DEVICE_COOKIE, momentDuSlot } from "@/lib/constants";
-import { sendPushToAdmins, sendPushToClasse, sendPushToUser } from "@/lib/push";
+import {
+  sendPushToAdmins,
+  sendPushToClasse,
+  sendPushToDelegues,
+  sendPushToUser,
+} from "@/lib/push";
 
 async function requireUser() {
   const session = await auth();
@@ -221,13 +227,20 @@ export async function proposeSubject(formData: FormData) {
     })
     .returning();
 
-  // Deep-link straight to the review screen: an admin tapping the notification
+  // Deep-link straight to the review screen: whoever taps the notification
   // lands on the document itself, not on a queue they then have to search.
-  await sendPushToAdmins({
+  const alerte = {
     title: "Nouveau sujet proposé",
     body: `${matiere} · ${niveau} · ${annee} — par ${user.name ?? "un étudiant"}`,
     url: `/admin/envois/${submission.id}`,
-  });
+  };
+  // The promo's délégué is the one who will actually review this; waiting for
+  // an admin to relay it is how a paper sits in the queue for a week.
+  const classeDuSujet = await getClasseByLabel(`${filiere} · ${niveau}`);
+  await Promise.all([
+    sendPushToAdmins(alerte),
+    classeDuSujet ? sendPushToDelegues(classeDuSujet.id, alerte) : Promise.resolve(),
+  ]);
 
   revalidatePath("/sujets/mes-envois");
   revalidatePath("/admin");
@@ -742,5 +755,154 @@ export async function nommerDelegue(input: {
 export async function retirerDelegue(id: number) {
   await requireAdmin();
   await db.delete(delegations).where(eq(delegations.id, id));
+  revalidatePath("/admin");
+}
+
+/*
+ * A student sends the photograph of the noticeboard for their promo.
+ *
+ * Only a photo and a week are asked for. The sheet is already pinned up on
+ * campus and perfectly readable; what is missing is someone carrying it into
+ * the app. Asking for the twelve cells as well would turn a ten-second errand
+ * into homework, and the proposals would stop coming.
+ */
+export async function proposerProgramme(formData: FormData) {
+  const user = await requireUser();
+
+  const classe = await getClasseByLabel(String(formData.get("classeLabel") ?? "").trim());
+  if (!classe) throw new Error("Promo inconnue.");
+
+  const semaine = mondayOf(fromISODate(String(formData.get("semaine") ?? "")));
+  if (Number.isNaN(semaine.getTime())) throw new Error("Semaine invalide.");
+
+  const file = formData.get("file") as File | null;
+  if (!file || file.size === 0) throw new Error("Ajoute la photo du tableau.");
+
+  const uploaded = await uploadFile(file, "propositions");
+  const note = String(formData.get("note") ?? "").trim() || null;
+
+  const [proposition] = await db
+    .insert(programmePropositions)
+    .values({
+      userId: user.id,
+      classeId: classe.id,
+      semaine,
+      photoUrl: uploaded.url,
+      note,
+    })
+    .returning();
+
+  const alerte = {
+    title: "Emploi du temps proposé",
+    body: `${classe.label} · semaine du ${weekRangeLabel(semaine)} — par ${
+      user.name ?? "un étudiant"
+    }`,
+    url: `/admin?tab=prog`,
+  };
+  await Promise.all([
+    sendPushToAdmins(alerte),
+    sendPushToDelegues(classe.id, alerte),
+  ]);
+
+  revalidatePath("/programme");
+  revalidatePath("/admin");
+  return proposition.id;
+}
+
+/*
+ * Answering a proposal. The promo on the proposal decides who may answer, so
+ * a délégué of LIG 2 can neither publish nor refuse BME 1's week, while an
+ * admin answers anywhere.
+ *
+ * Publishing writes the photo as that week's programme and leaves the grid
+ * empty: the week is readable immediately, and whoever has a minute can
+ * transcribe the cells afterwards in the grid, which keeps the photo.
+ */
+export async function repondreProposition(
+  propositionId: number,
+  decision: "publie" | "refuse",
+  note?: string
+) {
+  const [proposition] = await db
+    .select()
+    .from(programmePropositions)
+    .where(eq(programmePropositions.id, propositionId));
+  if (!proposition) throw new Error("Proposition introuvable.");
+
+  const auteur = await requireDroitSurClasse(proposition.classeId);
+
+  if (decision === "publie") {
+    const [classe] = await db
+      .select()
+      .from(classes)
+      .where(eq(classes.id, proposition.classeId));
+    const existing = await getProgrammeForWeek(proposition.classeId, proposition.semaine);
+    const weekLabel = existing?.weekLabel ?? `Semaine ${weekRangeLabel(proposition.semaine)}`;
+
+    await db
+      .insert(programmePublications)
+      .values({
+        classeId: proposition.classeId,
+        semaine: proposition.semaine,
+        weekLabel,
+        photoUrl: proposition.photoUrl,
+        publiePar: signature(auteur),
+      })
+      .onConflictDoUpdate({
+        target: [programmePublications.classeId, programmePublications.semaine],
+        set: {
+          photoUrl: proposition.photoUrl,
+          publishedAt: new Date(),
+          publiePar: signature(auteur),
+        },
+      });
+
+    // Same rule as the grid: a promo is told once, when the week appears, and
+    // never again when someone swaps in a sharper photograph.
+    if (!existing && classe) {
+      await sendPushToClasse(
+        proposition.classeId,
+        {
+          title: `Programme de la semaine — ${classe.label}`,
+          body: weekLabel,
+          url: "/programme",
+        },
+        "programme"
+      );
+    }
+  }
+
+  await db
+    .update(programmePropositions)
+    .set({
+      status: decision,
+      reponsePar: signature(auteur),
+      reponseNote: note?.trim() || null,
+      reviewedAt: new Date(),
+    })
+    .where(eq(programmePropositions.id, propositionId));
+
+  // The student who took the trouble hears what became of it.
+  await sendPushToUser(proposition.userId, {
+    title: decision === "publie" ? "Ton emploi du temps est en ligne" : "Proposition refusée",
+    body:
+      decision === "publie"
+        ? "Merci — toute ta promo l'a maintenant."
+        : note?.trim() || "Cette photo n'a pas pu être publiée.",
+    url: "/programme",
+  });
+
+  revalidatePath("/programme");
+  revalidatePath("/admin");
+}
+
+/*
+ * End of the academic year: the délégués elected last year are not the ones
+ * who will be elected next. Clearing the list in one gesture is safer than
+ * twelve removals, half of which get forgotten.
+ */
+export async function viderDelegues() {
+  await requireAdmin();
+  await db.delete(delegations);
   revalidatePath("/admin");
 }

@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
-import { nommerDelegue, retirerDelegue } from "@/lib/actions";
+import { nommerDelegue, retirerDelegue, viderDelegues } from "@/lib/actions";
 
 const INPUT =
   "h-[52px] w-full rounded-2xl border-[1.5px] border-line-2 bg-white px-3.5 text-[15px] font-semibold text-ink outline-none focus:border-teal";
@@ -30,6 +30,7 @@ export function DelegueForm({
   const [email, setEmail] = useState("");
   const [classe, setClasse] = useState(classes[0] ?? "");
   const [forcer, setForcer] = useState(false);
+  const [finAnnee, setFinAnnee] = useState(false);
 
   const ajouter = () => {
     startTransition(async () => {
@@ -53,6 +54,19 @@ export function DelegueForm({
         router.refresh();
       } catch (e) {
         show(e instanceof Error ? e.message : "Retrait impossible", "warn");
+      }
+    });
+  };
+
+  const toutRetirer = () => {
+    startTransition(async () => {
+      try {
+        await viderDelegues();
+        show("Tous les délégués ont été retirés");
+        setFinAnnee(false);
+        router.refresh();
+      } catch (e) {
+        show(e instanceof Error ? e.message : "Action impossible", "warn");
       }
     });
   };
@@ -145,6 +159,43 @@ export function DelegueForm({
             </button>
           </div>
         ))
+      )}
+
+      {/* Délégués are elected for a year. Twelve removals in June is how half
+          of them stay in place for a second year by accident. */}
+      {delegues.length > 0 && (
+        <div className="mt-7 rounded-[18px] border border-line-3 bg-surface-2 p-4">
+          <div className="text-[14.5px] font-extrabold">Fin d&rsquo;année</div>
+          <p className="mt-1 text-[13px] leading-snug text-slate-light">
+            Retire les {delegues.length} délégués d&rsquo;un coup. Les emplois du temps et les
+            annales déjà publiés ne bougent pas.
+          </p>
+          {finAnnee ? (
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={toutRetirer}
+                disabled={envoi}
+                className="h-[46px] flex-1 rounded-[13px] bg-danger text-[14px] font-bold text-white disabled:opacity-60"
+              >
+                Oui, retirer les {delegues.length}
+              </button>
+              <button
+                onClick={() => setFinAnnee(false)}
+                disabled={envoi}
+                className="h-[46px] px-4 text-[14px] font-bold text-slate-light"
+              >
+                Annuler
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setFinAnnee(true)}
+              className="mt-3 h-[46px] w-full rounded-[13px] border-[1.5px] border-line-2 bg-white text-[14px] font-bold text-slate-light active:bg-surface-3"
+            >
+              Retirer tous les délégués
+            </button>
+          )}
+        </div>
       )}
     </>
   );
