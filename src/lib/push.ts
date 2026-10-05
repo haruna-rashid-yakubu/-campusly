@@ -1,7 +1,13 @@
 import webpush from "web-push";
 import { db } from "@/db";
 import { APP_URL } from "@/lib/constants";
-import { delegations, pushSubscriptions, users } from "@/db/schema";
+import {
+  delegations,
+  notificationEnvois,
+  notificationTypeEnum,
+  pushSubscriptions,
+  users,
+} from "@/db/schema";
 import { and, eq, ne, sql } from "drizzle-orm";
 
 let configured = false;
@@ -25,6 +31,9 @@ function ensureConfigured() {
 
 type PushPayload = { title: string; body: string; url?: string };
 
+type TypeEnvoi = (typeof notificationTypeEnum)[number];
+
+/** True when the push service took the message. Never throws. */
 async function sendToSubscription(
   sub: { endpoint: string; p256dh: string; auth: string },
   payload: PushPayload
@@ -34,27 +43,60 @@ async function sendToSubscription(
       { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
       JSON.stringify(payload)
     );
+    return true;
   } catch (err: unknown) {
     const statusCode = (err as { statusCode?: number }).statusCode;
     if (statusCode === 404 || statusCode === 410) {
       await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint));
     }
+    return false;
   }
 }
 
+/*
+ * Sends, counts, and writes down what happened.
+ *
+ * Every path out of this file goes through here, so the log cannot drift from
+ * reality: a send that is not recorded is a send that did not happen. The
+ * write is guarded because a full log is worth less than a delivered message —
+ * if recording fails, the notification has already gone.
+ */
+async function diffuser(
+  subs: { endpoint: string; p256dh: string; auth: string }[],
+  payload: PushPayload,
+  type: TypeEnvoi,
+  classeId: number | null = null
+) {
+  const resultats = await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
+  const atteints = resultats.filter(Boolean).length;
+  try {
+    await db.insert(notificationEnvois).values({
+      type,
+      classeId,
+      titre: payload.title,
+      corps: payload.body,
+      atteints,
+      vises: subs.length,
+    });
+  } catch {
+    // The message is out; losing its line in the log is the lesser failure.
+  }
+  return atteints;
+}
+
 export async function sendPushToAll(payload: PushPayload) {
-  if (!ensureConfigured()) return;
+  if (!ensureConfigured()) return 0;
   const subs = await db.select().from(pushSubscriptions);
-  await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
+  return diffuser(subs, payload, "tous");
 }
 
 export async function sendPushToUser(userId: string, payload: PushPayload) {
-  if (!ensureConfigured()) return;
+  if (!ensureConfigured()) return 0;
   const subs = await db
     .select()
     .from(pushSubscriptions)
     .where(eq(pushSubscriptions.userId, userId));
-  await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
+  return diffuser(subs, payload, "etudiant");
 }
 
 /*
@@ -70,7 +112,7 @@ export async function sendPushToClasse(
   payload: PushPayload,
   kind: PushKind
 ) {
-  if (!ensureConfigured()) return;
+  if (!ensureConfigured()) return 0;
   const pref =
     kind === "programme" ? pushSubscriptions.prefProgramme : pushSubscriptions.prefRappel;
   const subs = await db
@@ -92,13 +134,13 @@ export async function sendPushToClasse(
       )
     );
 
-  await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
+  return diffuser(subs, payload, kind, classeId);
 }
 
 // Admins are the only people who can act on a new submission, so the alert
 // goes to their devices only — every other subscriber would just be spammed.
 export async function sendPushToAdmins(payload: PushPayload) {
-  if (!ensureConfigured()) return;
+  if (!ensureConfigured()) return 0;
   const subs = await db
     .select({
       endpoint: pushSubscriptions.endpoint,
@@ -108,7 +150,7 @@ export async function sendPushToAdmins(payload: PushPayload) {
     .from(pushSubscriptions)
     .innerJoin(users, eq(users.id, pushSubscriptions.userId))
     .where(eq(users.role, "admin"));
-  await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
+  return diffuser(subs, payload, "admin", null);
 }
 
 /*
@@ -122,7 +164,7 @@ export async function sendPushToAdmins(payload: PushPayload) {
  * starts working.
  */
 export async function sendPushToDelegues(classeId: number, payload: PushPayload) {
-  if (!ensureConfigured()) return;
+  if (!ensureConfigured()) return 0;
   const subs = await db
     .select({
       endpoint: pushSubscriptions.endpoint,
@@ -141,7 +183,7 @@ export async function sendPushToDelegues(classeId: number, payload: PushPayload)
     // An admin who is also délégué would otherwise be buzzed twice for the
     // same event.
     .where(ne(users.role, "admin"));
-  await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
+  return diffuser(subs, payload, "delegue", classeId);
 }
 
 /*
@@ -164,6 +206,5 @@ export async function sendPushToEmail(email: string, payload: PushPayload) {
     .from(pushSubscriptions)
     .innerJoin(users, eq(users.id, pushSubscriptions.userId))
     .where(sql`lower(${users.email}) = ${email.toLowerCase()}`);
-  await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
-  return subs.length;
+  return diffuser(subs, payload, "delegation", null);
 }

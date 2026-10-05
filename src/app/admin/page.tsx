@@ -29,6 +29,7 @@ import {
   getProgrammeForWeek,
   getAudience,
   getCouverture,
+  getJournalNotifications,
   getProposerFacets,
   getPropositionsProgramme,
   getSubjects,
@@ -370,12 +371,68 @@ function Chiffre({ valeur, legende }: { valeur: number; legende: string }) {
   );
 }
 
+const LIBELLE_ENVOI: Record<string, string> = {
+  programme: "Programme publié",
+  rappel: "Rappel du soir",
+  admin: "Alerte équipe",
+  delegue: "Alerte délégué",
+  delegation: "Nomination",
+  etudiant: "Réponse à un étudiant",
+  test: "Test",
+  tous: "Tout le monde",
+};
+
+async function JournalNotifications() {
+  const envois = await getJournalNotifications(30);
+  if (envois.length === 0) {
+    return (
+      <p className="mb-6 text-[13.5px] leading-snug text-slate-light">
+        Aucune notification enregistrée pour l&rsquo;instant. Les envois partis avant aujourd&rsquo;hui
+        ne figurent pas ici : le journal commence maintenant.
+      </p>
+    );
+  }
+  return (
+    <div className="mb-7">
+      {envois.map((e) => (
+        <div key={e.id} className="border-b border-line-3 py-3">
+          <div className="flex items-baseline gap-2">
+            <span className="text-[14.5px] font-bold">
+              {LIBELLE_ENVOI[e.type] ?? e.type}
+              {e.classeLabel ? ` · ${e.classeLabel}` : ""}
+            </span>
+            <span className="ml-auto flex-none text-[12.5px] tabular-nums text-slate-light">
+              {e.createdAt.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}{" "}
+              {e.createdAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          </div>
+          <div className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-slate">{e.corps}</div>
+          {/* Zero is the number worth seeing: it means the message rang nowhere. */}
+          <div
+            className="mt-1 text-[12.5px] font-bold tabular-nums"
+            style={{ color: e.atteints === 0 ? "#B4231F" : "#0A7F77" }}
+          >
+            {e.atteints} appareil{e.atteints > 1 ? "s" : ""} atteint
+            {e.atteints > 1 ? "s" : ""}
+            {e.vises !== e.atteints ? ` sur ${e.vises} visé${e.vises > 1 ? "s" : ""}` : ""}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 async function AudienceTab() {
   const a = await getAudience();
   const maxJour = Math.max(1, ...a.parJour.map((j) => j.appareils));
 
   return (
     <>
+      {/* First, because it answers the question that was being asked of the
+          database by hand: did the last notification reach anybody. */}
+      <div className="mb-2 text-base font-extrabold tracking-tight">Notifications envoyées</div>
+      <JournalNotifications />
+
       <div className="grid grid-cols-2 gap-2.5">
         <Chiffre valeur={a.aujourdhui} legende="Appareils aujourd'hui" />
         <Chiffre valeur={a.sept_jours} legende="Appareils ces 7 jours" />

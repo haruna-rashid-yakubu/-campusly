@@ -429,3 +429,44 @@ export const programmePropositionsRelations = relations(programmePropositions, (
   user: one(users, { fields: [programmePropositions.userId], references: [users.id] }),
   classe: one(classes, { fields: [programmePropositions.classeId], references: [classes.id] }),
 }));
+
+/*
+ * What was sent, to whom, and how many phones it actually reached.
+ *
+ * A push leaves no trace of its own: it either rings or it does not, and the
+ * person who sent it has no way of telling the difference afterwards. That is
+ * a bad place to be when the whole promo is waiting on the week's timetable —
+ * "did it go out?" became a question only the database could answer, and only
+ * by inference. Now it answers directly.
+ *
+ * The count is of devices the push service accepted, not of people who read
+ * it: nobody can know that. It is still the number that matters, because zero
+ * means the message rang nowhere.
+ */
+export const notificationTypeEnum = [
+  "programme",
+  "rappel",
+  "admin",
+  "delegue",
+  "delegation",
+  "etudiant",
+  "test",
+  "tous",
+] as const;
+
+export const notificationEnvois = pgTable("notification_envoi", {
+  id: serial("id").primaryKey(),
+  type: text("type", { enum: notificationTypeEnum }).notNull(),
+  // The promo concerned, when the send was aimed at one.
+  classeId: integer("classe_id").references(() => classes.id, { onDelete: "set null" }),
+  titre: text("titre").notNull(),
+  corps: text("corps").notNull(),
+  // Devices the push service accepted, and devices it was offered to.
+  atteints: integer("atteints").notNull().default(0),
+  vises: integer("vises").notNull().default(0),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const notificationEnvoisRelations = relations(notificationEnvois, ({ one }) => ({
+  classe: one(classes, { fields: [notificationEnvois.classeId], references: [classes.id] }),
+}));

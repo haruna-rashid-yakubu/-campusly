@@ -6,6 +6,7 @@ import {
   cites,
   creneaux,
   delegations,
+  notificationEnvois,
   programmePropositions,
   programmePublications,
   roomTypes,
@@ -548,4 +549,27 @@ export async function getPropositionsProgramme(promos?: string[]) {
     .orderBy(asc(programmePropositions.createdAt));
   if (!promos) return rows;
   return rows.filter((r) => promos.includes(r.classeLabel));
+}
+
+/*
+ * The last notifications sent, newest first. `atteints` is the number of
+ * devices the push service took the message for — zero means it rang nowhere,
+ * which is the one thing worth seeing at a glance.
+ */
+export async function getJournalNotifications(limite = 40) {
+  return db
+    .select({
+      id: notificationEnvois.id,
+      type: notificationEnvois.type,
+      classeLabel: classes.label,
+      titre: notificationEnvois.titre,
+      corps: notificationEnvois.corps,
+      atteints: notificationEnvois.atteints,
+      vises: notificationEnvois.vises,
+      createdAt: notificationEnvois.createdAt,
+    })
+    .from(notificationEnvois)
+    .leftJoin(classes, eq(classes.id, notificationEnvois.classeId))
+    .orderBy(desc(notificationEnvois.createdAt))
+    .limit(limite);
 }
