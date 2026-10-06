@@ -32,6 +32,21 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  /*
+   * A Server Action body is capped at 1 MB by default, and one photograph of
+   * an exam sheet is already past it — which is why sending a paper failed
+   * with nothing useful on screen. The batch uploader now sends its files
+   * straight to the blob store and never hits this, but the single-file
+   * forms still post through an action: a student proposing a paper or a
+   * timetable, an admin attaching the week's photo.
+   *
+   * 4 MB rather than more: the platform refuses a function request body over
+   * 4.5 MB whatever is written here, so a larger number would only move the
+   * failure somewhere less legible.
+   */
+  experimental: {
+    serverActions: { bodySizeLimit: "4mb" },
+  },
   images: {
     remotePatterns: [
       {

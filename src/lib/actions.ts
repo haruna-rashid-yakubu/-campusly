@@ -21,6 +21,7 @@ import {
   visites,
 } from "@/db/schema";
 import { deleteFile, uploadFile } from "@/lib/blob";
+
 import {
   ensureClassesForFiliere,
   getClasseByLabel,
@@ -1076,11 +1077,25 @@ export async function definirTroncCommun(
   return { ok: true };
 }
 
+/** Only this app's own blob store; a URL from the browser proves nothing. */
+function estLienBlob(url: string) {
+  try {
+    const { protocol, hostname } = new URL(url);
+    return protocol === "https:" && hostname.endsWith(".public.blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}
+
 export type EpreuveEnLot = {
   matiere: string;
   annee: string;
   type: string;
   enseignant: string;
+  // Already in the blob store: the browser sent it there directly, because a
+  // Server Action body cannot carry a photograph.
+  fileUrl: string;
+  fileName: string;
 };
 
 export type ResultatLot = {
@@ -1144,14 +1159,15 @@ export async function publierEpreuves(formData: FormData): Promise<Refus | Resul
       continue;
     }
 
-    const file = formData.get(`fichier-${i}`);
-    if (!(file instanceof File) || file.size === 0) {
-      refusees.push({ matiere: nom, message: "Fichier manquant." });
+    // A URL is a claim, not a proof: it arrives from the browser, so only one
+    // pointing at this app's own blob store is accepted. Anything else would
+    // let a published paper link wherever its sender liked.
+    if (!estLienBlob(ligne.fileUrl)) {
+      refusees.push({ matiere: nom, message: "Document manquant ou invalide." });
       continue;
     }
 
     try {
-      const uploaded = await uploadFile(file, "sujets");
       await db.insert(subjects).values({
         matiere,
         filiere,
@@ -1159,8 +1175,8 @@ export async function publierEpreuves(formData: FormData): Promise<Refus | Resul
         annee,
         type: ligne.type as (typeof SUBJECT_TYPES)[number],
         enseignant: ligne.enseignant.trim() || null,
-        fileUrl: uploaded.url,
-        fileName: uploaded.name,
+        fileUrl: ligne.fileUrl,
+        fileName: ligne.fileName?.trim() || `${matiere} ${annee}`,
       });
       publiees += 1;
     } catch (e) {
