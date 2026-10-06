@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Sheet } from "@/components/Sheet";
 import { useToast } from "@/components/Toast";
 import { APP_DOMAIN, APP_URL } from "@/lib/constants";
@@ -8,6 +9,7 @@ import { APP_DOMAIN, APP_URL } from "@/lib/constants";
 const TEXTE = "Campusly — ton campus dans une appli : ";
 
 export function ShareSheet({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   // Read after mount: navigator does not exist during the server render, and
   // assuming either way would make the first client render disagree with it.
@@ -38,7 +40,16 @@ export function ShareSheet({ children }: { children: React.ReactNode }) {
    * no navigator.share it showed "Partage ouvert" and opened nothing at all —
    * a button that reported success and did nothing.
    */
-  const options: { label: string; aide?: string; run: () => void }[] = [];
+  const options: { label: string; aide?: string; run: () => void }[] = [
+    {
+      label: "Image pour ton statut",
+      aide: "L'affiche prête à publier, avec le lien dessus",
+      run: () => {
+        setOpen(false);
+        router.push("/statut");
+      },
+    },
+  ];
 
   if (partageSysteme) {
     options.push({
