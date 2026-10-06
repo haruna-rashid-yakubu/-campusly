@@ -85,6 +85,7 @@ export default async function AdminSubjectPage({
             niveau: subject.niveau,
             annee: subject.annee,
             type: subject.type,
+            reserveFiliere: subject.reserveFiliere,
             enseignant: subject.enseignant ?? "",
             corrige: subject.corrige,
           }}

@@ -278,6 +278,8 @@ export type SubjectEdits = {
   type: string;
   enseignant: string;
   corrige: boolean;
+  // Keeps this paper inside its own filière where promos otherwise share.
+  reserveFiliere: boolean;
 };
 
 // `edits` carries what the admin corrected on the review screen. Students
@@ -396,6 +398,7 @@ export async function updateSubject(subjectId: number, edits: SubjectEdits) {
       annee,
       type: edits.type as (typeof SUBJECT_TYPES)[number],
       corrige: edits.corrige,
+      reserveFiliere: edits.reserveFiliere,
       enseignant: enseignant ? enseignant : null,
     })
     .where(eq(subjects.id, subjectId));

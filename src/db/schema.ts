@@ -94,6 +94,31 @@ export const classes = pgTable("classe", {
   }),
 });
 
+/*
+ * Which promos sit the same papers.
+ *
+ * At the UCAC a tronc commun narrows as the licence goes on: in L1 the whole
+ * of LEG, GRH, LSSD and LQSSE sit the same exams; in L2 LEG has left and the
+ * other three remain; by L3 every filière sets its own. So the sharing is a
+ * fact about a (filière, niveau) pair, never about a filière as a whole — a
+ * paper sent for LEG L1 belongs to GRH L1 too, while one sent for LEG L3 must
+ * not leave LEG.
+ *
+ * Pairs carrying the same `groupe` see each other's papers. A pair with no
+ * row keeps its papers to itself, which is the safe default: a promo that
+ * sees too few is inconvenienced, one that sees another filière's exam is
+ * misled about what it will be asked.
+ */
+export const partagesEpreuve = pgTable(
+  "partage_epreuve",
+  {
+    filiere: text("filiere").notNull(),
+    niveau: text("niveau").notNull(),
+    groupe: text("groupe").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.filiere, t.niveau] })]
+);
+
 export const subjectTypeEnum = ["Partiel", "Examen", "Rattrapage", "TD"] as const;
 
 export const subjects = pgTable("subject", {
@@ -104,6 +129,13 @@ export const subjects = pgTable("subject", {
   annee: text("annee").notNull(),
   type: text("type", { enum: subjectTypeEnum }).notNull(),
   corrige: boolean("corrige").notNull().default(false),
+  /*
+   * Keeps this paper inside its own filière even where the promos otherwise
+   * share. L1 is a tronc commun with one exception the faculty makes every
+   * year: the maths paper differs per filière, while the course is the same.
+   * Without the exception a GRH student would revise on LEG's maths exam.
+   */
+  reserveFiliere: boolean("reserve_filiere").notNull().default(false),
   enseignant: text("enseignant"),
   fileUrl: text("file_url"),
   fileName: text("file_name"),

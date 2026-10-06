@@ -12,6 +12,7 @@ export type SubjectFieldValues = {
   type: string;
   enseignant: string;
   corrige: boolean;
+  reserveFiliere: boolean;
 };
 
 const TEXT_FIELDS = [

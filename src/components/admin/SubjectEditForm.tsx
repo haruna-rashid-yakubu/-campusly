@@ -52,6 +52,24 @@ export function SubjectEditForm({
 
       <SubjectFields values={values} onChange={setValues} facets={facets} types={types} />
 
+      {/* L1 is a tronc commun with one exception the faculty makes every year:
+          the maths paper differs per filière while the course is shared. */}
+      <label className="mt-4 flex items-start gap-2.5 rounded-[16px] border border-line p-3.5 text-[13.5px] font-semibold text-ink-soft">
+        <input
+          type="checkbox"
+          checked={values.reserveFiliere}
+          onChange={(e) => setValues({ ...values, reserveFiliere: e.target.checked })}
+          className="mt-0.5 h-[18px] w-[18px] flex-none accent-teal"
+        />
+        <span className="min-w-0 flex-1">
+          Réservé à sa filière
+          <span className="mt-0.5 block text-[12.5px] font-medium leading-snug text-slate-light">
+            À cocher quand l&rsquo;épreuve diffère alors que la promo est en tronc commun — la
+            maths de L1. Sans ça, elle est visible par toutes les promos du groupe.
+          </span>
+        </span>
+      </label>
+
       <button
         disabled={pending}
         onClick={save}

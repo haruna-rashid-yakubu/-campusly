@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNotNull, ne, notInArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, ne, notInArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { cookies } from "next/headers";
 import { db } from "@/db";
@@ -13,6 +13,7 @@ import {
   roomTypes,
   subjectSubmissions,
   subjects,
+  partagesEpreuve,
   subjectTypeEnum,
   users,
 } from "@/db/schema";
@@ -38,6 +39,58 @@ export type SubjectFilters = {
   enseignant?: string;
 };
 
+
+/*
+ * The papers a student of `filiere` is entitled to see.
+ *
+ * Their own filière always, plus the levels where the faculty sets one paper
+ * for several promos. The sharing is read here rather than written into the
+ * rows, so a paper sent once for LEG L1 reaches GRH L1 without being stored
+ * twice — and the day a tronc commun ends, nothing has to be unpicked.
+ *
+ * `reserveFiliere` wins over the sharing: it is how the L1 maths paper, which
+ * differs per filière inside an otherwise common year, stays home.
+ */
+async function conditionFiliere(filiere: string) {
+  const miennes = await db
+    .select({ niveau: partagesEpreuve.niveau, groupe: partagesEpreuve.groupe })
+    .from(partagesEpreuve)
+    .where(eq(partagesEpreuve.filiere, filiere));
+
+  if (miennes.length === 0) return eq(subjects.filiere, filiere);
+
+  const partenaires = await db
+    .select({ filiere: partagesEpreuve.filiere, niveau: partagesEpreuve.niveau })
+    .from(partagesEpreuve)
+    .where(
+      or(
+        ...miennes.map((m) =>
+          and(eq(partagesEpreuve.groupe, m.groupe), eq(partagesEpreuve.niveau, m.niveau))
+        )
+      )
+    );
+
+  const empruntees = partenaires
+    .filter((p) => p.filiere !== filiere)
+    .map((p) =>
+      and(
+        eq(subjects.filiere, p.filiere),
+        eq(subjects.niveau, p.niveau),
+        eq(subjects.reserveFiliere, false)
+      )
+    );
+
+  return or(eq(subjects.filiere, filiere), ...empruntees)!;
+}
+
+/** The sharing as it stands, for the admin screen that has to show it. */
+export async function getPartagesEpreuve() {
+  return db
+    .select()
+    .from(partagesEpreuve)
+    .orderBy(partagesEpreuve.niveau, partagesEpreuve.groupe, partagesEpreuve.filiere);
+}
+
 export async function getSubjects(filters: SubjectFilters = {}) {
   const conditions = [];
   // Students look for a course *or* a lecturer in the same box ("Noumo",
@@ -50,7 +103,7 @@ export async function getSubjects(filters: SubjectFilters = {}) {
     );
   }
   if (filters.enseignant) conditions.push(eq(subjects.enseignant, filters.enseignant));
-  if (filters.filiere) conditions.push(eq(subjects.filiere, filters.filiere));
+  if (filters.filiere) conditions.push(await conditionFiliere(filters.filiere));
   if (filters.niveau) conditions.push(eq(subjects.niveau, filters.niveau));
   if (filters.annee) conditions.push(eq(subjects.annee, filters.annee));
   if (filters.type) conditions.push(eq(subjects.type, filters.type as (typeof subjects.type.enumValues)[number]));

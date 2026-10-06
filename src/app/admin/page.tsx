@@ -32,6 +32,7 @@ import {
   getProposerFacets,
   getPropositionsProgramme,
   getLiensTroncCommun,
+  getPartagesEpreuve,
   getTroncCommun,
   getSubjects,
 } from "@/lib/data";
@@ -150,10 +151,36 @@ async function ModerationTab({ promos }: { promos?: string[] }) {
 }
 
 async function PubliesTab({ q }: { q?: string }) {
-  const subjects = await getSubjects(q ? { q } : {});
+  const [subjects, partages] = await Promise.all([
+    getSubjects(q ? { q } : {}),
+    getPartagesEpreuve(),
+  ]);
+
+  // Grouped for reading: "L1 — LEG, GRH, LSSD, LQSSE" says the rule in one
+  // line, where a column in the database says it to nobody.
+  const groupes = new Map<string, { niveau: string; filieres: string[] }>();
+  for (const p of partages) {
+    const g = groupes.get(p.groupe) ?? { niveau: p.niveau, filieres: [] };
+    g.filieres.push(p.filiere);
+    groupes.set(p.groupe, g);
+  }
 
   return (
     <>
+      {groupes.size > 0 && (
+        <div className="mb-3.5 rounded-[18px] border border-line bg-surface-2 p-3.5">
+          <div className="text-[13.5px] font-extrabold">Épreuves partagées</div>
+          {[...groupes.values()].map((g) => (
+            <div key={g.niveau} className="mt-1.5 text-[12.5px] leading-snug text-slate">
+              <span className="font-bold">{g.niveau}</span> — {g.filieres.join(", ")}
+            </div>
+          ))}
+          <p className="mt-2 text-[12px] leading-snug text-slate-light">
+            Une épreuve publiée pour l&rsquo;une de ces filières apparaît chez toutes les autres du
+            même niveau. Coche « Réservé à sa filière » sur l&rsquo;épreuve pour l&rsquo;en exclure.
+          </p>
+        </div>
+      )}
       <form action="/admin" className="mb-3.5">
         <input type="hidden" name="tab" value="publies" />
         <div className="flex h-12 items-center gap-2.5 rounded-2xl bg-surface-2 px-3.5">
