@@ -39,7 +39,11 @@ export function ProposerForm({
     if (file) fd.set("file", file);
     startTransition(async () => {
       try {
-        await proposeSubject(fd);
+        const r = await proposeSubject(fd);
+        if (!r.ok) {
+          show(r.message, "warn");
+          return;
+        }
         setSent(true);
       } catch (e) {
         show(e instanceof Error ? e.message : "Erreur lors de l'envoi", "warn");

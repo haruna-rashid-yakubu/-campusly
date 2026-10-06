@@ -199,8 +199,17 @@ export async function dismissInstallBanner() {
 // TDs are in the bank and the picker offered the type.
 const SUBJECT_TYPES = subjectTypeEnum;
 
-export async function proposeSubject(formData: FormData) {
-  const user = await requireUser();
+/*
+ * Returns its refusals instead of throwing them. Next strips the message out
+ * of an error thrown by a server action in production, so every sentence
+ * written for the student — "Remplis tous les champs avant d'envoyer" —
+ * reached them as React error #441 and a wall of minified text. A refusal the
+ * person is meant to read has to travel as a value.
+ */
+export async function proposeSubject(formData: FormData): Promise<Refus | { ok: true }> {
+  const session = await auth();
+  if (!session?.user) return { ok: false, message: "Connecte-toi pour envoyer un sujet." };
+  const user = session.user;
 
   const filiere = String(formData.get("filiere") ?? "");
   const niveau = String(formData.get("niveau") ?? "");
@@ -210,10 +219,10 @@ export async function proposeSubject(formData: FormData) {
   const file = formData.get("file") as File | null;
 
   if (!filiere || !niveau || !matiere || !annee || !type) {
-    throw new Error("Remplis tous les champs avant d'envoyer.");
+    return { ok: false, message: "Remplis tous les champs avant d'envoyer." };
   }
   if (!SUBJECT_TYPES.includes(type as (typeof SUBJECT_TYPES)[number])) {
-    throw new Error("Type d'épreuve invalide.");
+    return { ok: false, message: "Type d'épreuve invalide." };
   }
 
   let fileUrl: string | null = null;
@@ -256,6 +265,7 @@ export async function proposeSubject(formData: FormData) {
   revalidatePath("/sujets/mes-envois");
   revalidatePath("/admin");
   revalidatePath("/");
+  return { ok: true };
 }
 
 export type SubjectEdits = {

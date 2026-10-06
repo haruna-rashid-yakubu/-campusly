@@ -2,7 +2,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { Icon } from "@/components/icons";
 import { CopyLinkButton } from "@/components/CopyLinkButton";
-import { estIPhone, estNavigateurIntegre } from "@/lib/ua";
+import { estNavigateurIntegre, plateforme } from "@/lib/ua";
 import { APP_URL } from "@/lib/constants";
 
 /** Names the app we are sitting inside, so the advice points at a real button. */
@@ -15,19 +15,24 @@ function nomDeLAppli(userAgent: string): string {
 
 /*
  * Campusly travels by WhatsApp link, so a lot of students meet it inside
- * WhatsApp's own browser — and there, adding it to the home screen is simply
- * impossible. Tapping Share gives Copy, Add to Reading List and nothing else:
- * iOS only offers "Add to Home Screen" from Safari itself. Someone who tries
- * and finds no such line concludes the app cannot be installed, when they
- * were one browser away.
+ * another app's browser — and there, adding it to the home screen is simply
+ * impossible. On an iPhone the Share button offers Copy and Add to Reading
+ * List and nothing else: only Safari has "Sur l'écran d'accueil". On Android
+ * the embedded browsers Instagram and Facebook carry are plain WebViews with
+ * no install entry either.
  *
- * On Android the same embedded browser does offer Chrome's menu, so this
- * speaks only to iPhones, and only while we are inside another app — in
- * Safari it disappears on its own.
+ * This used to speak only to iPhones, on the assumption that Android kept
+ * Chrome's menu inside embedded browsers. That holds for a WhatsApp link,
+ * which opens in a Chrome tab, but not for Instagram or Facebook — and those
+ * students saw nothing at all, then landed on a page telling them to open
+ * Safari. Both phones now get the banner, each pointed at a browser they have.
  */
 export async function OuvrirDansSafari() {
   const userAgent = (await headers()).get("user-agent") ?? "";
-  if (!estIPhone(userAgent) || !estNavigateurIntegre(userAgent)) return null;
+  if (!estNavigateurIntegre(userAgent)) return null;
+
+  const surIPhone = plateforme(userAgent) === "iPhone";
+  const navigateur = surIPhone ? "Safari" : "Chrome";
 
   return (
     <div className="mb-4 rounded-[20px] border-[1.5px] border-teal bg-teal-tint-soft p-4">
@@ -36,11 +41,15 @@ export async function OuvrirDansSafari() {
           <Icon name="safari" size={20} strokeWidth={1.7} />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="text-[15px] font-extrabold">Pour l&rsquo;ajouter, passe par Safari</div>
+          <div className="text-[15px] font-extrabold">
+            Pour l&rsquo;ajouter, passe par {navigateur}
+          </div>
           <p className="mt-0.5 text-[13.5px] leading-snug text-slate">
-            Tu es dans le navigateur de {nomDeLAppli(userAgent)}. Son bouton Partager n&rsquo;a pas
-            « Sur l&rsquo;écran d&rsquo;accueil » — ce n&rsquo;est pas toi, il ne l&rsquo;a jamais.
-            Copie le lien, ouvre Safari et colle-le : l&rsquo;option y est.
+            Tu es dans le navigateur de {nomDeLAppli(userAgent)}.{" "}
+            {surIPhone
+              ? "Son bouton Partager n'a pas « Sur l'écran d'accueil » — ce n'est pas toi, il ne l'a jamais."
+              : "Il ne sait pas installer une appli sur l'écran d'accueil — ce n'est pas toi, il ne l'a jamais su."}{" "}
+            Copie le lien, ouvre {navigateur} et colle-le : l&rsquo;option y est.
           </p>
         </div>
       </div>

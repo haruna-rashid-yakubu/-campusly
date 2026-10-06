@@ -14,6 +14,18 @@ export function estIPhone(userAgent: string): boolean {
   return /iphone|ipad|ipod/i.test(userAgent);
 }
 
+export type Plateforme = "iPhone" | "Android";
+
+/*
+ * Which set of instructions a person needs. Anything that is not an iPhone is
+ * told the Android way: on a desktop browser the menu wording is close enough,
+ * and guessing wrong there costs nothing, where guessing wrong on a phone
+ * sends someone looking for a button that is not on their screen.
+ */
+export function plateforme(userAgent: string): Plateforme {
+  return estIPhone(userAgent) ? "iPhone" : "Android";
+}
+
 export function detectInstallTab(userAgent: string): InstallTab {
   if (estNavigateurIntegre(userAgent)) return "Autre";
   if (estIPhone(userAgent)) return "iPhone";
