@@ -122,15 +122,69 @@ export default async function AdminPage({
       </div>
 
       <div className="px-5 pb-12">
-        {tab === "sujets" && <ModerationTab promos={estAdmin ? undefined : mesPromos} />}
-        {tab === "publies" && <PubliesTab q={q} />}
-        {tab === "cites" && <CitesTab />}
-        {tab === "prog" && <ProgrammeTab promos={estAdmin ? undefined : mesPromos} />}
-        {tab === "monde" && <AudienceTab />}
-        {tab === "delegues" && <DeleguesTab />}
+        {tab === "sujets" && (
+          <Panneau nom="Envois">
+            <ModerationTab promos={estAdmin ? undefined : mesPromos} />
+          </Panneau>
+        )}
+        {tab === "publies" && (
+          <Panneau nom="Publiés">
+            <PubliesTab q={q} />
+          </Panneau>
+        )}
+        {tab === "cites" && (
+          <Panneau nom="Cités">
+            <CitesTab />
+          </Panneau>
+        )}
+        {tab === "prog" && (
+          <Panneau nom="Programme">
+            <ProgrammeTab promos={estAdmin ? undefined : mesPromos} />
+          </Panneau>
+        )}
+        {tab === "monde" && (
+          <Panneau nom="Audience">
+            <AudienceTab />
+          </Panneau>
+        )}
+        {tab === "delegues" && (
+          <Panneau nom="Délégués">
+            <DeleguesTab />
+          </Panneau>
+        )}
       </div>
     </div>
   );
+}
+
+/*
+ * Catches a tab's own failure and prints it, instead of letting it reach the
+ * error boundary where Next replaces the message with a digest.
+ *
+ * The masking is right for a student — a stack trace leaks server detail and
+ * helps nobody holding a phone. On the admin screen it is the opposite: the
+ * person looking is the one who has to report the fault, and "Un problème est
+ * survenu" sent them away with a number nobody can look up. One broken tab
+ * also no longer takes the whole page down with it.
+ */
+async function Panneau({ nom, children }: { nom: string; children: React.ReactNode }) {
+  try {
+    return <>{await children}</>;
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    const pile = e instanceof Error && e.stack ? e.stack.split("\n").slice(0, 8).join("\n") : "";
+    return (
+      <div className="rounded-[18px] border-[1.5px] border-danger-border bg-danger-tint p-4">
+        <div className="text-[14.5px] font-extrabold text-danger">
+          L&rsquo;onglet {nom} n&rsquo;a pas pu s&rsquo;afficher
+        </div>
+        <pre className="mt-2.5 overflow-x-auto whitespace-pre-wrap break-words rounded-[12px] bg-white p-3 text-left text-[11.5px] leading-snug text-ink-soft">
+          {message}
+          {pile ? `\n\n${pile}` : ""}
+        </pre>
+      </div>
+    );
+  }
 }
 
 async function ModerationTab({ promos }: { promos?: string[] }) {
