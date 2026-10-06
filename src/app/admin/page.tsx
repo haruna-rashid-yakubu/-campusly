@@ -123,34 +123,22 @@ export default async function AdminPage({
 
       <div className="px-5 pb-12">
         {tab === "sujets" && (
-          <Panneau nom="Envois">
-            <ModerationTab promos={estAdmin ? undefined : mesPromos} />
-          </Panneau>
+          <Panneau nom="Envois" rendu={() => ModerationTab({ promos: estAdmin ? undefined : mesPromos })} />
         )}
         {tab === "publies" && (
-          <Panneau nom="Publiés">
-            <PubliesTab q={q} />
-          </Panneau>
+          <Panneau nom="Publiés" rendu={() => PubliesTab({ q })} />
         )}
         {tab === "cites" && (
-          <Panneau nom="Cités">
-            <CitesTab />
-          </Panneau>
+          <Panneau nom="Cités" rendu={() => CitesTab()} />
         )}
         {tab === "prog" && (
-          <Panneau nom="Programme">
-            <ProgrammeTab promos={estAdmin ? undefined : mesPromos} />
-          </Panneau>
+          <Panneau nom="Programme" rendu={() => ProgrammeTab({ promos: estAdmin ? undefined : mesPromos })} />
         )}
         {tab === "monde" && (
-          <Panneau nom="Audience">
-            <AudienceTab />
-          </Panneau>
+          <Panneau nom="Audience" rendu={() => AudienceTab()} />
         )}
         {tab === "delegues" && (
-          <Panneau nom="Délégués">
-            <DeleguesTab />
-          </Panneau>
+          <Panneau nom="Délégués" rendu={() => DeleguesTab()} />
         )}
       </div>
     </div>
@@ -167,9 +155,18 @@ export default async function AdminPage({
  * survenu" sent them away with a number nobody can look up. One broken tab
  * also no longer takes the whole page down with it.
  */
-async function Panneau({ nom, children }: { nom: string; children: React.ReactNode }) {
+async function Panneau({
+  nom,
+  rendu,
+}: {
+  nom: string;
+  rendu: () => Promise<React.ReactNode>;
+}) {
+  let contenu: React.ReactNode;
   try {
-    return <>{await children}</>;
+    // Called, not awaited as JSX: `await <Tab />` hands back an element
+    // without ever running the component, so nothing would be caught.
+    contenu = await rendu();
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     const pile = e instanceof Error && e.stack ? e.stack.split("\n").slice(0, 8).join("\n") : "";
@@ -185,12 +182,23 @@ async function Panneau({ nom, children }: { nom: string; children: React.ReactNo
       </div>
     );
   }
+  return <>{contenu}</>;
 }
 
 async function ModerationTab({ promos }: { promos?: string[] }) {
   const queue = await getModerationQueue(promos);
   return (
     <>
+      {/* The cupboard, not the queue: a délégué with twenty sheets in hand has
+          nothing to moderate, they have something to publish. */}
+      <Link
+        href="/admin/epreuves"
+        className="press-scale mb-4 flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-teal text-[15.5px] font-bold text-white active:bg-teal-press"
+      >
+        <Icon name="plus" size={19} strokeWidth={2.2} />
+        Ajouter des épreuves
+      </Link>
+
       <div className="mb-3 text-[13px] text-slate-light">
         {queue.length} sujet{queue.length > 1 ? "s" : ""} en attente
         {promos ? ` · ${promos.join(", ")}` : ""}

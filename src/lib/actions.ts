@@ -1075,3 +1075,104 @@ export async function definirTroncCommun(
   revalidatePath("/");
   return { ok: true };
 }
+
+export type EpreuveEnLot = {
+  matiere: string;
+  annee: string;
+  type: string;
+  enseignant: string;
+};
+
+export type ResultatLot = {
+  ok: true;
+  publiees: number;
+  refusees: { matiere: string; message: string }[];
+};
+
+/*
+ * Publishes a drawer's worth of past papers in one go.
+ *
+ * A délégué emptying a cupboard has twenty sheets of the same promo, the same
+ * year and the same kind; doing them one at a time means twenty trips through
+ * a form where only the matière changes, and in practice it means they stop
+ * after four. So the promo and the labels that repeat are chosen once, and
+ * each sheet carries only what is its own.
+ *
+ * Partial success is the honest outcome here: one unreadable file among
+ * twenty must not throw away the other nineteen, and the ones that failed are
+ * named back so they can be retried rather than silently lost.
+ */
+export async function publierEpreuves(formData: FormData): Promise<Refus | ResultatLot> {
+  const session = await auth();
+  if (!session?.user) return { ok: false, message: "Connecte-toi pour continuer." };
+
+  const classeLabel = String(formData.get("classeLabel") ?? "").trim();
+  const classe = await getClasseByLabel(classeLabel);
+  if (!classe) return { ok: false, message: "Promo inconnue." };
+
+  // The same fence as everywhere else: a délégué publishes for their promo
+  // and no other, whatever the form was made to say.
+  if (session.user.role !== "admin" && !session.user.delegations?.includes(classe.id)) {
+    return { ok: false, message: "Tu n'es pas délégué de cette promo." };
+  }
+
+  const [filiere, niveau] = classeLabel.split(" · ");
+  if (!filiere || !niveau) return { ok: false, message: "Promo mal formée." };
+
+  let lignes: EpreuveEnLot[] = [];
+  try {
+    lignes = JSON.parse(String(formData.get("epreuves") ?? "[]")) as EpreuveEnLot[];
+  } catch {
+    return { ok: false, message: "Liste illisible." };
+  }
+  if (lignes.length === 0) return { ok: false, message: "Ajoute au moins une épreuve." };
+
+  const refusees: { matiere: string; message: string }[] = [];
+  let publiees = 0;
+
+  for (const [i, ligne] of lignes.entries()) {
+    const matiere = ligne.matiere.trim();
+    const annee = ligne.annee.trim();
+    const nom = matiere || `Épreuve ${i + 1}`;
+
+    if (!matiere || !annee) {
+      refusees.push({ matiere: nom, message: "Matière et année obligatoires." });
+      continue;
+    }
+    if (!SUBJECT_TYPES.includes(ligne.type as (typeof SUBJECT_TYPES)[number])) {
+      refusees.push({ matiere: nom, message: "Type d'épreuve invalide." });
+      continue;
+    }
+
+    const file = formData.get(`fichier-${i}`);
+    if (!(file instanceof File) || file.size === 0) {
+      refusees.push({ matiere: nom, message: "Fichier manquant." });
+      continue;
+    }
+
+    try {
+      const uploaded = await uploadFile(file, "sujets");
+      await db.insert(subjects).values({
+        matiere,
+        filiere,
+        niveau,
+        annee,
+        type: ligne.type as (typeof SUBJECT_TYPES)[number],
+        enseignant: ligne.enseignant.trim() || null,
+        fileUrl: uploaded.url,
+        fileName: uploaded.name,
+      });
+      publiees += 1;
+    } catch (e) {
+      refusees.push({ matiere: nom, message: e instanceof Error ? e.message : "Envoi impossible." });
+    }
+  }
+
+  if (publiees > 0) {
+    await ensureClassesForFiliere(filiere, niveau);
+    revalidatePath("/sujets");
+    revalidatePath("/admin");
+  }
+
+  return { ok: true, publiees, refusees };
+}
