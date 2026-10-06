@@ -32,7 +32,14 @@ export function GET() {
           justifyContent: "space-between",
           background: "#0A7F77",
           fontFamily: "sans-serif",
-          padding: "110px 80px 96px",
+          /*
+           * WhatsApp draws its own furniture over a statut: the progress bars
+           * and the sender's name along the top, the reply bar along the
+           * bottom. The generous top and bottom padding keeps the logo and,
+           * above all, the address out from under them — an address hidden
+           * behind the reply bar is the one line the poster exists for.
+           */
+          padding: "210px 80px 240px",
         }}
       >
         <div style={{ display: "flex", flexDirection: "column" }}>
