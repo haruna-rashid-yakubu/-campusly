@@ -105,7 +105,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
  * notifications can be turned on without ever signing in, and matching only
  * on the account would silently drop those people.
  */
-export type PushKind = "programme" | "rappel";
+export type PushKind = "programme" | "rappel" | "annales";
 
 export async function sendPushToClasse(
   classeId: number,
@@ -114,7 +114,11 @@ export async function sendPushToClasse(
 ) {
   if (!ensureConfigured()) return 0;
   const pref =
-    kind === "programme" ? pushSubscriptions.prefProgramme : pushSubscriptions.prefRappel;
+    kind === "programme"
+      ? pushSubscriptions.prefProgramme
+      : kind === "annales"
+        ? pushSubscriptions.prefAnnales
+        : pushSubscriptions.prefRappel;
   const subs = await db
     .select({
       endpoint: pushSubscriptions.endpoint,

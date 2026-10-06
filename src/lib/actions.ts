@@ -28,6 +28,7 @@ import {
   getProgrammeForWeek,
   definirProgrammeDe,
   getTroncCommun,
+  getClassesQuiVoient,
 } from "@/lib/data";
 import { fromISODate, mondayOf, nowInWAT, startOfDay, weekRangeLabel } from "@/lib/semaine";
 import { BANNER_COOKIE, CLASSE_COOKIE, DEVICE_COOKIE, momentDuSlot } from "@/lib/constants";
@@ -637,13 +638,14 @@ export async function subscribePush(subscription: {
  */
 export async function setPushPrefs(
   endpoint: string,
-  prefs: { programme?: boolean; rappel?: boolean }
+  prefs: { programme?: boolean; rappel?: boolean; annales?: boolean }
 ) {
   await db
     .update(pushSubscriptions)
     .set({
       ...(prefs.programme === undefined ? {} : { prefProgramme: prefs.programme }),
       ...(prefs.rappel === undefined ? {} : { prefRappel: prefs.rappel }),
+      ...(prefs.annales === undefined ? {} : { prefAnnales: prefs.annales }),
     })
     .where(eq(pushSubscriptions.endpoint, endpoint));
 }
@@ -653,10 +655,11 @@ export async function getPushPrefs(endpoint: string) {
     .select({
       programme: pushSubscriptions.prefProgramme,
       rappel: pushSubscriptions.prefRappel,
+      annales: pushSubscriptions.prefAnnales,
     })
     .from(pushSubscriptions)
     .where(eq(pushSubscriptions.endpoint, endpoint));
-  return row ?? { programme: true, rappel: true };
+  return row ?? { programme: true, rappel: true, annales: true };
 }
 
 export async function unsubscribePush(endpoint: string) {
@@ -1167,6 +1170,34 @@ export async function publierEpreuves(formData: FormData): Promise<Refus | Resul
 
   if (publiees > 0) {
     await ensureClassesForFiliere(filiere, niveau);
+
+    /*
+     * One alert for the batch, not one per sheet: twenty buzzes in a row is
+     * how a promo turns notifications off for good.
+     *
+     * It goes to every promo that will actually see these papers, the tronc
+     * commun included — telling only the promo they were filed under would
+     * leave the others to find them by chance, which defeats the sharing.
+     */
+    const reussies = lignes
+      .map((l) => l.matiere.trim())
+      .filter((m) => m && !refusees.some((r) => r.matiere === m));
+    const apercu = reussies.slice(0, 3).join(", ");
+    const reste = reussies.length - 3;
+    const payload = {
+      title:
+        publiees === 1 ? "Une nouvelle épreuve" : `${publiees} nouvelles épreuves`,
+      body: `${apercu}${reste > 0 ? ` et ${reste} autre${reste > 1 ? "s" : ""}` : ""} · ${niveau}`,
+      url: `/sujets?filiere=${encodeURIComponent(filiere)}&niveau=${encodeURIComponent(niveau)}`,
+    };
+    const destinataires = await getClassesQuiVoient(filiere, niveau);
+    // One promo failing to notify must not lose the publication itself.
+    try {
+      await Promise.all(destinataires.map((c) => sendPushToClasse(c.id, payload, "annales")));
+    } catch {
+      /* les épreuves sont en ligne, c'est ce qui compte */
+    }
+
     revalidatePath("/sujets");
     revalidatePath("/admin");
   }

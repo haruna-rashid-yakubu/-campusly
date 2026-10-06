@@ -719,3 +719,31 @@ export async function getLiensTroncCommun() {
     .innerJoin(source, eq(source.id, classes.programmeDe))
     .orderBy(classes.label);
 }
+
+/*
+ * Every promo that will see a paper filed under this (filière, niveau) — the
+ * one it was published for, plus the ones sharing its tronc commun at that
+ * level.
+ *
+ * Used to decide who gets told. Telling only the promo it was filed under
+ * would leave LQSSE and LSSD to discover GRH's new papers by chance, which is
+ * the whole point of sharing them.
+ */
+export async function getClassesQuiVoient(filiere: string, niveau: string) {
+  const [mien] = await db
+    .select({ groupe: partagesEpreuve.groupe })
+    .from(partagesEpreuve)
+    .where(and(eq(partagesEpreuve.filiere, filiere), eq(partagesEpreuve.niveau, niveau)));
+
+  const filieres = new Set([filiere]);
+  if (mien) {
+    const partenaires = await db
+      .select({ filiere: partagesEpreuve.filiere })
+      .from(partagesEpreuve)
+      .where(and(eq(partagesEpreuve.groupe, mien.groupe), eq(partagesEpreuve.niveau, niveau)));
+    for (const p of partenaires) filieres.add(p.filiere);
+  }
+
+  const labels = [...filieres].map((f) => `${f} · ${niveau}`);
+  return db.select({ id: classes.id, label: classes.label }).from(classes).where(inArray(classes.label, labels));
+}

@@ -12,13 +12,18 @@ import {
   type PushStatus as Status,
 } from "@/lib/push-client";
 
-type Prefs = { programme: boolean; rappel: boolean };
+type Prefs = { programme: boolean; rappel: boolean; annales: boolean };
 
 const PREF_ROWS: { key: keyof Prefs; titre: string; detail: string }[] = [
   {
     key: "programme",
     titre: "Programme de la semaine",
     detail: "Quand le programme de ta promo est publié.",
+  },
+  {
+    key: "annales",
+    titre: "Nouvelles épreuves",
+    detail: "Quand des anciens sujets sont ajoutés pour ta promo.",
   },
   {
     key: "rappel",

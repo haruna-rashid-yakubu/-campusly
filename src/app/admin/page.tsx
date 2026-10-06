@@ -482,6 +482,7 @@ const LIBELLE_ENVOI: Record<string, string> = {
   delegue: "Alerte délégué",
   delegation: "Nomination",
   etudiant: "Réponse à un étudiant",
+  annales: "Nouvelles épreuves",
   test: "Test",
   tous: "Tout le monde",
 };

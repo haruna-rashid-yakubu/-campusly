@@ -230,6 +230,7 @@ export const pushSubscriptions = pgTable("push_subscription", {
    */
   prefProgramme: boolean("pref_programme").notNull().default(true),
   prefRappel: boolean("pref_rappel").notNull().default(true),
+  prefAnnales: boolean("pref_annales").notNull().default(true),
   endpoint: text("endpoint").notNull().unique(),
   p256dh: text("p256dh").notNull(),
   auth: text("auth").notNull(),
@@ -498,6 +499,7 @@ export const notificationTypeEnum = [
   "delegue",
   "delegation",
   "etudiant",
+  "annales",
   "test",
   "tous",
 ] as const;
