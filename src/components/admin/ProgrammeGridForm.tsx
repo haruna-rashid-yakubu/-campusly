@@ -6,16 +6,10 @@ import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
 import { saveProgramme, type CreneauInput } from "@/lib/actions";
 import { DEMI_JOURNEES, heuresDe, JOURS } from "@/lib/constants";
-
-export type Cell = {
-  matiere: string;
-  abrege: string;
-  enseignant: string;
-  salle: string;
-  seance: string;
-  seances: string;
-  cc: boolean;
-};
+// Shared with the server page that fills this grid. They cannot live here:
+// an export of a "use client" module is a client reference on the server,
+// so the page could not call them.
+import { cellKey, halfKey, type Cell } from "@/lib/grille";
 
 const EMPTY: Cell = {
   matiere: "",
@@ -26,11 +20,6 @@ const EMPTY: Cell = {
   seances: "",
   cc: false,
 };
-
-/** Keyed on the slot a course starts in: "3-1" is Wednesday 8h. */
-export const cellKey = (jour: number, debut: number) => `${jour}-${debut}`;
-/** A half-day that holds two courses instead of one block: "3-matin". */
-export const halfKey = (jour: number, moment: string) => `${jour}-${moment}`;
 
 export function ProgrammeGridForm({
   classes,

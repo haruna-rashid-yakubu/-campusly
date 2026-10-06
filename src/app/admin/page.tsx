@@ -10,12 +10,10 @@ import { StockControl } from "@/components/admin/StockControl";
 import { CiteForm } from "@/components/admin/CiteForm";
 import { DelegueForm } from "@/components/admin/DelegueForm";
 import { PropositionCard } from "@/components/admin/PropositionCard";
-import {
-  cellKey,
-  halfKey,
-  ProgrammeGridForm,
-  type Cell,
-} from "@/components/admin/ProgrammeGridForm";
+import { ProgrammeGridForm } from "@/components/admin/ProgrammeGridForm";
+// Not from the form: it is a client module, and its exports reach the server
+// as opaque references, so calling cellKey() here threw mid-render.
+import { cellKey, halfKey, type Cell } from "@/lib/grille";
 import { DEMI_JOURNEES } from "@/lib/constants";
 import {
   getCitesWithAvailability,
