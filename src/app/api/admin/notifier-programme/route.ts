@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
   // Never announce a week that is not there: the notification would open on an
   // empty screen, which is worse than no notification.
-  const programme = await getProgrammeForWeek(classe.id, semaine);
+  const programme = await getProgrammeForWeek(classe.id, semaine, { brut: true });
   if (!programme) {
     return NextResponse.json({ error: "Aucun programme pour cette semaine." }, { status: 404 });
   }

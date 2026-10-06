@@ -8,7 +8,13 @@ import { DownloadButton } from "@/components/DownloadButton";
 import { ProgrammeGrid } from "@/components/ProgrammeGrid";
 import { NotifNudge } from "@/components/NotifNudge";
 import { Icon } from "@/components/icons";
-import { getClasseByLabel, getClasses, getLatestProgramme, getPreferredClasse } from "@/lib/data";
+import {
+  getClasseByLabel,
+  getClasses,
+  getLatestProgramme,
+  getPreferredClasse,
+  getTroncCommun,
+} from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Programme de la semaine",
@@ -22,6 +28,9 @@ export default async function ProgrammePage() {
   const [classe, classesRows] = await Promise.all([getPreferredClasse(), getClasses()]);
   const classeRow = await getClasseByLabel(classe);
   const programme = classeRow ? await getLatestProgramme(classeRow.id) : null;
+  // Said out loud, because a student whose promo borrows its week would
+  // otherwise read someone else's room numbers without knowing it.
+  const suit = classeRow ? await getTroncCommun(classeRow.id) : null;
 
   return (
     <div className="min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
@@ -29,6 +38,11 @@ export default async function ProgrammePage() {
         <div className="pb-3">
           <div className="text-[24px] font-extrabold tracking-tight">Programme</div>
           <ClasseSwitcher value={classe} classes={classesRows.map((c) => c.label)} variant="field" />
+          {suit && (
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-teal-tint px-2.5 py-1 text-[12px] font-bold text-teal-active">
+              Tronc commun avec {suit.label}
+            </div>
+          )}
           <div className="mt-2.5 text-[13px] text-slate-light">
             {programme
               ? `${programme.weekLabel} — mis à jour le ${programme.publishedAt.toLocaleDateString("fr-FR")} à ${programme.publishedAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`

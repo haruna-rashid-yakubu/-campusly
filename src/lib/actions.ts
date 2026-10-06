@@ -26,6 +26,8 @@ import {
   getClasseByLabel,
   getPreferredClasse,
   getProgrammeForWeek,
+  definirProgrammeDe,
+  getTroncCommun,
 } from "@/lib/data";
 import { fromISODate, mondayOf, nowInWAT, startOfDay, weekRangeLabel } from "@/lib/semaine";
 import { BANNER_COOKIE, CLASSE_COOKIE, DEVICE_COOKIE, momentDuSlot } from "@/lib/constants";
@@ -484,6 +486,15 @@ export async function saveProgramme(formData: FormData) {
   // délégué of LIG 2 is stopped from rewriting BME 1's week.
   const auteur = await requireDroitSurClasse(classe.id);
 
+  // A promo in tronc commun shows the other one's week, so anything published
+  // here would be written and never read — an hour of typing into a void.
+  const suit = await getTroncCommun(classe.id);
+  if (suit) {
+    throw new Error(
+      `${classeLabel} suit le programme de ${suit.label}. Publie sur ${suit.label}, ou coupe le tronc commun d'abord.`
+    );
+  }
+
   const semaine = mondayOf(fromISODate(String(formData.get("semaine") ?? "")));
   if (Number.isNaN(semaine.getTime())) throw new Error("Semaine invalide.");
 
@@ -498,7 +509,7 @@ export async function saveProgramme(formData: FormData) {
   }
 
   const file = formData.get("file") as File | null;
-  const existing = await getProgrammeForWeek(classe.id, semaine);
+  const existing = await getProgrammeForWeek(classe.id, semaine, { brut: true });
   const uploaded = file && file.size > 0 ? await uploadFile(file, "programme") : null;
   if (!uploaded && !existing && grid.length === 0) {
     throw new Error("Ajoute une photo ou remplis au moins une case.");
@@ -954,7 +965,7 @@ export async function repondreProposition(
       .select()
       .from(classes)
       .where(eq(classes.id, proposition.classeId));
-    const existing = await getProgrammeForWeek(proposition.classeId, proposition.semaine);
+    const existing = await getProgrammeForWeek(proposition.classeId, proposition.semaine, { brut: true });
     const weekLabel = existing?.weekLabel ?? `Semaine ${weekRangeLabel(proposition.semaine)}`;
 
     await db
@@ -1024,4 +1035,40 @@ export async function viderDelegues() {
   await requireAdmin();
   await db.delete(delegations);
   revalidatePath("/admin");
+}
+
+/*
+ * Declares that a promo sits in the same room as another, or takes the
+ * declaration back.
+ *
+ * Admin only, and deliberately not open to a délégué: a tronc commun is a
+ * fact about the faculty's timetable, not about one promo, and the person who
+ * would get it wrong is the one who only sees their own.
+ */
+export async function definirTroncCommun(
+  classeLabel: string,
+  sourceLabel: string | null
+): Promise<Refus | { ok: true }> {
+  const session = await auth();
+  if (session?.user?.role !== "admin") {
+    return { ok: false, message: "Réservé à l'équipe Campusly." };
+  }
+
+  const classe = await getClasseByLabel(classeLabel);
+  if (!classe) return { ok: false, message: "Promo inconnue." };
+
+  let sourceId: number | null = null;
+  if (sourceLabel) {
+    const source = await getClasseByLabel(sourceLabel);
+    if (!source) return { ok: false, message: "Promo source inconnue." };
+    sourceId = source.id;
+  }
+
+  const r = await definirProgrammeDe(classe.id, sourceId);
+  if (!r.ok) return r;
+
+  revalidatePath("/admin");
+  revalidatePath("/programme");
+  revalidatePath("/");
+  return { ok: true };
 }

@@ -8,6 +8,7 @@ import {
   serial,
   date,
   unique,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import type { AdapterAccountType } from "next-auth/adapters";
@@ -76,6 +77,21 @@ export const verificationTokens = pgTable(
 export const classes = pgTable("classe", {
   id: serial("id").primaryKey(),
   label: text("label").notNull().unique(), // e.g. "BME · L2"
+  /*
+   * The promo this one shares its week with. At the UCAC a tronc commun is
+   * the rule rather than the exception — the whole first year of LEG, GRH,
+   * LSSD and LQSSE sits in the same room — and the timetable was being
+   * duplicated per promo to express it. A copy drifts: the day a room moves
+   * on the original, every promo holding a copy keeps sending its students
+   * to the old one, and nobody finds out until they are standing in it.
+   *
+   * Null is the normal case: the promo publishes its own week. Resolution is
+   * deliberately one hop, so a chain cannot form and a cycle cannot hang the
+   * page — a follower must point at a promo that publishes.
+   */
+  programmeDe: integer("programme_de").references((): AnyPgColumn => classes.id, {
+    onDelete: "set null",
+  }),
 });
 
 export const subjectTypeEnum = ["Partiel", "Examen", "Rattrapage", "TD"] as const;

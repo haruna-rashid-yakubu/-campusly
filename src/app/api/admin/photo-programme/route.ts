@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Semaine invalide." }, { status: 400 });
   }
 
-  const programme = await getProgrammeForWeek(classe.id, semaine);
+  const programme = await getProgrammeForWeek(classe.id, semaine, { brut: true });
   if (!programme) {
     return NextResponse.json({ error: "Aucun programme pour cette semaine." }, { status: 404 });
   }

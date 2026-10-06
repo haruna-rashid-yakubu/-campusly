@@ -9,6 +9,7 @@ import { ModerationCard } from "@/components/admin/ModerationCard";
 import { StockControl } from "@/components/admin/StockControl";
 import { CiteForm } from "@/components/admin/CiteForm";
 import { DelegueForm } from "@/components/admin/DelegueForm";
+import { TroncCommunForm } from "@/components/admin/TroncCommunForm";
 import { PropositionCard } from "@/components/admin/PropositionCard";
 import { ProgrammeGridForm } from "@/components/admin/ProgrammeGridForm";
 // Not from the form: it is a client module, and its exports reach the server
@@ -30,6 +31,8 @@ import {
   getJournalNotifications,
   getProposerFacets,
   getPropositionsProgramme,
+  getLiensTroncCommun,
+  getTroncCommun,
   getSubjects,
 } from "@/lib/data";
 import { addDays, mondayOf, nowInWAT, toISODate, weekRangeLabel } from "@/lib/semaine";
@@ -280,11 +283,12 @@ function toCells(programme: { creneaux: CreneauRow[] } | undefined) {
 }
 
 async function ProgrammeTab({ promos }: { promos?: string[] }) {
-  const [toutes, preferee, manquantes, propositions] = await Promise.all([
+  const [toutes, preferee, manquantes, propositions, liens] = await Promise.all([
     getClasses(),
     getPreferredClasse(),
     promos ? Promise.resolve([]) : getClassesWithoutRecentProgramme(),
     getPropositionsProgramme(promos),
+    promos ? Promise.resolve([]) : getLiensTroncCommun(),
   ]);
 
   // A délégué fills the grid for their own promos; the picker simply has
@@ -295,15 +299,16 @@ async function ProgrammeTab({ promos }: { promos?: string[] }) {
   const semaine = mondayOf(new Date());
   const classeRow = await getClasseByLabel(classe);
   const [courante, precedente, facets] = await Promise.all([
-    classeRow ? getProgrammeForWeek(classeRow.id, semaine) : Promise.resolve(undefined),
+    classeRow ? getProgrammeForWeek(classeRow.id, semaine, { brut: true }) : Promise.resolve(undefined),
     classeRow
-      ? getProgrammeForWeek(classeRow.id, addDays(semaine, -7))
+      ? getProgrammeForWeek(classeRow.id, addDays(semaine, -7), { brut: true })
       : Promise.resolve(undefined),
     getProposerFacets(),
   ]);
 
   const actuelle = toCells(courante);
   const derniere = toCells(precedente);
+  const suit = classeRow ? await getTroncCommun(classeRow.id) : null;
 
   return (
     <>
@@ -331,6 +336,16 @@ async function ProgrammeTab({ promos }: { promos?: string[] }) {
         </>
       )}
 
+      {suit && (
+        <div className="mb-4 rounded-[18px] border-[1.5px] border-teal bg-teal-tint-soft p-4">
+          <div className="text-[14.5px] font-extrabold">{classe} est en tronc commun</div>
+          <p className="mt-1 text-[13px] leading-snug text-slate">
+            Elle affiche l&rsquo;emploi du temps de {suit.label}. Publie sur {suit.label} : ce que
+            tu saisirais ici ne serait lu par personne.
+          </p>
+        </div>
+      )}
+
       <ProgrammeGridForm
         classes={labels}
         defaultClasse={classe}
@@ -344,6 +359,8 @@ async function ProgrammeTab({ promos }: { promos?: string[] }) {
         previousDivise={derniere.divise}
         matieres={facets.matiere ?? []}
       />
+      {!promos && <TroncCommunForm classes={toutes.map((c) => c.label)} liens={liens} />}
+
       {manquantes.length > 0 && (
         <div className="mb-1 mt-7 text-base font-extrabold">Classes sans programme récent</div>
       )}

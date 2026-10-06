@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, inArray, isNotNull, ne, notInArray, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { cookies } from "next/headers";
 import { db } from "@/db";
 import {
@@ -298,25 +299,103 @@ export async function getClasseByLabel(label: string) {
   return row;
 }
 
+/*
+ * Where a promo's week actually comes from.
+ *
+ * Reading follows the tronc commun by default, because every screen that
+ * shows a timetable should show the one the student will sit in. Writing
+ * never does: `brut` is how the admin grid, the publish action and the photo
+ * route stay pointed at the promo named on screen, instead of silently
+ * rewriting the promo it follows.
+ */
+type LectureProgramme = { brut?: boolean };
+
+export async function classeSourceDuProgramme(classeId: number) {
+  const [row] = await db
+    .select({ programmeDe: classes.programmeDe })
+    .from(classes)
+    .where(eq(classes.id, classeId));
+  // One hop only, and never onto itself: a chain or a loop here would be a
+  // page that hangs rather than a timetable that is merely wrong.
+  const source = row?.programmeDe;
+  return source && source !== classeId ? source : classeId;
+}
+
+/** The promo a follower borrows from, or null when it publishes its own. */
+export async function getTroncCommun(classeId: number) {
+  const source = await classeSourceDuProgramme(classeId);
+  if (source === classeId) return null;
+  const [row] = await db
+    .select({ id: classes.id, label: classes.label })
+    .from(classes)
+    .where(eq(classes.id, source));
+  return row ?? null;
+}
+
 // Ordered by the week itself, not by when it was published: a correction
 // pushed on Wednesday for the current week must not make last week the
 // "latest" one again.
-export async function getLatestProgramme(classeId: number) {
+export async function getLatestProgramme(classeId: number, options: LectureProgramme = {}) {
+  const cible = options.brut ? classeId : await classeSourceDuProgramme(classeId);
   return db.query.programmePublications.findFirst({
-    where: eq(programmePublications.classeId, classeId),
+    where: eq(programmePublications.classeId, cible),
     orderBy: (p, { desc }) => desc(p.semaine),
     with: { creneaux: { orderBy: [asc(creneaux.jour), asc(creneaux.moment)] } },
   });
 }
 
-export async function getProgrammeForWeek(classeId: number, semaine: Date) {
+export async function getProgrammeForWeek(
+  classeId: number,
+  semaine: Date,
+  options: LectureProgramme = {}
+) {
+  const cible = options.brut ? classeId : await classeSourceDuProgramme(classeId);
   return db.query.programmePublications.findFirst({
     where: and(
-      eq(programmePublications.classeId, classeId),
+      eq(programmePublications.classeId, cible),
       eq(programmePublications.semaine, semaine)
     ),
     with: { creneaux: { orderBy: [asc(creneaux.jour), asc(creneaux.moment)] } },
   });
+}
+
+/*
+ * Points a promo at the one it shares its week with, or cuts the link when
+ * `sourceId` is null.
+ *
+ * Refuses to make a follower of a promo that is itself followed, and refuses
+ * to point a promo at itself. Both would produce a timetable nobody can
+ * reach, and the second would be a loop.
+ */
+export async function definirProgrammeDe(classeId: number, sourceId: number | null) {
+  if (sourceId === classeId) return { ok: false as const, message: "Une promo ne peut pas suivre son propre programme." };
+
+  if (sourceId !== null) {
+    const [source] = await db
+      .select({ programmeDe: classes.programmeDe, label: classes.label })
+      .from(classes)
+      .where(eq(classes.id, sourceId));
+    if (!source) return { ok: false as const, message: "Promo source introuvable." };
+    if (source.programmeDe !== null) {
+      return {
+        ok: false as const,
+        message: `${source.label} suit déjà une autre promo. Choisis celle qui publie vraiment.`,
+      };
+    }
+    const suiveurs = await db
+      .select({ id: classes.id })
+      .from(classes)
+      .where(eq(classes.programmeDe, classeId));
+    if (suiveurs.length > 0) {
+      return {
+        ok: false as const,
+        message: "D'autres promos suivent déjà celle-ci : elle doit publier son propre programme.",
+      };
+    }
+  }
+
+  await db.update(classes).set({ programmeDe: sourceId }).where(eq(classes.id, classeId));
+  return { ok: true as const };
 }
 
 export type ProgrammeWithCreneaux = NonNullable<Awaited<ReturnType<typeof getLatestProgramme>>>;
@@ -572,4 +651,18 @@ export async function getJournalNotifications(limite = 40) {
     .leftJoin(classes, eq(classes.id, notificationEnvois.classeId))
     .orderBy(desc(notificationEnvois.createdAt))
     .limit(limite);
+}
+
+/*
+ * Every promo that borrows its week, with the one it borrows from — the list
+ * the admin screen shows so a tronc commun can be seen and cut, rather than
+ * being a fact buried in a column nobody looks at.
+ */
+export async function getLiensTroncCommun() {
+  const source = alias(classes, "source");
+  return db
+    .select({ classe: classes.label, suit: source.label })
+    .from(classes)
+    .innerJoin(source, eq(source.id, classes.programmeDe))
+    .orderBy(classes.label);
 }
