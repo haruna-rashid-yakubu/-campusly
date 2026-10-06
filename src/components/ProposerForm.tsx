@@ -6,7 +6,9 @@ import { PickerButton } from "@/components/PickerButton";
 import { Icon } from "@/components/icons";
 import { NotifNudge } from "@/components/NotifNudge";
 import { useToast } from "@/components/Toast";
+import { upload } from "@vercel/blob/client";
 import { proposeSubject } from "@/lib/actions";
+import { fusionnerPages } from "@/lib/pages";
 import { PROPOSER_LABELS } from "@/lib/constants";
 
 const FIELDS = ["filiere", "niveau", "matiere", "annee", "type"] as const;
@@ -27,7 +29,12 @@ export function ProposerForm({
     annee: facets.annee[0],
     type: facets.type[0],
   });
-  const [file, setFile] = useState<File | null>(null);
+  /*
+   * Pages, not a page. An exam is often a recto-verso or three sheets, and
+   * accepting only one meant the sender either sent a third of their paper or
+   * gave up. They are bound into a single document on the way out.
+   */
+  const [pages, setPages] = useState<File[]>([]);
   const [pending, startTransition] = useTransition();
   const [sent, setSent] = useState(false);
   const { show } = useToast();
@@ -36,9 +43,20 @@ export function ProposerForm({
   const submit = () => {
     const fd = new FormData();
     FIELDS.forEach((f) => fd.set(f, values[f]));
-    if (file) fd.set("file", file);
+
     startTransition(async () => {
       try {
+        // Bound here and sent straight to the store: a Server Action body is
+        // capped at 1 MB, which one photograph of a sheet already exceeds.
+        if (pages.length > 0) {
+          const document = await fusionnerPages(pages, `${values.matiere} ${values.annee}`);
+          const envoye = await upload(`submissions/${document.name}`, document, {
+            access: "public",
+            handleUploadUrl: "/api/blob/upload",
+          });
+          fd.set("fileUrl", envoye.url);
+          fd.set("fileName", document.name);
+        }
         const r = await proposeSubject(fd);
         if (!r.ok) {
           show(r.message, "warn");
@@ -80,15 +98,43 @@ export function ProposerForm({
           <input
             type="file"
             accept=".pdf,.jpg,.jpeg,.png"
+            multiple
             className="hidden"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            onChange={(e) => {
+              setPages((anciennes) => [...anciennes, ...Array.from(e.target.files ?? [])]);
+              e.target.value = "";
+            }}
           />
           <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-[15px] bg-teal-tint text-teal-dark">
             <Icon name="up" size={22} />
           </span>
-          <span className="block text-[14.5px] font-extrabold">{file ? file.name : "Photo ou PDF"}</span>
-          <span className="mt-0.5 block text-[12.5px] text-slate-light">10 Mo maximum · JPG, PNG ou PDF</span>
+          <span className="block text-[14.5px] font-extrabold">
+            {pages.length === 0
+              ? "Photos ou PDF"
+              : pages.length === 1
+                ? pages[0].name
+                : `${pages.length} pages — un seul sujet`}
+          </span>
+          <span className="mt-0.5 block text-[12.5px] text-slate-light">
+            Plusieurs pages possibles · JPG, PNG ou PDF
+          </span>
         </label>
+
+        {pages.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {pages.map((page, i) => (
+              <button
+                key={`${page.name}-${i}`}
+                onClick={() => setPages((l) => l.filter((_, j) => j !== i))}
+                title={page.name}
+                className="flex h-8 items-center gap-1.5 rounded-[10px] bg-surface-2 px-2.5 text-[11.5px] font-bold text-slate active:bg-surface-3"
+              >
+                p.{i + 1}
+                <Icon name="x" size={12} strokeWidth={2.4} />
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="mt-4 flex items-start gap-2 text-[13px] leading-relaxed text-slate-light">
           <span className="mt-0.5 flex-none text-teal-dark">

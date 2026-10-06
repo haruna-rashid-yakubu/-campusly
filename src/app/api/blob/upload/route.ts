@@ -16,17 +16,16 @@ export const dynamic = "force-dynamic";
  * entirely, so a cupboard of twenty sheets is no longer a single enormous
  * request that either fits or fails whole.
  *
- * The token is the thing being guarded, so the right is checked here, before
- * one is handed out: an admin, or a délégué of at least one promo. Everything
- * else about the paper — which promo it lands on — is checked again when the
- * row is written, because a token says who may upload, never what may be
- * claimed afterwards.
+ * Being signed in is the whole of the right, because it is also the whole of
+ * the right to send a paper at all: a student proposing one goes through here
+ * too, and anything narrower would block the screen most people use. What
+ * matters is checked where it counts — when the row is written, against the
+ * promo and the role — because a token says who may upload, never what may
+ * be claimed afterwards.
  */
 export async function POST(request: Request) {
   const session = await auth();
-  const autorise =
-    session?.user?.role === "admin" || (session?.user?.delegations?.length ?? 0) > 0;
-  if (!autorise) return new NextResponse("Unauthorized", { status: 401 });
+  if (!session?.user) return new NextResponse("Unauthorized", { status: 401 });
 
   const body = (await request.json()) as HandleUploadBody;
 

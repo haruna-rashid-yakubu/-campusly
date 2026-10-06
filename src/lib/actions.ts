@@ -220,6 +220,10 @@ export async function proposeSubject(formData: FormData): Promise<Refus | { ok: 
   const matiere = String(formData.get("matiere") ?? "");
   const annee = String(formData.get("annee") ?? "");
   const type = String(formData.get("type") ?? "");
+  // The document is already in the store: the browser sent it there, because
+  // a Server Action body cannot carry a photograph of an exam sheet.
+  const lien = String(formData.get("fileUrl") ?? "");
+  const nomFichier = String(formData.get("fileName") ?? "").trim();
   const file = formData.get("file") as File | null;
 
   if (!filiere || !niveau || !matiere || !annee || !type) {
@@ -231,7 +235,13 @@ export async function proposeSubject(formData: FormData): Promise<Refus | { ok: 
 
   let fileUrl: string | null = null;
   let fileName: string | null = null;
-  if (file && file.size > 0) {
+  if (lien) {
+    // A URL from a browser is a claim: only this app's own store is accepted.
+    if (!estLienBlob(lien)) return { ok: false, message: "Document invalide." };
+    fileUrl = lien;
+    fileName = nomFichier || `${matiere} ${annee}`;
+  } else if (file && file.size > 0) {
+    // Kept for anything still posting the file itself.
     const uploaded = await uploadFile(file, "submissions");
     fileUrl = uploaded.url;
     fileName = uploaded.name;
