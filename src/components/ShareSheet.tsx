@@ -17,6 +17,9 @@ export function ShareSheet({ children }: { children: React.ReactNode }) {
   const { show } = useToast();
 
   useEffect(() => {
+    // Starts false so the first client render matches the server's, then the
+    // real answer is read here because navigator does not exist until now.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPartageSysteme(typeof navigator !== "undefined" && !!navigator.share);
   }, []);
 

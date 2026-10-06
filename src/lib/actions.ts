@@ -908,16 +908,13 @@ export async function proposerProgramme(
   const uploaded = await uploadFile(file, "propositions");
   const note = String(formData.get("note") ?? "").trim() || null;
 
-  const [proposition] = await db
-    .insert(programmePropositions)
-    .values({
-      userId: user.id,
-      classeId: classe.id,
-      semaine,
-      photoUrl: uploaded.url,
-      note,
-    })
-    .returning();
+  await db.insert(programmePropositions).values({
+    userId: user.id,
+    classeId: classe.id,
+    semaine,
+    photoUrl: uploaded.url,
+    note,
+  });
 
   const alerte = {
     title: "Emploi du temps proposé",
