@@ -22,13 +22,20 @@ export function PressingCommande({ nom }: { nom?: string | null }) {
   const configure = PRESSING_WHATSAPP.length > 0;
   const actif = accepte && configure;
 
+  /*
+   * Joined on newlines, not spaces. The two last lines are blanks the student
+   * is meant to fill in, and run together on one line they read as
+   * "Liste des articles : Lieu de récupération :" — a single unanswerable
+   * sentence instead of two prompts. The name line is dropped entirely when
+   * there is no account behind it, rather than sending "Nom : .".
+   */
   const message = [
     "Bonjour 👋 Je souhaite commander un service de pressing via Campusly.",
     "J'ai lu et accepté les conditions du service.",
-    `Nom : ${nom?.trim() ?? ""}.`,
+    ...(nom?.trim() ? [`Nom : ${nom.trim()}`] : []),
     "Liste des articles : ",
     "Lieu de récupération : ",
-  ].join(" ");
+  ].join("\n");
 
   const lien = `https://wa.me/${PRESSING_WHATSAPP}?text=${encodeURIComponent(message)}`;
 

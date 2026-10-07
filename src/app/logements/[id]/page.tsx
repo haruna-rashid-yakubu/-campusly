@@ -105,8 +105,15 @@ export default async function CiteDetailPage({ params }: { params: Promise<{ id:
         <div className="mb-3 mt-6 text-lg font-extrabold tracking-tight">Types de chambres</div>
         {cite.roomTypes.map((r) => (
           <div key={r.id} className="mb-3 flex gap-3 rounded-[20px] border border-line p-3">
-            <span className="grid h-[92px] w-[88px] flex-none place-items-center rounded-[14px] bg-line-3 text-[11px] font-semibold text-slate-light">
-              photo
+            {/* No photograph per room type is stored yet, so this is a plain
+                placeholder. It used to read "photo", which looks exactly like
+                an image that failed to load — a student reasonably reads it as
+                the app being broken rather than as a gap in the listing. */}
+            <span
+              aria-hidden
+              className="grid h-[92px] w-[88px] flex-none place-items-center rounded-[14px] bg-line-3 text-slate-light"
+            >
+              <Icon name="bed" size={22} strokeWidth={1.8} />
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-2">
