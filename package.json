@@ -17,7 +17,7 @@
     "@vercel/blob": "^2.8.0",
     "@vercel/speed-insights": "^2.0.0",
     "drizzle-orm": "^0.45.2",
-    "next": "16.3.5",
+    "next": "16.3.6",
     "next-auth": "^5.0.0-beta.32",
     "pdf-lib": "^1.17.1",
     "react": "19.2.8",
@@ -33,9 +33,13 @@
     "dotenv": "^18.0.1",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
-    "eslint-config-next": "16.3.5",
+    "eslint-config-next": "16.3.6",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"
+  },
+  "overrides": {
+    "sharp": "^0.35.5",
+    "source-map-js": "^1.2.2"
   }
 }
