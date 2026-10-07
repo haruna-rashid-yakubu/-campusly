@@ -70,7 +70,13 @@ export default async function LogementsPage({
               >
                 <div className="relative grid h-[154px] place-items-center bg-line-3 text-[12.5px] font-semibold text-slate-light">
                   {c.photos[0] ? (
-                    <Image src={c.photos[0]} alt={c.nom} fill className="object-cover" />
+                    <Image
+                      src={c.photos[0]}
+                      alt=""
+                      fill
+                      sizes="(max-width: 480px) 100vw, 480px"
+                      className="object-cover"
+                    />
                   ) : (
                     "photo de la cité"
                   )}

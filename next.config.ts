@@ -48,6 +48,14 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: "4mb" },
   },
   images: {
+    /*
+     * 2048 and 3840 removed from the candidates. No phone reading this app
+     * has a screen that wide, and leaving them in means any image whose
+     * `sizes` is wrong or missing can quietly bill a student several
+     * megabytes of mobile data for one photograph. 1920 is already more than
+     * a whiteboard needs to be legible.
+     */
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     remotePatterns: [
       {
         protocol: "https",

@@ -16,7 +16,7 @@ export function FilePreview({ url, className }: { url: string; className?: strin
   }
   return (
     <div className={`relative ${className ?? ""}`}>
-      <Image src={url} alt="Document" fill className="object-contain" />
+      <Image src={url} alt="Document" fill sizes="(max-width: 480px) 100vw, 480px" className="object-contain" />
     </div>
   );
 }

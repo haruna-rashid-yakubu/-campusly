@@ -14,7 +14,17 @@ export function ZoomViewer({ url }: { url: string }) {
           className="relative transition-[width,height] duration-200"
           style={{ width: `${320 * zoom}px`, height: `${440 * zoom}px`, maxWidth: "94vw" }}
         >
-          <Image src={url} alt="Document en plein écran" fill className="object-contain" />
+          {/* 100vw and full quality on purpose: this is the screen where a
+              student actually reads the board, so starving it would defeat
+              the point. Stated explicitly rather than left to the default,
+              which is what produced the oversized request elsewhere. */}
+          <Image
+            src={url}
+            alt="Document en plein écran"
+            fill
+            sizes="100vw"
+            className="object-contain"
+          />
         </div>
       </div>
       <div className="fixed inset-x-0 bottom-10 flex justify-center gap-2.5">

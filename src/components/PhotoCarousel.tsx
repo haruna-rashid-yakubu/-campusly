@@ -22,7 +22,13 @@ export function PhotoCarousel({
   return (
     <div className="relative grid h-[300px] place-items-center bg-line-3 text-[13px] font-semibold text-slate-light">
       {photos[index] ? (
-        <Image src={photos[index]} alt={alt} fill className="object-cover" />
+        <Image
+          src={photos[index]}
+          alt={alt}
+          fill
+          sizes="(max-width: 480px) 100vw, 480px"
+          className="object-cover"
+        />
       ) : (
         `photo ${index + 1} / ${total}`
       )}

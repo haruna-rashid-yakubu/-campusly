@@ -94,11 +94,19 @@ export default async function ProgrammePage() {
                 href="/programme/plein"
                 className="press-scale relative mb-4 block h-[360px] overflow-hidden rounded-[20px] bg-line-3"
               >
+                {/* sizes, because without it `fill` asks for 100vw against
+                    the full device-size list and a phone on 3x pixel density
+                    fetches the 3840-wide copy — megabytes of mobile data for a
+                    card cropped to 360px high. The readable copy is one tap
+                    away in /programme/plein, which is where resolution is
+                    worth paying for. */}
                 <Image
                   src={programme.photoUrl}
-                  alt="Programme de la semaine"
+                  alt={`Programme de la semaine — ${classe}`}
                   fill
                   priority
+                  sizes="(max-width: 480px) 100vw, 480px"
+                  quality={70}
                   className="object-cover"
                 />
                 <span className="absolute bottom-3 right-3 flex h-10 items-center gap-1.5 rounded-[13px] bg-ink/80 px-3.5 text-[12.5px] font-bold text-white">

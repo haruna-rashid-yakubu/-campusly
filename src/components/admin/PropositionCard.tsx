@@ -64,6 +64,7 @@ export function PropositionCard({ proposition }: { proposition: PropositionRow }
           src={proposition.photoUrl}
           alt={`Tableau ${proposition.classeLabel}`}
           fill
+          sizes="(max-width: 480px) 100vw, 480px"
           className="object-cover"
         />
       </span>

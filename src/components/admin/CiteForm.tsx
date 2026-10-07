@@ -188,7 +188,7 @@ export function CiteForm() {
         <div className="mb-2.5 flex flex-wrap gap-2">
           {photos.map((url) => (
             <span key={url} className="relative h-[66px] w-[66px] overflow-hidden rounded-[13px]">
-              <Image src={url} alt="" fill className="object-cover" />
+              <Image src={url} alt="" fill sizes="96px" className="object-cover" />
               <button
                 onClick={() => setPhotos((p) => p.filter((u) => u !== url))}
                 className="absolute right-0 top-0 grid h-6 w-6 place-items-center bg-ink/70 text-white"
