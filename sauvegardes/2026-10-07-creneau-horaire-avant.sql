@@ -21,3 +21,6 @@ UPDATE creneau SET matiere = 'Welcome day à 12H00', horaire = NULL WHERE id = 9
 UPDATE creneau SET matiere = 'Welcome day à 11H00', horaire = NULL WHERE id = 103;
 UPDATE creneau SET matiere = 'Introduction à la Sociologie générale — 15h à 17h', horaire = NULL WHERE id = 106;
 UPDATE creneau SET matiere = 'Welcome day à 11H00', horaire = NULL WHERE id = 114;
+
+-- DATA-07 : les variantes posees le 2026-10-07. Pour annuler :
+-- UPDATE subject SET variante = NULL WHERE id IN (15,19,123,124,128,129);

@@ -85,6 +85,13 @@
       "when": 1791365621986,
       "tag": "0011_creneau_horaire",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791366165760,
+      "tag": "0012_subject_variante",
+      "breakpoints": true
     }
   ]
 }

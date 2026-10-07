@@ -288,6 +288,9 @@ export type SubjectEdits = {
   niveau: string;
   annee: string;
   type: string;
+  // "Sujet B", "Décembre" — what tells this paper from the other one of the
+  // same sitting. Empty for a paper that is the only one of its kind.
+  variante: string;
   enseignant: string;
   corrige: boolean;
   // Keeps this paper inside its own filière where promos otherwise share.
@@ -342,6 +345,7 @@ export async function moderateSubject(
         niveau: edits?.niveau?.trim() || submission.niveau,
         annee: edits?.annee?.trim() || submission.annee,
         type: type as (typeof SUBJECT_TYPES)[number],
+        variante: edits?.variante?.trim() || null,
         corrige: edits?.corrige ?? false,
         enseignant: enseignant ? enseignant : null,
         fileUrl: submission.fileUrl,
@@ -409,6 +413,7 @@ export async function updateSubject(subjectId: number, edits: SubjectEdits) {
       niveau,
       annee,
       type: edits.type as (typeof SUBJECT_TYPES)[number],
+      variante: edits.variante.trim() || null,
       corrige: edits.corrige,
       reserveFiliere: edits.reserveFiliere,
       enseignant: enseignant ? enseignant : null,

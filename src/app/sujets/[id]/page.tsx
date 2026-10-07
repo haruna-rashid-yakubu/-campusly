@@ -24,7 +24,7 @@ export async function generateMetadata({
   const subject = await getSubjectById(subjectId);
   if (!subject) return { title: "Sujet introuvable" };
   return pageMetadata({
-    title: `${subject.matiere} — ${subject.filiere} ${subject.niveau} (${subject.annee})`,
+    title: `${subject.matiere}${subject.variante ? ` — ${subject.variante}` : ""} — ${subject.filiere} ${subject.niveau} (${subject.annee})`,
     description: `${subject.type} de ${subject.matiere} — ${subject.filiere}, ${subject.niveau}, ${subject.annee}.${subject.enseignant ? ` Enseignant : ${subject.enseignant}.` : ""}${subject.corrige ? " Corrigé disponible." : ""}`,
     path: `/sujets/${subject.id}`,
   });
@@ -70,6 +70,7 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
           <Badge tone="neutral">
             {subject.filiere} · {subject.niveau}
           </Badge>
+          {subject.variante && <Badge tone="neutral">{subject.variante}</Badge>}
         </div>
 
         <SujetViewer

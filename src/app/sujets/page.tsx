@@ -142,6 +142,11 @@ export default async function SujetsPage({
                     <div className="text-[15.5px] font-extrabold leading-tight">{s.matiere}</div>
                     <div className="mt-0.5 text-[12.5px] text-slate-light">
                       {s.filiere} · {s.niveau} · {s.annee}
+                      {/* Without this, two papers of the same sitting — a
+                          sujet A and a sujet B — were two identical cards, and
+                          the only way to tell them apart was to download
+                          both. */}
+                      {s.variante ? ` · ${s.variante}` : ""}
                     </div>
                     {s.enseignant && (
                       <div className="mt-0.5 truncate text-[12.5px] text-slate-light">

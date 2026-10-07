@@ -10,6 +10,7 @@ export type SubjectFieldValues = {
   niveau: string;
   annee: string;
   type: string;
+  variante: string;
   enseignant: string;
   corrige: boolean;
   reserveFiliere: boolean;
@@ -20,6 +21,13 @@ const TEXT_FIELDS = [
   { key: "filiere", label: "Filière", placeholder: "BME", facet: "filiere" },
   { key: "niveau", label: "Niveau", placeholder: "L2", facet: "niveau" },
   { key: "annee", label: "Année", placeholder: "2024", facet: "annee" },
+  /*
+   * For the second paper of the same sitting. Five pairs in the bank share
+   * everything else and showed as two identical cards, so whoever publishes
+   * needs somewhere to say "Sujet B" or "Décembre" at the moment they can
+   * still tell which is which.
+   */
+  { key: "variante", label: "Variante (facultatif)", placeholder: "Sujet B", facet: "variante" },
   { key: "enseignant", label: "Enseignant", placeholder: "Dr. NOUMO FOKO", facet: "enseignant" },
 ] as const;
 

@@ -33,6 +33,9 @@ export async function POST(request: Request) {
   const annee = champ("annee");
   const type = champ("type");
   const enseignant = champ("enseignant");
+  // Optional, and the thing that stops two papers of the same sitting
+  // arriving as two identical cards.
+  const variante = champ("variante");
 
   if (!matiere || !filiere || !niveau || !annee) {
     return NextResponse.json(
@@ -63,6 +66,7 @@ export async function POST(request: Request) {
       annee,
       type: type as (typeof subjectTypeEnum)[number],
       enseignant: enseignant || null,
+      variante: variante || null,
       corrige: champ("corrige") === "1",
       fileUrl: uploaded.url,
       fileName: uploaded.name,

@@ -137,6 +137,21 @@ export const subjects = pgTable("subject", {
    * Without the exception a GRH student would revise on LEG's maths exam.
    */
   reserveFiliere: boolean("reserve_filiere").notNull().default(false),
+  /*
+   * What tells two papers apart when everything else about them is the same.
+   *
+   * Five pairs in the table share matière, filière, niveau, année and type,
+   * and the list had no way to show a difference: a student saw two identical
+   * cards and could only tell by downloading both. They are not duplicates.
+   * International Relations 2024 is a sujet A and a sujet B of the same
+   * sitting; Business English 2025 is the December paper and the April one.
+   *
+   * Free text rather than an enum, because the school does not have one
+   * vocabulary for this: "Sujet A", "Décembre", "Session 2" all appear on the
+   * real sheets. Null is the normal case — most papers are the only one of
+   * their kind.
+   */
+  variante: text("variante"),
   enseignant: text("enseignant"),
   fileUrl: text("file_url"),
   fileName: text("file_name"),

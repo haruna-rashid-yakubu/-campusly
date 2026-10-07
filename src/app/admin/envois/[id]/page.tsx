@@ -130,6 +130,7 @@ export default async function ReviewSubmissionPage({
               niveau: submission.niveau,
               annee: submission.annee,
               type: submission.type,
+              variante: "",
               // A student's submission is never the filière-only exception:
               // the admin ticks that on the published paper if it applies.
               reserveFiliere: false,
