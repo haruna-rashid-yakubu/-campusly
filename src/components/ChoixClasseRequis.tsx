@@ -6,7 +6,7 @@ import { Logo } from "@/components/Logo";
 import { Icon } from "@/components/icons";
 import { setClasse } from "@/lib/actions";
 import { resyncPush } from "@/lib/push-client";
-import { estUnLienPartage, hasTabBar } from "@/lib/nav";
+import { estUnLienPartage, hasTabBar, neDependPasDeLaPromo } from "@/lib/nav";
 import { filiereDeClasse } from "@/lib/utils";
 
 /** "BME · L2" -> "L2". Falls back to the whole label if there is no separator. */
@@ -59,7 +59,11 @@ export function ChoixClasseRequis({ classes }: { classes: string[] }) {
    * get what they came for; the question waits until they look around, which
    * is when it starts being worth answering.
    */
-  const affiche = hasTabBar(pathname) && !estUnLienPartage(pathname) && classes.length > 0;
+  const affiche =
+    hasTabBar(pathname) &&
+    !estUnLienPartage(pathname) &&
+    !neDependPasDeLaPromo(pathname) &&
+    classes.length > 0;
 
   useEffect(() => {
     if (!affiche) return;
