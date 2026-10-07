@@ -20,19 +20,22 @@ import {
   isBannerDismissed,
 } from "@/lib/data";
 import { dismissInstallBanner } from "@/lib/actions";
-import { distanceLabel, fcfa, isWithinLastWeek } from "@/lib/utils";
+import { distanceLabel, fcfa, filiereDeClasse, isWithinLastWeek } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function AccueilPage() {
   const session = await auth();
-  const [classe, classesRows, bannerDismissed, recentSubjects, recentCite] = await Promise.all([
+  const [classe, classesRows, bannerDismissed, recentCite] = await Promise.all([
     getClasseChoisie(),
     getClasses(),
     isBannerDismissed(),
-    getRecentSubjects(1),
     getRecentCite(),
   ]);
+
+  // Needs the promo, so it cannot ride in the batch above: the feed announced
+  // papers from filières the reader is not in.
+  const recentSubjects = await getRecentSubjects(1, classe ? filiereDeClasse(classe) : undefined);
 
   // Belt and braces on the délégué alert: someone may be named while their
   // notifications are off, and would then never learn of it. The app says so
@@ -173,8 +176,11 @@ export default async function AccueilPage() {
 
       <div className="flex items-baseline justify-between px-5 pb-1.5 pt-6">
         <div className="text-lg font-extrabold tracking-tight">Nouveautés</div>
+        {/* "Tout voir" pointed at /sujets while the list below mixes papers,
+            cités and programme updates — so it promised more than it opened.
+            Named for where it actually goes. */}
         <Link href="/sujets" className="text-[13.5px] font-bold text-teal-dark">
-          Tout voir
+          Tous les sujets
         </Link>
       </div>
       <div className="px-5">

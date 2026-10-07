@@ -488,8 +488,26 @@ export async function getClassesWithoutRecentProgramme() {
   return results;
 }
 
-export async function getRecentSubjects(limit = 1) {
-  return db.select().from(subjects).orderBy(desc(subjects.createdAt)).limit(limit);
+/*
+ * The newest papers a student of `filiere` is entitled to see.
+ *
+ * It used to ignore the filière, so the home page announced "Nouveau sujet :
+ * Fiscalité Appliquée" to a BME L2 student — a LEG L3 paper, in a programme
+ * they are not in, as the one new thing worth their attention. Reusing
+ * conditionFiliere means the tronc commun still counts: a paper sent once for
+ * L1 reaches every filière of that level, exactly as it does in the list.
+ *
+ * Without a filière (no promo chosen yet) it answers with everything, which
+ * is the same choice the list makes.
+ */
+export async function getRecentSubjects(limit = 1, filiere?: string) {
+  const condition = filiere ? await conditionFiliere(filiere) : undefined;
+  return db
+    .select()
+    .from(subjects)
+    .where(condition)
+    .orderBy(desc(subjects.createdAt))
+    .limit(limit);
 }
 
 export type NotificationItem = {
