@@ -14,7 +14,16 @@ const CSP = [
   // and nothing else can produce one.
   "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.public.blob.vercel-storage.com",
+  /*
+   * vercel.com is here because the browser needs it to send a file.
+   *
+   * @vercel/blob/client first asks our own route for a token, then calls the
+   * blob API at https://vercel.com/api/blob to get the presigned URL, and
+   * only then PUTs to the store. That middle call was blocked: a paper could
+   * not leave a student's phone at all, and the failure was silent. The
+   * wildcard below covers the store itself, never the API.
+   */
+  "connect-src 'self' https://vercel.com https://*.public.blob.vercel-storage.com https://*.blob.vercel-storage.com",
   /*
    * The blob store, because a PDF is now read by the browser's own viewer in
    * a frame pointed straight at the file. This replaced Google's viewer: the
