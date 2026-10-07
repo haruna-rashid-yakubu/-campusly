@@ -311,6 +311,53 @@ export type SubjectEdits = {
 // `edits` carries what the admin corrected on the review screen. Students
 // mistype the matière or guess the année, so the row that gets published is
 // the reviewed version, not the raw submission.
+/*
+ * Asks the student who sent a submission to send it again.
+ *
+ * It exists because of a bug of ours: for a day, the form emptied its own
+ * file list before reading it, so four papers were recorded as proposed with
+ * nothing attached. Telling those students by hand meant knowing who they
+ * were, which is exactly what the admin screen should not have to make
+ * anyone look up.
+ *
+ * It stays useful beyond that day: a photograph can arrive blurred, upside
+ * down, or be page two of three. Refusing is the blunt answer and loses the
+ * paper; asking is the one that gets it.
+ *
+ * The count comes back so the screen can be honest about what happened. A
+ * student who never switched notifications on has no device to reach, and
+ * reporting "demandé" in that case would leave an admin waiting for a reply
+ * that was never asked for.
+ */
+export async function demanderDocument(
+  submissionId: number,
+  message?: string
+): Promise<Refus | { ok: true; appareils: number }> {
+  const portee = await porteeModeration();
+
+  const [submission] = await db
+    .select()
+    .from(subjectSubmissions)
+    .where(eq(subjectSubmissions.id, submissionId));
+  if (!submission) return { ok: false, message: "Envoi introuvable." };
+
+  // Same fence as moderation: a délégué answers for their own promo only.
+  if (portee && !portee.includes(`${submission.filiere} · ${submission.niveau}`)) {
+    return { ok: false, message: "Cet envoi ne concerne pas ta promo." };
+  }
+
+  const precision = message?.trim();
+  const appareils = await sendPushToUser(submission.userId, {
+    title: "Renvoie ton sujet, s'il te plaît",
+    body:
+      precision ||
+      `${submission.matiere} n'est pas arrivé avec sa photo — un bug de notre côté. Renvoie-le, ça marche maintenant.`,
+    url: "/sujets/proposer",
+  });
+
+  return { ok: true, appareils };
+}
+
 export async function moderateSubject(
   submissionId: number,
   decision: "publie" | "refuse",

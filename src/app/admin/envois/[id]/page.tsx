@@ -6,6 +6,7 @@ import { EmptyState, Badge } from "@/components/EmptyState";
 import { FilePreview } from "@/components/FilePreview";
 import { SignInRequired } from "@/components/SignInRequired";
 import { SubmissionReview } from "@/components/admin/SubmissionReview";
+import { DemanderDocument } from "@/components/admin/DemanderDocument";
 import { subjectTypeEnum } from "@/db/schema";
 import {
   getClasseLabels,
@@ -108,8 +109,12 @@ export default async function ReviewSubmissionPage({
             className="mt-4 h-[62vh] w-full rounded-[18px] border border-line"
           />
         ) : (
-          <div className="mt-4 grid h-40 place-items-center rounded-[18px] border-[1.5px] border-dashed border-line-2 px-5 text-center text-[13.5px] text-slate-light">
-            Aucun document joint à cet envoi.
+          <div className="mt-4 rounded-[18px] border-[1.5px] border-dashed border-line-2 p-5 text-center">
+            <div className="text-[13.5px] leading-snug text-slate-light">
+              Aucun document joint à cet envoi. Jusqu&rsquo;au 7 octobre, un bug de notre côté
+              vidait la photo avant l&rsquo;envoi — l&rsquo;étudiant a probablement bien essayé.
+            </div>
+            {!decided && <DemanderDocument submissionId={submission.id} />}
           </div>
         )}
 
