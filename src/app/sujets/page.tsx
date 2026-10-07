@@ -5,7 +5,7 @@ import { Icon } from "@/components/icons";
 import { Badge, EmptyState } from "@/components/EmptyState";
 import { SujetsFilterBar } from "@/components/SujetsFilterBar";
 import {
-  getPreferredClasse,
+  getClasseChoisie,
   getSubjectFacets,
   getSubjects,
   getUserSubmissions,
@@ -34,7 +34,7 @@ export default async function SujetsPage({
   }>;
 }) {
   const params = await searchParams;
-  const [session, classe] = await Promise.all([auth(), getPreferredClasse()]);
+  const [session, classe] = await Promise.all([auth(), getClasseChoisie()]);
 
   /*
    * The list opens on the student's own filière. A LEG student searching
@@ -43,7 +43,10 @@ export default async function SujetsPage({
    * The chip stays visible and clearable, so nothing is hidden: it is a
    * starting point, not a wall.
    */
-  const filiereDefaut = filiereDeClasse(classe);
+  // Undefined when no promo has been chosen, which opens the list on every
+  // filière. Defaulting to one would mean a student who has not answered yet
+  // is quietly shown one section's papers as though they were theirs.
+  const filiereDefaut = classe ? filiereDeClasse(classe) : undefined;
   const filiere = params.filiere === "toutes" ? undefined : params.filiere || filiereDefaut;
 
   const [subjects, submissions, facets] = await Promise.all([
@@ -82,7 +85,7 @@ export default async function SujetsPage({
             <Icon name="plus" size={20} strokeWidth={2.2} />
           </Link>
         </div>
-        <SujetsFilterBar facets={facets} defaults={{ filiere: filiereDefaut }} />
+        <SujetsFilterBar facets={facets} defaults={filiereDefaut ? { filiere: filiereDefaut } : {}} />
       </div>
 
       <div className="relative px-5 pt-1">

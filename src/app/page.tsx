@@ -14,7 +14,7 @@ import {
   getClasseLabels,
   getClasses,
   getLatestProgramme,
-  getPreferredClasse,
+  getClasseChoisie,
   getRecentCite,
   getRecentSubjects,
   isBannerDismissed,
@@ -27,7 +27,7 @@ export const dynamic = "force-dynamic";
 export default async function AccueilPage() {
   const session = await auth();
   const [classe, classesRows, bannerDismissed, recentSubjects, recentCite] = await Promise.all([
-    getPreferredClasse(),
+    getClasseChoisie(),
     getClasses(),
     isBannerDismissed(),
     getRecentSubjects(1),
@@ -41,7 +41,9 @@ export default async function AccueilPage() {
     .map((c) => c.label)
     .join(" et ");
 
-  const selectedClasse = await getClasseByLabel(classe);
+  // Null until the promo question is answered, so nothing below shows one
+  // promo's week to a student of another.
+  const selectedClasse = classe ? await getClasseByLabel(classe) : null;
   const latestProgramme = selectedClasse ? await getLatestProgramme(selectedClasse.id) : null;
   const programmeRecent = latestProgramme && isWithinLastWeek(latestProgramme.publishedAt);
 
@@ -80,7 +82,10 @@ export default async function AccueilPage() {
         <div className="mt-4">
           <div className="flex items-center justify-between gap-2">
             <div className="text-[26px] font-extrabold leading-tight tracking-tight">
-              {firstName ? `Salut ${firstName},` : "Salut,"}
+              {/* Not "Salut," on its own: a greeting that trails off into a
+                  comma reads like the name failed to load, which is exactly
+                  what it looked like to anyone not signed in. */}
+              {firstName ? `Salut ${firstName},` : "Salut 👋"}
             </div>
             {session?.user ? <SignOutButton /> : <SignInButton />}
           </div>
@@ -220,7 +225,9 @@ export default async function AccueilPage() {
               <Icon name="cal" size={20} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[14.5px] font-bold">Programme {classe} publié</span>
+              <span className="block text-[14.5px] font-bold">
+                Programme {classe} publié
+              </span>
               <span className="mt-0.5 block text-[12.5px] text-slate-light">
                 Mis à jour le {latestProgramme!.publishedAt.toLocaleDateString("fr-FR")}
               </span>

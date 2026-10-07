@@ -14,21 +14,30 @@ function niveauDeClasse(label: string) {
   return (parts[1] ?? parts[0] ?? "").trim();
 }
 
+/*
+ * `value` is null for a device that has never answered the promo question.
+ * The button then invites the choice instead of naming a promo nobody picked,
+ * and every `value === label` check below is simply false, which is the truth:
+ * nothing is selected yet.
+ */
 export function ClasseSwitcher({
   value,
   classes,
   variant = "pill",
 }: {
-  value: string;
+  value: string | null;
   classes: string[];
   variant?: "pill" | "field";
 }) {
+  const libelle = value ?? "Choisir ma classe";
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   // The filière the student is already in opens first, so the sheet lands on
   // where they are rather than on a list they have to search.
-  const [deplie, setDeplie] = useState<string | null>(() => filiereDeClasse(value));
+  const [deplie, setDeplie] = useState<string | null>(() =>
+    value ? filiereDeClasse(value) : null
+  );
 
   /*
    * Grouped by filière instead of listed flat. Three filières already make
@@ -64,7 +73,7 @@ export function ClasseSwitcher({
           onClick={() => setOpen(true)}
           className="press-scale mt-2 flex h-[34px] items-center gap-1.5 rounded-[11px] bg-surface px-3 text-[13.5px] font-bold text-ink-soft"
         >
-          {value}
+          {libelle}
           <Icon name="chevD" size={16} strokeWidth={2} />
         </button>
       ) : (
@@ -76,7 +85,7 @@ export function ClasseSwitcher({
             <span className="text-teal-dark">
               <Icon name="cap" size={20} />
             </span>
-            <span className="text-[15px]">{value}</span>
+            <span className="text-[15px]">{libelle}</span>
           </span>
           <Icon name="chevD" size={18} strokeWidth={2} />
         </button>
@@ -90,7 +99,7 @@ export function ClasseSwitcher({
       >
         {filieres.map(({ nom, labels }) => {
           const ouvert = deplie === nom;
-          const actif = filiereDeClasse(value) === nom;
+          const actif = value !== null && filiereDeClasse(value) === nom;
 
           // A filière with a single promo has nothing to unfold: making
           // someone tap twice to reach the only option is just friction.
@@ -119,7 +128,7 @@ export function ClasseSwitcher({
               >
                 <span className="flex-1 text-left">{nom}</span>
                 <span className="mr-1 text-[12.5px] font-semibold text-slate-light">
-                  {actif ? niveauDeClasse(value) : `${labels.length} niveaux`}
+                  {actif && value ? niveauDeClasse(value) : `${labels.length} niveaux`}
                 </span>
                 <span
                   className="transition-transform"

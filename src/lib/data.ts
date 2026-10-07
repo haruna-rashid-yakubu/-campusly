@@ -21,9 +21,28 @@ import {
 import { BANNER_COOKIE, CLASSE_COOKIE, DEFAULT_CLASSE } from "@/lib/constants";
 import { toISODate } from "@/lib/semaine";
 
-export async function getPreferredClasse() {
+/*
+ * The promo this device reads, or null when it has never said.
+ *
+ * The distinction matters because the fallback below is a real promo with
+ * real students in it. Anywhere the answer becomes something a reader will
+ * take as theirs -- a timetable, a room number, the filière a list opens on --
+ * "no answer yet" has to stay visible as itself, or a LEG student is quietly
+ * shown BME's week and has no way to know it is not theirs.
+ */
+export async function getClasseChoisie() {
   const store = await cookies();
-  return store.get(CLASSE_COOKIE)?.value || DEFAULT_CLASSE;
+  return store.get(CLASSE_COOKIE)?.value || null;
+}
+
+/*
+ * The same answer with the default filled in, for the places where a promo is
+ * only ever a starting value: a form's prechecked field, or the stamp written
+ * on a push subscription (where null would mean every promo-specific
+ * notification skips that device for good). Never for displayed content.
+ */
+export async function getPreferredClasse() {
+  return (await getClasseChoisie()) ?? DEFAULT_CLASSE;
 }
 
 export async function isBannerDismissed() {
