@@ -15,7 +15,15 @@ const CSP = [
   "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
   "font-src 'self' data:",
   "connect-src 'self' https://*.public.blob.vercel-storage.com",
-  "frame-src https://docs.google.com",
+  /*
+   * The blob store, because a PDF is now read by the browser's own viewer in
+   * a frame pointed straight at the file. This replaced Google's viewer: the
+   * document no longer leaves for a third party to be re-rendered and sent
+   * back, which was slow on a weak connection and came up blank often enough
+   * that students reported sujets as missing. docs.google.com is gone from
+   * here with it -- one less origin allowed to frame anything.
+   */
+  "frame-src 'self' https://*.public.blob.vercel-storage.com",
   "form-action 'self' https://accounts.google.com",
   "frame-ancestors 'self'",
   "base-uri 'self'",
