@@ -2,14 +2,26 @@
 
 import { Gated } from "@/components/Gated";
 import { Icon } from "@/components/icons";
+import { compter } from "@/lib/compteur";
 
-export function WhatsAppContactButton({ authed, whatsapp }: { authed: boolean; whatsapp: string }) {
+export function WhatsAppContactButton({
+  authed,
+  whatsapp,
+  citeId,
+}: {
+  authed: boolean;
+  whatsapp: string;
+  citeId: number;
+}) {
   return (
     <Gated
       authed={authed}
-      onAuthed={() =>
-        window.open(`https://wa.me/${whatsapp.replace(/\D/g, "")}`, "_blank", "noopener,noreferrer")
-      }
+      onAuthed={() => {
+        // Counted before the window opens, never after: on a phone this line
+        // is the last one to run before the page is backgrounded.
+        compter({ type: "contact_bailleur", cible: "cite", cibleId: citeId });
+        window.open(`https://wa.me/${whatsapp.replace(/\D/g, "")}`, "_blank", "noopener,noreferrer");
+      }}
     >
       {(onClick) => (
         <button

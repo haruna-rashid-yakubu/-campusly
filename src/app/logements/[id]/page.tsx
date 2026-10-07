@@ -49,7 +49,7 @@ export default async function CiteDetailPage({ params }: { params: Promise<{ id:
         alt={cite.nom}
         backHref="/logements"
         shareButton={
-          <ShareSheet>
+          <ShareSheet cible="cite" cibleId={cite.id}>
             <button
               className="press-scale grid h-[42px] w-[42px] place-items-center rounded-full bg-white/95 shadow-md"
               aria-label="Partager"
@@ -91,7 +91,7 @@ export default async function CiteDetailPage({ params }: { params: Promise<{ id:
 
         <p className="mt-4 text-[14.5px] leading-relaxed text-slate">{cite.description}</p>
 
-        <WhatsAppContactButton authed={!!session?.user} whatsapp={cite.whatsapp} />
+        <WhatsAppContactButton authed={!!session?.user} whatsapp={cite.whatsapp} citeId={cite.id} />
 
         <div className="mt-2.5 flex items-start gap-2 text-[12.5px] leading-snug text-slate-light">
           <span className="mt-0.5 flex-none text-danger">

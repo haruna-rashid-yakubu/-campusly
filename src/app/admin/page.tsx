@@ -30,6 +30,8 @@ import {
   getCouverture,
   getJournalNotifications,
   getProposerFacets,
+  getStatsCites,
+  getStatsPartages,
   getPropositionsProgramme,
   getLiensTroncCommun,
   getPartagesEpreuve,
@@ -291,9 +293,15 @@ async function PubliesTab({ q }: { q?: string }) {
 }
 
 async function CitesTab() {
-  const cites = await getCitesWithAvailability();
+  const [cites, stats] = await Promise.all([getCitesWithAvailability(), getStatsCites()]);
   return (
     <>
+      <p className="mb-4 rounded-[14px] bg-surface-2 px-3.5 py-3 text-[12.5px] leading-snug text-slate">
+        <span className="font-bold">Ce que ces chiffres disent.</span> Un contact est un étudiant
+        qui a appuyé sur « Contacter sur WhatsApp » depuis la fiche. Ce qui se passe ensuite —
+        s&rsquo;il écrit, s&rsquo;il visite, s&rsquo;il loue — Campusly ne peut pas le savoir. Annonce-les au
+        bailleur comme des étudiants envoyés, jamais comme des locataires.
+      </p>
       {cites.map((c) => (
         <div key={c.id} className="mb-3.5 rounded-[20px] border border-line p-3.5">
           <div className="flex items-center gap-3">
@@ -307,6 +315,8 @@ async function CitesTab() {
               </div>
             </div>
           </div>
+
+          <ChiffresCite stats={stats.get(c.id)} />
           <div className="mt-3 border-t border-line-3 pt-1.5">
             {c.roomTypes.map((r) => (
               <div key={r.id} className="flex items-center justify-between py-2.5">
@@ -327,6 +337,55 @@ async function CitesTab() {
       )}
       <CiteForm />
     </>
+  );
+}
+
+/*
+ * The three figures a landlord will be told, in the order they matter.
+ *
+ * "Personnes" leads because it is the honest headline: distinct students, not
+ * taps. The tap count sits beside it in smaller type so the two can never be
+ * confused, and a cité nobody has contacted says so in words rather than
+ * showing three zeros, which reads like a bug.
+ */
+function ChiffresCite({
+  stats,
+}: {
+  stats?: { personnes: number; contacts: number; partages: number; dernier: Date | null };
+}) {
+  if (!stats || stats.personnes + stats.partages === 0) {
+    return (
+      <div className="mt-3 rounded-[14px] bg-surface-2 px-3 py-2.5 text-[12.5px] text-slate-light">
+        Personne n&rsquo;a encore contacté ce bailleur depuis Campusly.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 flex flex-wrap items-stretch gap-2">
+      <div className="min-w-[104px] flex-1 rounded-[14px] bg-teal-tint px-3 py-2.5">
+        <div className="text-[20px] font-extrabold leading-none tabular-nums text-teal-dark">
+          {stats.personnes}
+        </div>
+        <div className="mt-1 text-[11.5px] font-bold text-teal-dark">
+          {stats.personnes === 1 ? "étudiant envoyé" : "étudiants envoyés"}
+        </div>
+        <div className="mt-0.5 text-[11px] text-slate-light">
+          {stats.contacts} ouverture{stats.contacts > 1 ? "s" : ""} de WhatsApp
+        </div>
+      </div>
+      <div className="min-w-[104px] flex-1 rounded-[14px] bg-surface-2 px-3 py-2.5">
+        <div className="text-[20px] font-extrabold leading-none tabular-nums">{stats.partages}</div>
+        <div className="mt-1 text-[11.5px] font-bold text-ink-soft">
+          partage{stats.partages > 1 ? "s" : ""} de la fiche
+        </div>
+        {stats.dernier && (
+          <div className="mt-0.5 text-[11px] text-slate-light">
+            dernier contact le {stats.dernier.toLocaleDateString("fr-FR")}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -475,6 +534,13 @@ function Chiffre({ valeur, legende }: { valeur: number; legende: string }) {
   );
 }
 
+const LIBELLE_CANAL: Record<string, string> = {
+  statut: "L'affiche pour le statut",
+  systeme: "Le partage du téléphone",
+  whatsapp: "Une conversation WhatsApp",
+  copie: "Lien copié",
+};
+
 const LIBELLE_ENVOI: Record<string, string> = {
   programme: "Programme publié",
   rappel: "Rappel du soir",
@@ -528,8 +594,9 @@ async function JournalNotifications() {
 }
 
 async function AudienceTab() {
-  const a = await getAudience();
+  const [a, partages] = await Promise.all([getAudience(), getStatsPartages()]);
   const maxJour = Math.max(1, ...a.parJour.map((j) => j.appareils));
+  const totalPartages = partages.reduce((n, p) => n + p.total, 0);
 
   return (
     <>
@@ -553,6 +620,35 @@ async function AudienceTab() {
         {a.nouveaux_sept_jours > 1 ? "s" : ""} cette semaine, {a.ouvertures_sept_jours} ouverture
         {a.ouvertures_sept_jours > 1 ? "s" : ""} au total.
       </p>
+
+      <div className="mb-2 mt-7 text-base font-extrabold tracking-tight">Partages</div>
+      {totalPartages === 0 ? (
+        <p className="text-[14px] leading-snug text-slate-light">
+          Personne n&rsquo;a encore partagé Campusly depuis l&rsquo;appli. Les affiches et le
+          bouche-à-oreille ne passent pas par ici, donc zéro ne veut pas dire que personne ne
+          parle de l&rsquo;appli.
+        </p>
+      ) : (
+        <>
+          <div className="mb-2.5 text-[13px] text-slate">
+            <span className="text-[17px] font-extrabold tabular-nums">{totalPartages}</span> partage
+            {totalPartages > 1 ? "s" : ""} au total, par :
+          </div>
+          {partages.map((p) => (
+            <div
+              key={p.canal}
+              className="mb-1.5 flex items-center justify-between rounded-[13px] bg-surface-2 px-3.5 py-2.5"
+            >
+              <span className="text-[13.5px] font-semibold">{LIBELLE_CANAL[p.canal] ?? p.canal}</span>
+              <span className="text-[14px] font-extrabold tabular-nums">{p.total}</span>
+            </div>
+          ))}
+          <p className="mt-2 text-[12.5px] leading-snug text-slate-light">
+            Ce sont des appuis sur un bouton, pas des publications confirmées : l&rsquo;appli ne voit
+            pas ce qui se passe après, dans WhatsApp.
+          </p>
+        </>
+      )}
 
       <div className="mb-2 mt-7 text-base font-extrabold tracking-tight">14 derniers jours</div>
       {a.parJour.length === 0 ? (

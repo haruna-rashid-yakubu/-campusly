@@ -7,6 +7,7 @@ import {
   cites,
   creneaux,
   delegations,
+  evenements,
   notificationEnvois,
   programmePropositions,
   programmePublications,
@@ -746,4 +747,75 @@ export async function getClassesQuiVoient(filiere: string, niveau: string) {
 
   const labels = [...filieres].map((f) => `${f} · ${niveau}`);
   return db.select({ id: classes.id, label: classes.label }).from(classes).where(inArray(classes.label, labels));
+}
+
+/*
+ * What each cité got out of being on Campusly.
+ *
+ * Two numbers, not one, because they answer different questions and only one
+ * of them is the one a landlord cares about. `personnes` counts distinct
+ * students; `contacts` counts taps. A student who opens the number three times
+ * over a week while deciding is one person and three contacts, and quoting the
+ * second figure as though it were the first is how Campusly would come to be
+ * distrusted by the very people it needs.
+ *
+ * Note what this cannot know: whether anyone actually wrote, visited, or
+ * rented. The tap is where our sight ends. The admin screen says as much.
+ */
+export async function getStatsCites() {
+  const rows = await db
+    .select({
+      citeId: evenements.cibleId,
+      type: evenements.type,
+      personnes: sql<number>`count(distinct coalesce(${evenements.userId}, ${evenements.id}::text))`,
+      total: sql<number>`count(*)`,
+      dernier: sql<Date | null>`max(${evenements.createdAt})`,
+    })
+    .from(evenements)
+    .where(eq(evenements.cible, "cite"))
+    .groupBy(evenements.cibleId, evenements.type);
+
+  const par = new Map<
+    number,
+    { personnes: number; contacts: number; partages: number; dernier: Date | null }
+  >();
+
+  for (const r of rows) {
+    if (r.citeId == null) continue;
+    const e =
+      par.get(r.citeId) ?? { personnes: 0, contacts: 0, partages: 0, dernier: null };
+    if (r.type === "contact_bailleur") {
+      e.personnes = Number(r.personnes);
+      e.contacts = Number(r.total);
+      e.dernier = r.dernier ? new Date(r.dernier) : null;
+    } else {
+      e.partages = Number(r.total);
+    }
+    par.set(r.citeId, e);
+  }
+
+  return par;
+}
+
+/*
+ * Shares, broken down by the route that was used.
+ *
+ * Taps only, with no count of distinct people: sharing is not behind the
+ * sign-in gate, so most rows have no account on them, and any "people" figure
+ * here would be a guess dressed as a measurement. Which route gets used is
+ * the useful part anyway — it says whether the Statut poster was worth
+ * building.
+ */
+export async function getStatsPartages() {
+  const rows = await db
+    .select({
+      canal: evenements.canal,
+      total: sql<number>`count(*)`,
+    })
+    .from(evenements)
+    .where(eq(evenements.type, "partage"))
+    .groupBy(evenements.canal)
+    .orderBy(desc(sql`count(*)`));
+
+  return rows.map((r) => ({ canal: r.canal ?? "autre", total: Number(r.total) }));
 }

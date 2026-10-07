@@ -4,6 +4,7 @@ import {
   timestamp,
   integer,
   boolean,
+  index,
   primaryKey,
   serial,
   date,
@@ -519,4 +520,58 @@ export const notificationEnvois = pgTable("notification_envoi", {
 
 export const notificationEnvoisRelations = relations(notificationEnvois, ({ one }) => ({
   classe: one(classes, { fields: [notificationEnvois.classeId], references: [classes.id] }),
+}));
+
+// --- What Campusly actually caused ------------------------------------------
+
+/*
+ * Actions worth counting, as opposed to page views.
+ *
+ * `contact_bailleur` is the tap on "Contacter sur WhatsApp" on a cité. It is
+ * the closest thing the app can honestly witness to a student arriving at a
+ * landlord's door: what happens after the tap takes place in WhatsApp, and
+ * then on a dirt road, where no code of ours can follow. Every screen that
+ * shows these figures has to say so, because the number will be quoted to the
+ * landlord, and a bailleur told "fifteen clients" who met three stops
+ * believing anything Campusly says afterwards.
+ *
+ * `partage` is someone passing the app on.
+ */
+export const evenementTypeEnum = ["contact_bailleur", "partage"] as const;
+
+/** What the event is about. `app` is Campusly itself, shared from anywhere. */
+export const evenementCibleEnum = ["cite", "app"] as const;
+
+export const evenements = pgTable(
+  "evenement",
+  {
+    id: serial("id").primaryKey(),
+    type: text("type", { enum: evenementTypeEnum }).notNull(),
+    cible: text("cible", { enum: evenementCibleEnum }).notNull(),
+    /*
+     * Deliberately not a foreign key. A cité that is deleted must not take its
+     * history with it: "this cité received eleven contacts before we dropped
+     * it" is exactly the kind of thing worth keeping, and a cascade would
+     * erase the evidence along with the row.
+     */
+    cibleId: integer("cible_id"),
+    /** For a share: which route was used (statut, systeme, whatsapp, copie). */
+    canal: text("canal"),
+    /*
+     * Who did it, when they were signed in. Contacting a landlord is behind
+     * the sign-in gate, so contacts always have one; a share does not, and
+     * null there means an anonymous device, not a missing row.
+     *
+     * It is kept so that "people" can be told apart from "taps" — eleven taps
+     * by one student looking for the number again is not eleven students. No
+     * screen shows who; the name is never the point.
+     */
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [index("evenement_cible").on(t.cible, t.cibleId)]
+);
+
+export const evenementsRelations = relations(evenements, ({ one }) => ({
+  user: one(users, { fields: [evenements.userId], references: [users.id] }),
 }));

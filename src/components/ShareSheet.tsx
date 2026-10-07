@@ -5,10 +5,24 @@ import { useRouter } from "next/navigation";
 import { Sheet } from "@/components/Sheet";
 import { useToast } from "@/components/Toast";
 import { APP_DOMAIN, APP_URL } from "@/lib/constants";
+import { compter } from "@/lib/compteur";
 
 const TEXTE = "Campusly — ton campus dans une appli : ";
 
-export function ShareSheet({ children }: { children: React.ReactNode }) {
+/*
+ * `cible` says what is being passed on. Sharing from a cité's page is a
+ * student recommending that cité to a friend, which is worth knowing per cité;
+ * sharing from anywhere else is passing on Campusly itself.
+ */
+export function ShareSheet({
+  children,
+  cible = "app",
+  cibleId,
+}: {
+  children: React.ReactNode;
+  cible?: "cite" | "app";
+  cibleId?: number;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   // Read after mount: navigator does not exist during the server render, and
@@ -48,6 +62,7 @@ export function ShareSheet({ children }: { children: React.ReactNode }) {
       label: "Image pour ton statut",
       aide: "L'affiche prête à publier, avec le lien dessus",
       run: () => {
+        compter({ type: "partage", cible, cibleId, canal: "statut" });
         setOpen(false);
         router.push("/statut");
       },
@@ -59,6 +74,7 @@ export function ShareSheet({ children }: { children: React.ReactNode }) {
       label: "Partager…",
       aide: "Pour un statut WhatsApp, choisis WhatsApp puis « Statut »",
       run: () => {
+        compter({ type: "partage", cible, cibleId, canal: "systeme" });
         // Called before closing the sheet: iOS only honours navigator.share
         // while the tap that triggered it is still being handled.
         navigator.share({ title: "Campusly", text: TEXTE, url: APP_URL }).catch(() => {
@@ -74,6 +90,7 @@ export function ShareSheet({ children }: { children: React.ReactNode }) {
       label: "Envoyer dans une conversation",
       aide: "WhatsApp — ouvre la liste de tes contacts",
       run: () => {
+        compter({ type: "partage", cible, cibleId, canal: "whatsapp" });
         window.open(
           `https://wa.me/?text=${encodeURIComponent(TEXTE + APP_URL)}`,
           "_blank",
@@ -86,6 +103,7 @@ export function ShareSheet({ children }: { children: React.ReactNode }) {
       label: "Copier le lien",
       aide: partageSysteme ? undefined : "Puis colle-le dans ton statut WhatsApp",
       run: () => {
+        compter({ type: "partage", cible, cibleId, canal: "copie" });
         copier();
         setOpen(false);
       },
