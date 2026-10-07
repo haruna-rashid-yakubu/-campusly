@@ -396,6 +396,7 @@ type CreneauRow = {
   debut: number;
   fin: number;
   matiere: string;
+  horaire: string | null;
   abrege: string | null;
   enseignant: string | null;
   salle: string | null;
@@ -412,6 +413,7 @@ function toCells(programme: { creneaux: CreneauRow[] } | undefined) {
   for (const c of programme?.creneaux ?? []) {
     cells[cellKey(c.jour, c.debut)] = {
       matiere: c.matiere,
+      horaire: c.horaire ?? "",
       abrege: c.abrege ?? "",
       enseignant: c.enseignant ?? "",
       salle: c.salle ?? "",

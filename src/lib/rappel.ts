@@ -38,6 +38,7 @@ type Creneau = {
   debut: number;
   fin: number;
   matiere: string;
+  horaire?: string | null;
   abrege?: string | null;
   salle: string | null;
   seance: number | null;
@@ -115,7 +116,10 @@ export function messageDuSoir(
     viderLesTrous();
     const nom = c.abrege?.trim() || matiereCourte(c.matiere);
     const salle = c.salle ?? salleDefaut;
-    lignes.push(`${heuresDe(c.debut, c.fin)} : ${nom}${salle ? `, ${salle}` : ""}`);
+    // Same rule as the screen: the hour written on the sheet wins over the
+    // slot, so the push never announces a time the noticeboard contradicts.
+    const heures = c.horaire ?? heuresDe(c.debut, c.fin);
+    lignes.push(`${heures} : ${nom}${salle ? `, ${salle}` : ""}`);
     const alerte = alerteSeance(c, nom);
     if (alerte) alertes.push(alerte);
     slot = c.fin + 1;

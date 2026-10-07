@@ -13,6 +13,7 @@ import { cellKey, halfKey, type Cell } from "@/lib/grille";
 
 const EMPTY: Cell = {
   matiere: "",
+  horaire: "",
   abrege: "",
   enseignant: "",
   salle: "",
@@ -105,6 +106,7 @@ export function ProgrammeGridForm({
             debut,
             fin,
             matiere: c.matiere,
+            horaire: c.horaire,
             abrege: c.abrege,
             enseignant: c.enseignant,
             salle: c.salle,
@@ -167,6 +169,17 @@ export function ProgrammeGridForm({
               value={cell.enseignant}
               onChange={(e) => setCell(key, { enseignant: e.target.value })}
               placeholder="Enseignant"
+              className="col-span-2 h-[44px] rounded-[13px] border-[1.5px] border-line-2 px-3 text-[14px] outline-none focus:border-teal"
+            />
+            {/* For anything the sheet announced outside the block it was
+                filed under -- "Welcome day à 12H00" in the 14h-18h slot.
+                Leaving it empty keeps the slot's hours, which is almost
+                always what is wanted; filling it stops the screen printing
+                one time above a line naming another. */}
+            <input
+              value={cell.horaire}
+              onChange={(e) => setCell(key, { horaire: e.target.value })}
+              placeholder="Heure réelle si différente (ex. 15h–17h)"
               className="col-span-2 h-[44px] rounded-[13px] border-[1.5px] border-line-2 px-3 text-[14px] outline-none focus:border-teal"
             />
             {/* Only worth filling for a title too long to send. */}

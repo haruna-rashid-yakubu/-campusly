@@ -475,6 +475,8 @@ export type CreneauInput = {
   debut: number;
   fin: number;
   matiere: string;
+  /* The hour the sheet wrote, when it is not the slot's. */
+  horaire?: string;
   abrege?: string;
   enseignant?: string;
   salle?: string;
@@ -567,6 +569,7 @@ export async function saveProgramme(formData: FormData) {
       // reversible; nothing reads it.
       moment: momentDuSlot(c.debut),
       matiere: c.matiere.trim(),
+      horaire: c.horaire?.trim() || null,
       abrege: c.abrege?.trim() || null,
       enseignant: c.enseignant?.trim() || null,
       salle: c.salle?.trim() || null,

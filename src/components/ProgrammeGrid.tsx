@@ -6,6 +6,7 @@ type Creneau = {
   debut: number;
   fin: number;
   matiere: string;
+  horaire: string | null;
   enseignant: string | null;
   salle: string | null;
   seance: number | null;
@@ -82,8 +83,14 @@ export function ProgrammeGrid({
                 </div>
               ) : (
                 <div key={`c${seg.creneau.debut}`} className="border-t border-line-3 px-4 py-3">
+                  {/* The hour the sheet wrote wins over the slot it was
+                      filed under. They disagree whenever the noticeboard
+                      announced something outside the usual blocks, and
+                      printing the slot's hours above a line naming another
+                      time is how a student ends up on campus at the wrong
+                      one. */}
                   <div className="text-[12px] font-bold uppercase tracking-wide text-slate-light">
-                    {heuresDe(seg.creneau.debut, seg.creneau.fin)}
+                    {seg.creneau.horaire ?? heuresDe(seg.creneau.debut, seg.creneau.fin)}
                   </div>
                   <div className="mt-1 text-[15.5px] font-extrabold leading-snug">
                     {seg.creneau.matiere}

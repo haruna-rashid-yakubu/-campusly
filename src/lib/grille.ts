@@ -15,6 +15,12 @@
  */
 export type Cell = {
   matiere: string;
+  /*
+   * The hour written on the sheet, when the noticeboard announced something
+   * outside the usual two-hour blocks. Empty means the slot's own hours are
+   * right, which is the normal case.
+   */
+  horaire: string;
   abrege: string;
   enseignant: string;
   salle: string;

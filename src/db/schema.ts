@@ -302,6 +302,20 @@ export const creneaux = pgTable(
     moment: text("moment", { enum: momentEnum }).notNull(),
     matiere: text("matiere").notNull(),
     /*
+     * The hour the noticeboard actually wrote, when it is not the slot's.
+     *
+     * The grid holds one field per half-day, so anything the sheet announced
+     * got typed into it as though it were a course: "Welcome day à 12H00" in
+     * the 14h-18h slot, "Introduction à la Sociologie générale — 15h à 17h"
+     * in the same one. The screen then printed the slot's hours above a line
+     * naming a different time — two contradictory times, and the evening
+     * reminder sent the wrong one of the two.
+     *
+     * Null means the slot's own hours are right, which is the normal case.
+     * When it is set it replaces them, and the title keeps only the title.
+     */
+    horaire: text("horaire"),
+    /*
      * What a notification calls this course. The screen keeps the official
      * title — "Introduction à l'analyse de données à l'aide d'un tableur" —
      * because that is what the noticeboard says and what students check
