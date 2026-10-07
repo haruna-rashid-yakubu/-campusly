@@ -119,7 +119,12 @@ export default async function SujetsPage({
         ) : (
           <>
             <div className="py-1.5 text-[13px] text-slate-light">
-              {subjects.length} sujet{subjects.length > 1 ? "s" : ""} · du plus récent
+              {/* "du plus récent" was read as the most recent exam, and the
+                  list is ordered by when each paper was added instead: a 2023
+                  paper photographed yesterday sits above a 2026 one added last
+                  week. Saying which it is costs nothing and stops the order
+                  looking broken. */}
+              {subjects.length} sujet{subjects.length > 1 ? "s" : ""} · derniers ajoutés
             </div>
             {subjects.map((s) => (
               <Link
