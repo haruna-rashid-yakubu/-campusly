@@ -49,11 +49,16 @@ export function EpreuvesEnLotForm({
    * the shared année afterwards does not silently rewrite sheets already
    * labelled — but "Appliquer à toutes" is there for when that is the point.
    */
-  const ajouter = (fichiers: FileList | null) => {
-    if (!fichiers?.length) return;
+  /*
+   * Takes File[] rather than a FileList on purpose: a FileList is live and
+   * goes empty the moment the input is cleared, so reading it later — inside
+   * a state updater — hands back nothing. The caller copies it first.
+   */
+  const ajouter = (fichiers: File[]) => {
+    if (!fichiers.length) return;
     setLignes((anciennes) => [
       ...anciennes,
-      ...Array.from(fichiers).map((fichier) => ({
+      ...fichiers.map((fichier) => ({
         pages: [fichier],
         matiere: "",
         annee,
@@ -68,11 +73,11 @@ export function EpreuvesEnLotForm({
    * publication, so the promo gets the paper whole instead of finding
    * "Macroéconomie 2024" three times and downloading page 2.
    */
-  const ajouterPages = (i: number, fichiers: FileList | null) => {
-    if (!fichiers?.length) return;
+  const ajouterPages = (i: number, fichiers: File[]) => {
+    if (!fichiers.length) return;
     setLignes((l) =>
       l.map((ligne, j) =>
-        j === i ? { ...ligne, pages: [...ligne.pages, ...Array.from(fichiers)] } : ligne
+        j === i ? { ...ligne, pages: [...ligne.pages, ...fichiers] } : ligne
       )
     );
   };
@@ -246,8 +251,9 @@ export function EpreuvesEnLotForm({
         multiple
         className="hidden"
         onChange={(e) => {
-          ajouter(e.target.files);
+          const choisies = Array.from(e.target.files ?? []);
           e.target.value = "";
+          ajouter(choisies);
         }}
       />
 
@@ -328,8 +334,9 @@ export function EpreuvesEnLotForm({
                 multiple
                 className="hidden"
                 onChange={(e) => {
-                  ajouterPages(i, e.target.files);
+                  const choisies = Array.from(e.target.files ?? []);
                   e.target.value = "";
+                  ajouterPages(i, choisies);
                 }}
               />
 

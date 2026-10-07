@@ -41,6 +41,13 @@ export function ProposerForm({
   const router = useRouter();
 
   const submit = () => {
+    // A submission with no document is useless to whoever reviews it, and
+    // silently accepting one is how four papers were lost.
+    if (pages.length === 0) {
+      show("Ajoute la photo ou le PDF du sujet avant d'envoyer", "warn");
+      return;
+    }
+
     const fd = new FormData();
     FIELDS.forEach((f) => fd.set(f, values[f]));
 
@@ -101,8 +108,20 @@ export function ProposerForm({
             multiple
             className="hidden"
             onChange={(e) => {
-              setPages((anciennes) => [...anciennes, ...Array.from(e.target.files ?? [])]);
+              /*
+               * The files are copied into a real array here, before the input
+               * is cleared, and that order is the whole fix.
+               *
+               * Array.from() used to sit inside the setPages updater, which
+               * React runs after this handler returns — by which time
+               * `value = ""` had already emptied `e.target.files`. So the
+               * array was always empty: a student picked their photo, no chip
+               * appeared, and the paper was sent with nothing attached. Four
+               * students lost their épreuve that way, one of them three times.
+               */
+              const choisies = Array.from(e.target.files ?? []);
               e.target.value = "";
+              if (choisies.length) setPages((anciennes) => [...anciennes, ...choisies]);
             }}
           />
           <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-[15px] bg-teal-tint text-teal-dark">

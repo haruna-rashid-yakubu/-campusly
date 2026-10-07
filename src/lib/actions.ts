@@ -233,6 +233,20 @@ export async function proposeSubject(formData: FormData): Promise<Refus | { ok: 
     return { ok: false, message: "Type d'épreuve invalide." };
   }
 
+  /*
+   * A submission with no document is refused here, not only in the form.
+   *
+   * The form is where the mistake was caught too late: a bug emptied the
+   * file list before it was read, the page showed no chip, and the action
+   * accepted the row anyway. Four papers were recorded as "proposés" with
+   * nothing attached, and nobody could tell whether the students had failed
+   * to attach them or the app had lost them. A guard on this side means that
+   * question can never be asked again — whatever the screen does.
+   */
+  if (!lien && !(file && file.size > 0)) {
+    return { ok: false, message: "Ajoute la photo ou le PDF du sujet avant d'envoyer." };
+  }
+
   let fileUrl: string | null = null;
   let fileName: string | null = null;
   if (lien) {
