@@ -12,6 +12,7 @@ import { DelegueForm } from "@/components/admin/DelegueForm";
 import { TroncCommunForm } from "@/components/admin/TroncCommunForm";
 import { PropositionCard } from "@/components/admin/PropositionCard";
 import { ProgrammeGridForm } from "@/components/admin/ProgrammeGridForm";
+import { AnnonceATous } from "@/components/admin/AnnonceATous";
 // Not from the form: it is a client module, and its exports reach the server
 // as opaque references, so calling cellKey() here threw mid-render.
 import { cellKey, halfKey, type Cell } from "@/lib/grille";
@@ -121,6 +122,7 @@ export default async function AdminPage({
             </Link>
           ))}
         </div>
+        {estAdmin && <AnnonceATous />}
       </div>
 
       <div className="px-5 pb-12">

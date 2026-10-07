@@ -35,6 +35,7 @@ import { fromISODate, mondayOf, nowInWAT, startOfDay, weekRangeLabel } from "@/l
 import { BANNER_COOKIE, CLASSE_COOKIE, DEVICE_COOKIE, momentDuSlot } from "@/lib/constants";
 import {
   sendPushToAdmins,
+  sendPushToAll,
   sendPushToClasse,
   sendPushToDelegues,
   sendPushToEmail,
@@ -1290,4 +1291,32 @@ export async function publierEpreuves(formData: FormData): Promise<Refus | Resul
   }
 
   return { ok: true, publiees, refusees };
+}
+
+/*
+ * Une annonce a tout le monde, toutes promos confondues.
+ *
+ * C'est le seul envoi qui ne repond pas a un evenement : ni un programme
+ * publie, ni une epreuve en ligne, ni un sujet accepte. Il part donc vers tous
+ * les appareils abonnes sans passer par les reglages par type, parce qu'aucun
+ * des trois reglages ne le decrit -- et c'est precisement pour ca qu'il doit
+ * rester rare. Sur 121 appareils, pas un n'a coupe le rappel du soir : cette
+ * confiance est le vrai capital de l'appli, et deux annonces de trop la
+ * depensent.
+ *
+ * Le compte renvoye est celui des appareils qui ont vraiment recu, pas celui
+ * des abonnes : annoncer "envoye a tout le monde" quand la moitie des
+ * endpoints sont morts donnerait une fausse idee de la portee.
+ */
+export async function annoncerATous(titre: string, corps: string, url?: string) {
+  await requireAdmin();
+
+  const t = titre.trim();
+  const c = corps.trim();
+  if (!t || !c) {
+    return { ok: false as const, message: "Le titre et le message sont obligatoires." };
+  }
+
+  const appareils = await sendPushToAll({ title: t, body: c, url: url?.trim() || "/" });
+  return { ok: true as const, appareils };
 }
