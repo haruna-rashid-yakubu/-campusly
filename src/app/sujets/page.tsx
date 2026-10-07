@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { CAMPUS_NOM } from "@/lib/constants";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { Icon } from "@/components/icons";
@@ -12,12 +14,11 @@ import {
 } from "@/lib/data";
 import { filiereDeClasse } from "@/lib/utils";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Anciens sujets d'examens",
-  description:
-    "Retrouve les anciens sujets d'examens, partiels et rattrapages de l'UCAC Nkolbisson, avec corrigés quand disponibles.",
-  alternates: { canonical: "/sujets" },
-};
+  description: `Retrouve les anciens sujets d'examens, partiels et rattrapages de l'${CAMPUS_NOM}, avec corrigés quand disponibles.`,
+  path: "/sujets",
+});
 
 export const dynamic = "force-dynamic";
 

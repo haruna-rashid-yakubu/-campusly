@@ -8,6 +8,7 @@ import { SujetViewer } from "@/components/SujetViewer";
 import { ShareSheet } from "@/components/ShareSheet";
 import { ToastButton } from "@/components/ToastButton";
 import { getRelatedSubjects, getSubjectById } from "@/lib/data";
+import { pageMetadata } from "@/lib/seo";
 import { incrementSubjectDownload } from "@/lib/actions";
 
 export const dynamic = "force-dynamic";
@@ -22,11 +23,11 @@ export async function generateMetadata({
   if (Number.isNaN(subjectId)) return { title: "Sujet introuvable" };
   const subject = await getSubjectById(subjectId);
   if (!subject) return { title: "Sujet introuvable" };
-  return {
+  return pageMetadata({
     title: `${subject.matiere} — ${subject.filiere} ${subject.niveau} (${subject.annee})`,
     description: `${subject.type} de ${subject.matiere} — ${subject.filiere}, ${subject.niveau}, ${subject.annee}.${subject.enseignant ? ` Enseignant : ${subject.enseignant}.` : ""}${subject.corrige ? " Corrigé disponible." : ""}`,
-    alternates: { canonical: `/sujets/${subject.id}` },
-  };
+    path: `/sujets/${subject.id}`,
+  });
 }
 
 export default async function SujetDetailPage({ params }: { params: Promise<{ id: string }> }) {

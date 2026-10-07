@@ -27,6 +27,22 @@ export const PROPOSER_LABELS: Record<string, string> = {
   type: "Type d'épreuve",
 };
 
+/*
+ * The campus this deployment is about, named once.
+ *
+ * It was written by hand in twelve places — page descriptions, keywords, the
+ * manifest, a form placeholder, body copy — which is exactly the shape of
+ * thing that gets missed when Ekounou is added. The quartiers below belong to
+ * the campus too: Melen and Biyem-Assi are near Nkolbisson and mean nothing
+ * for a student looking for a room near Ekounou.
+ *
+ * Reading it from the environment means a second campus is a second Vercel
+ * project with one setting changed, not a hunt through the source. When the
+ * two campuses have to live in one deployment, this is the seam to widen:
+ * a column on the classe, and this constant becomes a lookup.
+ */
+export const CAMPUS_NOM = process.env.NEXT_PUBLIC_CAMPUS_NOM ?? "UCAC Nkolbisson";
+
 export const CITE_QUARTIERS = ["Nkolbisson", "Melen", "Biyem-Assi"];
 export const CITE_DISTANCE_OPTIONS = [
   { label: "≤ 1 km", value: "1000" },

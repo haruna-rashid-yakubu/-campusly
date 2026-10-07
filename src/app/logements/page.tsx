@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CAMPUS_NOM } from "@/lib/constants";
 import Link from "next/link";
 import Image from "next/image";
 import { LogementsFilterBar } from "@/components/LogementsFilterBar";
@@ -9,7 +10,7 @@ import { citeAvailabilityLabel, distanceLabel, fcfa } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Logements étudiants vérifiés",
-  description: "Cités et logements étudiants vérifiés autour de l'UCAC Nkolbisson, à Yaoundé.",
+  description: `Cités et logements étudiants vérifiés autour de l'${CAMPUS_NOM}, à Yaoundé.`,
   alternates: { canonical: "/logements" },
 };
 
@@ -34,7 +35,7 @@ export default async function LogementsPage({
       <div className="sticky top-0 z-10 bg-white px-5" style={{ paddingTop: "calc(20px + var(--safe-top))" }}>
         <div className="text-[24px] font-extrabold tracking-tight">Logements</div>
         <div className="mt-0.5 text-[13.5px] text-slate-light">
-          {cites.length} cité{cites.length > 1 ? "s" : ""} autour de l&rsquo;UCAC Nkolbisson
+          {cites.length} cité{cites.length > 1 ? "s" : ""} autour de l&rsquo;{CAMPUS_NOM}
         </div>
         <LogementsFilterBar />
       </div>

@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next";
+import { CAMPUS_NOM } from "@/lib/constants";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
     name: "Campusly — ton campus dans une appli",
     short_name: "Campusly",
-    description: "L'appli étudiante de l'UCAC Nkolbisson : sujets, logements, pressing, programme.",
+    description: `L'appli étudiante de l'${CAMPUS_NOM} : sujets, logements, pressing, programme.`,
     start_url: "/",
     scope: "/",
     display: "standalone",

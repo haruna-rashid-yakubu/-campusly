@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { CAMPUS_NOM } from "@/lib/constants";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import Image from "next/image";
 import { ClasseSwitcher } from "@/components/ClasseSwitcher";
@@ -17,11 +19,11 @@ import {
 } from "@/lib/data";
 import { mondayOf, nowInWAT, toISODate } from "@/lib/semaine";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Programme de la semaine",
-  description: "Le programme de cours de la semaine, par classe, pour l'UCAC Nkolbisson.",
-  alternates: { canonical: "/programme" },
-};
+  description: `Le programme de cours de la semaine, par classe, pour l'${CAMPUS_NOM}.`,
+  path: "/programme",
+});
 
 export const dynamic = "force-dynamic";
 

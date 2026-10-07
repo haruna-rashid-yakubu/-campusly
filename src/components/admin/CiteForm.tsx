@@ -1,5 +1,7 @@
 "use client";
 
+import { CITE_QUARTIERS } from "@/lib/constants";
+
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -140,7 +142,7 @@ export function CiteForm() {
       <input
         value={quartier}
         onChange={(e) => setQuartier(e.target.value)}
-        placeholder="Nkolbisson"
+        placeholder={CITE_QUARTIERS[0]}
         className={`${INPUT} mb-3.5`}
       />
 

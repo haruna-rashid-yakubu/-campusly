@@ -9,7 +9,7 @@ import { TabBarGate } from "@/components/TabBarGate";
 import { ChoixClasseGate } from "@/components/ChoixClasseGate";
 import { AppleSplashLinks } from "@/components/AppleSplashLinks";
 import { Visite } from "@/components/Visite";
-import { APP_URL } from "@/lib/constants";
+import { APP_URL, CAMPUS_NOM } from "@/lib/constants";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -17,8 +17,7 @@ const manrope = Manrope({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-const SITE_DESCRIPTION =
-  "Campusly — l'appli étudiante de l'UCAC Nkolbisson : anciens sujets d'examens, logements vérifiés autour du campus, pressings partenaires et programme de la semaine.";
+const SITE_DESCRIPTION = `Campusly — l'appli étudiante de l'${CAMPUS_NOM} : anciens sujets d'examens, logements vérifiés autour du campus, pressing étudiant et programme de la semaine.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
@@ -28,7 +27,7 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   keywords: [
-    "UCAC Nkolbisson",
+    CAMPUS_NOM,
     "sujets d'examens",
     "anciens sujets",
     "logements étudiants Yaoundé",

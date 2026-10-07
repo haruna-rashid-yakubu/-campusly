@@ -4,13 +4,21 @@ import { Badge } from "@/components/EmptyState";
 import { auth } from "@/auth";
 import { PressingCommande } from "@/components/PressingCommande";
 import { getPressings } from "@/lib/data";
+import { pageMetadata } from "@/lib/seo";
+import { CAMPUS_NOM } from "@/lib/constants";
 import { fcfa } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Pressings partenaires",
-  description: "Pressings partenaires autour de l'UCAC Nkolbisson, avec tarifs indicatifs.",
-  alternates: { canonical: "/pressing" },
-};
+/*
+ * "Pressings partenaires" described a directory of partner shops with
+ * indicative prices. There is one service, Campusly's own, at a fixed price
+ * paid after weighing — so the card a student shared promised something the
+ * page does not have.
+ */
+export const metadata: Metadata = pageMetadata({
+  title: "Pressing étudiant",
+  description: `Le pressing Campusly pour les étudiants de l'${CAMPUS_NOM} : 500 F/kg couleurs, 800 F/kg blancs, lavé et essoré, payé après pesée.`,
+  path: "/pressing",
+});
 
 export const dynamic = "force-dynamic";
 

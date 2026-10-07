@@ -6,6 +6,8 @@ import { ShareSheet } from "@/components/ShareSheet";
 import { WhatsAppContactButton } from "@/components/WhatsAppContactButton";
 import { Icon } from "@/components/icons";
 import { getCiteById } from "@/lib/data";
+import { pageMetadata } from "@/lib/seo";
+import { CAMPUS_NOM } from "@/lib/constants";
 import { distanceLabel, fcfa, roomStockLabel } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -20,11 +22,11 @@ export async function generateMetadata({
   if (Number.isNaN(citeId)) return { title: "Logement introuvable" };
   const cite = await getCiteById(citeId);
   if (!cite) return { title: "Logement introuvable" };
-  return {
+  return pageMetadata({
     title: cite.nom,
-    description: `${cite.nom} — ${cite.quartier}, à ${distanceLabel(cite.distanceM)} de l'UCAC Nkolbisson. ${cite.description}`.trim(),
-    alternates: { canonical: `/logements/${cite.id}` },
-  };
+    description: `${cite.nom} — ${cite.quartier}, à ${distanceLabel(cite.distanceM)} de ${CAMPUS_NOM}. ${cite.description}`.trim(),
+    path: `/logements/${cite.id}`,
+  });
 }
 
 const EQUIPMENTS = [
