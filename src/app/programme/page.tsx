@@ -10,11 +10,12 @@ import { NotifNudge } from "@/components/NotifNudge";
 import { Icon } from "@/components/icons";
 import {
   getClasseByLabel,
+  getClasseChoisie,
   getClasses,
   getLatestProgramme,
-  getPreferredClasse,
   getTroncCommun,
 } from "@/lib/data";
+import { mondayOf, nowInWAT, toISODate } from "@/lib/semaine";
 
 export const metadata: Metadata = {
   title: "Programme de la semaine",
@@ -25,12 +26,29 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ProgrammePage() {
-  const [classe, classesRows] = await Promise.all([getPreferredClasse(), getClasses()]);
-  const classeRow = await getClasseByLabel(classe);
+  const [classe, classesRows] = await Promise.all([getClasseChoisie(), getClasses()]);
+  const classeRow = classe ? await getClasseByLabel(classe) : null;
   const programme = classeRow ? await getLatestProgramme(classeRow.id) : null;
   // Said out loud, because a student whose promo borrows its week would
   // otherwise read someone else's room numbers without knowing it.
   const suit = classeRow ? await getTroncCommun(classeRow.id) : null;
+
+  /*
+   * Whether what we are about to show is actually this week.
+   *
+   * getLatestProgramme returns the newest publication, full stop. On the
+   * Monday of a week nobody has published yet, that is last week's sheet —
+   * and the screen presented it with its label and an update date, which
+   * reads as current. A student then walks to a room that has another promo
+   * in it. The evening reminder never had this problem: it asks for one
+   * precise week and stays silent when it is missing.
+   *
+   * So the sheet is still shown, because a week old is far better than
+   * nothing when the noticeboard is across campus — but it is named for what
+   * it is.
+   */
+  const lundiCourant = toISODate(mondayOf(nowInWAT()));
+  const perime = programme ? toISODate(programme.semaine) < lundiCourant : false;
 
   return (
     <div className="min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
@@ -46,7 +64,9 @@ export default async function ProgrammePage() {
           <div className="mt-2.5 text-[13px] text-slate-light">
             {programme
               ? `${programme.weekLabel} — mis à jour le ${programme.publishedAt.toLocaleDateString("fr-FR")} à ${programme.publishedAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`
-              : "Aucune publication pour cette classe pour l'instant"}
+              : classe
+                ? "Aucune publication pour cette classe pour l'instant"
+                : "Choisis ta classe pour voir ton programme"}
           </div>
         </div>
       </div>
@@ -57,6 +77,18 @@ export default async function ProgrammePage() {
               the noticeboard, so seeing it first is what tells them this is
               their week; the grid underneath is what they then read. */}
           <div className="px-5 pt-3">
+            {perime && (
+              <div className="mb-3.5 flex items-start gap-2.5 rounded-[16px] bg-warn-tint px-3.5 py-3">
+                <span className="mt-0.5 flex-none text-warn-ink">
+                  <Icon name="warn" size={17} strokeWidth={1.9} />
+                </span>
+                <span className="text-[13px] leading-snug text-warn-ink">
+                  <span className="font-bold">Ce n&rsquo;est pas la semaine en cours.</span> Le
+                  programme de cette semaine n&rsquo;a pas encore été publié — voici le dernier
+                  reçu. Vérifie au tableau avant de te déplacer.
+                </span>
+              </div>
+            )}
             {programme.photoUrl && (
               <Link
                 href="/programme/plein"
