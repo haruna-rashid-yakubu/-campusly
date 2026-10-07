@@ -10,6 +10,19 @@ const TRI_OPTIONS: PickerOption[] = [
   { label: "Prix croissant", value: "prix" },
 ];
 
+/*
+ * The chip reads its own label from the options list, and both the distance
+ * and the price list carry a "Peu importe" entry whose value is the empty
+ * string. So with no filter set, the lookup found that entry instead of
+ * falling through to the generic word: two chips side by side both said "Peu
+ * importe" and neither said what it filtered. Looking up only when something
+ * is actually chosen is the whole fix.
+ */
+function libelleChoisi(options: PickerOption[], valeur: string, defaut: string) {
+  if (!valeur) return defaut;
+  return options.find((o) => o.value === valeur)?.label ?? defaut;
+}
+
 export function LogementsFilterBar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -35,7 +48,8 @@ export function LogementsFilterBar() {
         onSelect={(v) => pushParams((p) => p.set("tri", v))}
         trigger={(open) => (
           <Chip
-            label={TRI_OPTIONS.find((o) => o.value === tri)?.label ?? "Trier"}
+            label={libelleChoisi(TRI_OPTIONS, tri, "Trier")}
+            purpose="Trier par"
             active={tri !== "distance"}
             onClick={open}
           />
@@ -48,7 +62,8 @@ export function LogementsFilterBar() {
         onSelect={(v) => pushParams((p) => (v ? p.set("dist", v) : p.delete("dist")))}
         trigger={(open) => (
           <Chip
-            label={CITE_DISTANCE_OPTIONS.find((o) => o.value === dist)?.label ?? "Distance"}
+            label={libelleChoisi(CITE_DISTANCE_OPTIONS, dist, "Distance")}
+            purpose="Distance maximale"
             active={!!dist}
             onClick={open}
           />
@@ -61,7 +76,8 @@ export function LogementsFilterBar() {
         onSelect={(v) => pushParams((p) => (v ? p.set("prix", v) : p.delete("prix")))}
         trigger={(open) => (
           <Chip
-            label={CITE_PRICE_OPTIONS.find((o) => o.value === prix)?.label ?? "Prix"}
+            label={libelleChoisi(CITE_PRICE_OPTIONS, prix, "Prix")}
+            purpose="Budget mensuel"
             active={!!prix}
             onClick={open}
           />
@@ -72,7 +88,9 @@ export function LogementsFilterBar() {
         value={quartier}
         options={[{ label: "Tous", value: "" }, ...CITE_QUARTIERS.map((q) => ({ label: q, value: q }))]}
         onSelect={(v) => pushParams((p) => (v ? p.set("quartier", v) : p.delete("quartier")))}
-        trigger={(open) => <Chip label={quartier || "Quartier"} active={!!quartier} onClick={open} />}
+        trigger={(open) => (
+          <Chip label={quartier || "Quartier"} purpose="Quartier" active={!!quartier} onClick={open} />
+        )}
       />
     </div>
   );
