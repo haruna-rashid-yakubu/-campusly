@@ -6,6 +6,7 @@ import { ClasseSwitcher } from "@/components/ClasseSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ShareSheet } from "@/components/ShareSheet";
 import { InstallNudge } from "@/components/InstallNudge";
+import { NotifNudge } from "@/components/NotifNudge";
 import { OuvrirDansSafari } from "@/components/OuvrirDansSafari";
 import { SignInButton } from "@/components/SignInButton";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -233,6 +234,17 @@ export default async function AccueilPage() {
       <div className="px-5 pb-7 pt-5">
         {/* After the screen has done its job, never before it. */}
         <OuvrirDansSafari />
+        {/* The offer was only on the timetable and on a sent paper, so the
+            screen every opening lands on never made it. Of 537 devices this
+            week, 163 put Campusly on their home screen and 126 can be
+            reached -- the gap is mostly people who were never asked. It sits
+            under the week rather than above it, for the same reason as
+            everywhere else: the thing it offers has to be on screen first. */}
+        <NotifNudge
+          compact
+          titre="Ton programme de demain, chaque soir"
+          detail="À 20h, tes cours du lendemain avec les salles. Et un mot quand de nouvelles épreuves arrivent."
+        />
         <InstallNudge />
 
         <ShareSheet>

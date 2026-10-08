@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { Icon } from "@/components/icons";
 import { Badge, EmptyState } from "@/components/EmptyState";
 import { SujetsFilterBar } from "@/components/SujetsFilterBar";
+import { NotifNudge } from "@/components/NotifNudge";
 import {
   getPreferredClasse,
   getSubjectFacets,
@@ -152,6 +153,16 @@ export default async function SujetsPage({
                 </div>
               </Link>
             ))}
+
+            {/* Below the list rather than above it: someone who has just
+                scrolled a drawer of past papers knows what being told about a
+                new one is worth. Nothing is asked of a promo whose drawer is
+                still empty -- the empty state never reaches here. */}
+            <NotifNudge
+              compact
+              titre="Sois prévenu des nouvelles épreuves"
+              detail="Une notification quand une épreuve de ta promo est mise en ligne."
+            />
 
             <div className="mb-2.5 mt-1.5 rounded-[20px] border-[1.5px] border-dashed border-teal-border bg-teal-tint-soft p-5 text-center">
               <div className="text-[15.5px] font-extrabold">Tu as un sujet sur ton téléphone ?</div>
