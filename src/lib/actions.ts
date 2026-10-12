@@ -577,6 +577,13 @@ export async function saveProgramme(formData: FormData) {
 
   const semaine = mondayOf(fromISODate(String(formData.get("semaine") ?? "")));
   if (Number.isNaN(semaine.getTime())) throw new Error("Semaine invalide.");
+  // Only this week or the next. A past week has already been read and
+  // reminded about; rewriting it changes nothing for anyone but the record.
+  const cetteSemaine = mondayOf(nowInWAT());
+  const ecart = Math.round((semaine.getTime() - cetteSemaine.getTime()) / (7 * 24 * 3600_000));
+  if (ecart < 0 || ecart > 1) {
+    throw new Error("On ne peut publier que pour cette semaine ou la semaine prochaine.");
+  }
 
   const weekLabel = String(formData.get("weekLabel") ?? "").trim() || `Semaine ${weekRangeLabel(semaine)}`;
   const salleDefaut = String(formData.get("salleDefaut") ?? "").trim() || null;
@@ -620,7 +627,6 @@ export async function saveProgramme(formData: FormData) {
 
   // The grid is replaced wholesale rather than diffed: a cell that was emptied
   // has no row to update, and "no row" is exactly how the app reads "no class".
-  await db.delete(creneaux).where(eq(creneaux.programmeId, row.id));
   const cells = grid
     .filter((c) => c.matiere?.trim())
     .map((c) => ({
@@ -639,7 +645,12 @@ export async function saveProgramme(formData: FormData) {
       seances: c.seances ?? null,
       cc: c.cc ?? false,
     }));
-  if (cells.length) await db.insert(creneaux).values(cells);
+  // Deleting and inserting run as one transaction. Done as two separate
+  // statements, a failure between them left the week with no classes at all —
+  // an empty programme and a 20h reminder with nothing to say.
+  const supprimer = db.delete(creneaux).where(eq(creneaux.programmeId, row.id));
+  if (cells.length) await db.batch([supprimer, db.insert(creneaux).values(cells)]);
+  else await supprimer;
 
   revalidatePath("/admin");
   revalidatePath("/programme");

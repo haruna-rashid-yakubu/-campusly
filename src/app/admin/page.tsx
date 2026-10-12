@@ -73,7 +73,7 @@ const TABS_DELEGUE: TabId[] = ["sujets", "prog"];
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; q?: string }>;
+  searchParams: Promise<{ tab?: string; q?: string; classe?: string; semaine?: string }>;
 }) {
   const session = await auth();
   if (!session?.user) return <SignInRequired backHref="/" title="Administration" />;
@@ -93,7 +93,7 @@ export default async function AdminPage({
   }
 
   const onglets = estAdmin ? TABS : TABS.filter((t) => TABS_DELEGUE.includes(t.id));
-  const { tab: rawTab, q } = await searchParams;
+  const { tab: rawTab, q, classe: classeParam, semaine: semaineParam } = await searchParams;
   const tab = onglets.some((t) => t.id === rawTab) ? (rawTab as TabId) : onglets[0].id;
 
   return (
@@ -139,7 +139,16 @@ export default async function AdminPage({
           <Panneau nom="Cités" rendu={() => CitesTab()} />
         )}
         {tab === "prog" && (
-          <Panneau nom="Programme" rendu={() => ProgrammeTab({ promos: estAdmin ? undefined : mesPromos })} />
+          <Panneau
+            nom="Programme"
+            rendu={() =>
+              ProgrammeTab({
+                promos: estAdmin ? undefined : mesPromos,
+                classeParam,
+                semaineParam,
+              })
+            }
+          />
         )}
         {tab === "monde" && (
           <Panneau nom="Audience" rendu={() => AudienceTab()} />
@@ -458,7 +467,29 @@ function toCells(programme: { creneaux: CreneauRow[] } | undefined) {
   return { cells, divise };
 }
 
-async function ProgrammeTab({ promos }: { promos?: string[] }) {
+/*
+ * Which week the grid writes to is chosen, never assumed. It used to be "the
+ * current week" whatever the day, so a timetable published on Friday for the
+ * coming week overwrote the one still running — and with it Saturday's
+ * classes and the reminder the 20h push sends for them on Friday evening.
+ *
+ * From Thursday on, the next week is what is being published, so it is the
+ * default; the current week stays one tap away for a correction.
+ */
+function semaineParDefaut(): "courante" | "prochaine" {
+  const jour = nowInWAT().getDay(); // 0 = dimanche
+  return jour === 0 || jour >= 4 ? "prochaine" : "courante";
+}
+
+async function ProgrammeTab({
+  promos,
+  classeParam,
+  semaineParam,
+}: {
+  promos?: string[];
+  classeParam?: string;
+  semaineParam?: string;
+}) {
   const [toutes, preferee, manquantes, propositions, liens] = await Promise.all([
     getClasses(),
     getPreferredClasse(),
@@ -470,9 +501,17 @@ async function ProgrammeTab({ promos }: { promos?: string[] }) {
   // A délégué fills the grid for their own promos; the picker simply has
   // nothing else in it, so there is no wrong promo to choose by accident.
   const labels = promos ?? toutes.map((c) => c.label);
-  const classe = labels.includes(preferee) ? preferee : labels[0];
+  const classe =
+    classeParam && labels.includes(classeParam)
+      ? classeParam
+      : labels.includes(preferee)
+        ? preferee
+        : labels[0];
 
-  const semaine = mondayOf(new Date());
+  const choix =
+    semaineParam === "courante" || semaineParam === "prochaine" ? semaineParam : semaineParDefaut();
+  const cetteSemaine = mondayOf(nowInWAT());
+  const semaine = choix === "prochaine" ? addDays(cetteSemaine, 7) : cetteSemaine;
   const classeRow = await getClasseByLabel(classe);
   const [courante, precedente, facets] = await Promise.all([
     classeRow ? getProgrammeForWeek(classeRow.id, semaine, { brut: true }) : Promise.resolve(undefined),
@@ -523,10 +562,18 @@ async function ProgrammeTab({ promos }: { promos?: string[] }) {
       )}
 
       <ProgrammeGridForm
+        // Remounted for every promo and week, so the grid on screen is always
+        // the one stored for them and never what was typed for another.
+        key={`${classe}|${toISODate(semaine)}`}
         classes={labels}
         defaultClasse={classe}
+        choixSemaine={choix}
+        semaines={{
+          courante: weekRangeLabel(cetteSemaine),
+          prochaine: weekRangeLabel(addDays(cetteSemaine, 7)),
+        }}
+        dejaPubliee={Boolean(courante)}
         semaine={toISODate(semaine)}
-        semaineLabel={`Semaine ${weekRangeLabel(semaine)}`}
         initial={actuelle.cells}
         initialDivise={actuelle.divise}
         initialWeekLabel={courante?.weekLabel ?? ""}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { PickerButton } from "@/components/PickerButton";
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
@@ -24,8 +25,10 @@ const EMPTY: Cell = {
 export function ProgrammeGridForm({
   classes,
   defaultClasse,
+  choixSemaine,
+  semaines,
+  dejaPubliee,
   semaine,
-  semaineLabel,
   initial,
   initialDivise,
   initialWeekLabel,
@@ -36,8 +39,10 @@ export function ProgrammeGridForm({
 }: {
   classes: string[];
   defaultClasse: string;
+  choixSemaine: "courante" | "prochaine";
+  semaines: { courante: string; prochaine: string };
+  dejaPubliee: boolean;
   semaine: string;
-  semaineLabel: string;
   initial: Record<string, Cell>;
   initialDivise: string[];
   initialWeekLabel: string;
@@ -46,7 +51,19 @@ export function ProgrammeGridForm({
   previousDivise: string[];
   matieres: string[];
 }) {
-  const [classe, setClasse] = useState(defaultClasse);
+  /*
+   * The promo and the week are part of the address, not local state. Picking
+   * another promo used to swap the name on the button while leaving the grid
+   * of the first one on screen, so saving wrote one promo's week onto
+   * another. Now each pick reloads the grid stored for that promo and week.
+   */
+  const classe = defaultClasse;
+  const router = useRouter();
+  const [navigation, startNavigation] = useTransition();
+  const aller = (c: string, w: "courante" | "prochaine") =>
+    startNavigation(() =>
+      router.push(`/admin?tab=prog&classe=${encodeURIComponent(c)}&semaine=${w}`, { scroll: false })
+    );
   const [weekLabel, setWeekLabel] = useState(initialWeekLabel);
   const [salleDefaut, setSalleDefaut] = useState(initialSalle);
   const [cells, setCells] = useState<Record<string, Cell>>(initial);
@@ -130,7 +147,7 @@ export function ProgrammeGridForm({
     startTransition(async () => {
       try {
         await saveProgramme(fd);
-        show(`Programme enregistré pour ${classe}`);
+        show(`Enregistré pour ${classe}, semaine ${semaines[choixSemaine]}`);
         setFile(null);
       } catch (e) {
         show(e instanceof Error ? e.message : "Erreur à l'enregistrement", "warn");
@@ -223,7 +240,7 @@ export function ProgrammeGridForm({
         title="Choisis la classe"
         value={classe}
         options={classes.map((c) => ({ label: c, value: c }))}
-        onSelect={setClasse}
+        onSelect={(c) => c !== classe && aller(c, choixSemaine)}
         trigger={(open) => (
           <button
             onClick={open}
@@ -234,6 +251,41 @@ export function ProgrammeGridForm({
           </button>
         )}
       />
+
+      <div className="mb-1.5 mt-4 text-[13px] font-bold text-ink-soft">Semaine</div>
+      <div className="grid grid-cols-2 gap-2">
+        {(["courante", "prochaine"] as const).map((w) => {
+          const actif = choixSemaine === w;
+          return (
+            <button
+              key={w}
+              onClick={() => !actif && aller(classe, w)}
+              aria-pressed={actif}
+              className={`press-scale rounded-2xl border-[1.5px] px-3 py-2.5 text-left ${
+                actif ? "border-teal bg-teal-tint-soft" : "border-line-2 bg-white"
+              }`}
+            >
+              <span className={`block text-[13.5px] font-extrabold ${actif ? "text-teal-dark" : ""}`}>
+                {w === "courante" ? "Cette semaine" : "Semaine prochaine"}
+              </span>
+              <span className="mt-0.5 block text-[12px] leading-snug text-slate-light">
+                {semaines[w]}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div
+        className={`mt-2.5 rounded-[14px] px-3.5 py-2.5 text-[13px] leading-snug ${
+          dejaPubliee ? "bg-warn-tint text-warn-ink" : "bg-surface-2 text-ink-soft"
+        }`}
+      >
+        {navigation
+          ? "Chargement…"
+          : dejaPubliee
+            ? `${classe} a déjà un emploi du temps pour la semaine ${semaines[choixSemaine]}. Enregistrer le remplace.`
+            : `Rien n'est encore publié pour ${classe}, semaine ${semaines[choixSemaine]}.`}
+      </div>
 
       <div className="mt-4 flex gap-2.5">
         <div className="flex-1">
@@ -255,7 +307,6 @@ export function ProgrammeGridForm({
           />
         </div>
       </div>
-      <p className="mt-1.5 text-[12.5px] text-slate-light">{semaineLabel}</p>
 
       {hasPrevious && (
         <button
@@ -266,7 +317,7 @@ export function ProgrammeGridForm({
           className="press-scale mt-3.5 flex h-11 w-full items-center justify-center gap-2 rounded-[13px] border-[1.5px] border-line-2 text-[13.5px] font-bold active:bg-surface-2"
         >
           <Icon name="cal" size={17} strokeWidth={2} />
-          Reprendre la semaine dernière
+          Reprendre la semaine d&rsquo;avant
         </button>
       )}
 
@@ -349,11 +400,11 @@ export function ProgrammeGridForm({
       </label>
 
       <button
-        disabled={pending}
+        disabled={pending || navigation}
         onClick={submit}
         className="press-scale mt-[18px] h-[54px] w-full rounded-2xl bg-teal text-[15.5px] font-bold text-white disabled:opacity-60 active:bg-teal-press"
       >
-        {pending ? "Enregistrement…" : `Enregistrer pour ${classe}`}
+        {pending ? "Enregistrement…" : `Enregistrer · ${classe} · ${semaines[choixSemaine]}`}
       </button>
     </div>
   );
