@@ -30,7 +30,9 @@ export function estUnLienPartage(pathname: string): boolean {
  * actually show them the wrong thing.
  */
 export function neDependPasDeLaPromo(pathname: string): boolean {
-  return pathname === "/pressing" || pathname === "/logements";
+  // A poll asks the same question of everyone; its answers are read per
+  // promo only when the device has already said which one it is in.
+  return pathname === "/pressing" || pathname === "/logements" || pathname.startsWith("/sondage/");
 }
 
 export function hasTabBar(pathname: string): boolean {

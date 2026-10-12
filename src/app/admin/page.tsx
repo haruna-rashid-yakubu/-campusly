@@ -13,6 +13,8 @@ import { TroncCommunForm } from "@/components/admin/TroncCommunForm";
 import { PropositionCard } from "@/components/admin/PropositionCard";
 import { ProgrammeGridForm } from "@/components/admin/ProgrammeGridForm";
 import { AnnonceATous } from "@/components/admin/AnnonceATous";
+import { SondageAdmin } from "@/components/admin/SondageAdmin";
+import { estOuvert, getDernierSondage, getResultats, getResultatsParPromo } from "@/lib/sondage";
 // Not from the form: it is a client module, and its exports reach the server
 // as opaque references, so calling cellKey() here threw mid-render.
 import { cellKey, halfKey, type Cell } from "@/lib/grille";
@@ -123,6 +125,7 @@ export default async function AdminPage({
           ))}
         </div>
         {estAdmin && <AnnonceATous />}
+        {estAdmin && <Panneau nom="Sondage" rendu={() => SondageSection()} />}
       </div>
 
       <div className="px-5 pb-12">
@@ -187,6 +190,29 @@ async function Panneau({
     );
   }
   return <>{contenu}</>;
+}
+
+async function SondageSection() {
+  const dernier = await getDernierSondage();
+  const [resultats, parPromo] = dernier
+    ? await Promise.all([getResultats(dernier), getResultatsParPromo(dernier)])
+    : [null, []];
+  return (
+    <SondageAdmin
+      dernier={
+        dernier && {
+          id: dernier.id,
+          question: dernier.question,
+          options: dernier.options,
+          fermeLe: dernier.fermeLe,
+          appareilsNotifies: dernier.appareilsNotifies,
+          ouvert: estOuvert(dernier),
+        }
+      }
+      resultats={resultats}
+      parPromo={parPromo}
+    />
+  );
 }
 
 async function ModerationTab({ promos }: { promos?: string[] }) {

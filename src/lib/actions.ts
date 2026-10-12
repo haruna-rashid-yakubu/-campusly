@@ -16,11 +16,14 @@ import {
   subjects,
   programmePublications,
   pushSubscriptions,
+  sondageReponses,
+  sondages,
   subjectTypeEnum,
   users,
   visites,
 } from "@/db/schema";
 import { deleteFile, uploadFile } from "@/lib/blob";
+import { estOuvert, getSondage, getSondageOuvert } from "@/lib/sondage";
 
 import {
   ensureClassesForFiliere,
@@ -1319,4 +1322,115 @@ export async function annoncerATous(titre: string, corps: string, url?: string) 
 
   const appareils = await sendPushToAll({ title: t, body: c, url: url?.trim() || "/" });
   return { ok: true as const, appareils };
+}
+
+/*
+ * Opens a poll and, unless told not to, tells every subscribed device about
+ * it. The push ignores the per-type settings for the same reason the
+ * announcement does: it is rare, decided by a person, and about the app as a
+ * whole rather than one promo.
+ *
+ * Refused while another poll is open. Closing it silently would end a
+ * question people are still answering; the admin box offers "Clore" instead.
+ */
+const DUREES_HEURES = [24, 48, 168];
+
+export async function creerSondage(input: {
+  question: string;
+  options: string[];
+  dureeHeures: number;
+  notifier: boolean;
+  titreNotification: string;
+}) {
+  const admin = await requireAdmin();
+
+  const question = input.question.trim();
+  const options = input.options.map((o) => o.trim()).filter(Boolean);
+  if (!question) return { ok: false as const, message: "La question est obligatoire." };
+  if (options.length < 2 || options.length > 4) {
+    return { ok: false as const, message: "Il faut entre 2 et 4 réponses." };
+  }
+  if (new Set(options.map((o) => o.toLowerCase())).size !== options.length) {
+    return { ok: false as const, message: "Deux réponses sont identiques." };
+  }
+  if (!DUREES_HEURES.includes(input.dureeHeures)) {
+    return { ok: false as const, message: "Durée invalide." };
+  }
+  const titre = input.titreNotification.trim();
+  if (input.notifier && !titre) {
+    return { ok: false as const, message: "Le titre de la notification est obligatoire." };
+  }
+
+  if (await getSondageOuvert()) {
+    return { ok: false as const, message: "Un sondage est déjà en cours. Clos-le d'abord." };
+  }
+
+  const [row] = await db
+    .insert(sondages)
+    .values({
+      question,
+      options,
+      fermeLe: new Date(Date.now() + input.dureeHeures * 3600_000),
+      creePar: signature(admin),
+    })
+    .returning({ id: sondages.id });
+
+  let appareils: number | null = null;
+  if (input.notifier) {
+    appareils = await sendPushToAll({ title: titre, body: question, url: `/sondage/${row.id}` });
+    await db.update(sondages).set({ appareilsNotifies: appareils }).where(eq(sondages.id, row.id));
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/");
+  return { ok: true as const, id: row.id, appareils };
+}
+
+export async function cloreSondage(id: number) {
+  await requireAdmin();
+  await db.update(sondages).set({ fermeLe: new Date() }).where(eq(sondages.id, id));
+  revalidatePath("/admin");
+  revalidatePath("/");
+  revalidatePath(`/sondage/${id}`);
+}
+
+/*
+ * One tap, one answer per device; tapping another option changes it while
+ * the poll is open. The device cookie is created here when missing, the same
+ * way the visit counter does, so a first-time visitor arriving from a shared
+ * link can still answer.
+ */
+export async function repondreSondage(sondageId: number, option: number) {
+  const sondage = await getSondage(sondageId);
+  if (!sondage) return { ok: false as const, message: "Ce sondage n'existe plus." };
+  if (!estOuvert(sondage)) return { ok: false as const, message: "Ce sondage est terminé." };
+  if (!Number.isInteger(option) || option < 0 || option >= sondage.options.length) {
+    return { ok: false as const, message: "Réponse invalide." };
+  }
+
+  const store = await cookies();
+  let deviceId = store.get(DEVICE_COOKIE)?.value;
+  if (!deviceId) {
+    deviceId = crypto.randomUUID();
+    store.set(DEVICE_COOKIE, deviceId, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365 * 2,
+      httpOnly: true,
+      sameSite: "lax",
+    });
+  }
+  const label = store.get(CLASSE_COOKIE)?.value;
+  const classe = label ? await getClasseByLabel(label) : undefined;
+
+  await db
+    .insert(sondageReponses)
+    .values({ sondageId, deviceId, option, classeId: classe?.id ?? null })
+    .onConflictDoUpdate({
+      target: [sondageReponses.sondageId, sondageReponses.deviceId],
+      set: { option, classeId: classe?.id ?? null, repondA: new Date() },
+    });
+
+  revalidatePath(`/sondage/${sondageId}`);
+  revalidatePath("/");
+  return { ok: true as const };
 }

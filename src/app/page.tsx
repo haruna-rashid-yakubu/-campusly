@@ -21,6 +21,7 @@ import {
   isBannerDismissed,
 } from "@/lib/data";
 import { dismissInstallBanner } from "@/lib/actions";
+import { getMaReponse, getSondageOuvert } from "@/lib/sondage";
 import { distanceLabel, fcfa, isWithinLastWeek } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +48,11 @@ export default async function AccueilPage() {
   const programmeRecent = latestProgramme && isWithinLastWeek(latestProgramme.publishedAt);
 
   const firstName = session?.user?.name?.split(" ")[0] ?? null;
+
+  // Shown until this device has answered, so whoever missed the push still
+  // finds the question, and whoever answered is not asked twice.
+  const sondage = await getSondageOuvert();
+  const sondageAFaire = sondage && (await getMaReponse(sondage.id)) === null ? sondage : null;
 
   const modules = [
     { href: "/sujets", titre: "Sujets", sous: "Anciens sujets", icon: "doc" as const },
@@ -146,6 +152,28 @@ export default async function AccueilPage() {
               Comment faire ?
             </Link>
           </div>
+        </div>
+      )}
+
+      {sondageAFaire && (
+        <div className="px-5 pt-5">
+          <Link
+            href={`/sondage/${sondageAFaire.id}`}
+            className="press-scale flex items-center gap-3 rounded-[20px] border-[1.5px] border-teal-border bg-teal-tint-soft p-3.5 active:bg-teal-tint"
+          >
+            <span className="grid h-[42px] w-[42px] flex-none place-items-center rounded-[13px] bg-teal text-white">
+              <Icon name="chat" size={20} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[12px] font-bold uppercase tracking-wide text-teal-dark">
+                Sondage · 1 tap
+              </span>
+              <span className="mt-0.5 block text-[14.5px] font-bold leading-snug">
+                {sondageAFaire.question}
+              </span>
+            </span>
+            <Icon name="right" size={18} className="text-teal-dark" />
+          </Link>
         </div>
       )}
 

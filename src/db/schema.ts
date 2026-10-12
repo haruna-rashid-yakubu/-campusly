@@ -9,6 +9,7 @@ import {
   serial,
   date,
   unique,
+  jsonb,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
@@ -575,3 +576,47 @@ export const evenements = pgTable(
 export const evenementsRelations = relations(evenements, ({ one }) => ({
   user: one(users, { fields: [evenements.userId], references: [users.id] }),
 }));
+
+// --- Sondages ----------------------------------------------------------------
+
+/*
+ * A question put to every student at once, answered in one tap.
+ *
+ * One at a time: the home screen shows the open one, and two side by side
+ * would each get half the attention and neither a clear answer. Opening a new
+ * one is refused while another is still open, rather than silently closing it.
+ */
+export const sondages = pgTable("sondage", {
+  id: serial("id").primaryKey(),
+  question: text("question").notNull(),
+  // Two to four labels, in display order. An answer stores the index.
+  options: jsonb("options").$type<string[]>().notNull(),
+  fermeLe: timestamp("ferme_le", { mode: "date" }).notNull(),
+  // Devices the push actually reached, or null when it went out silently.
+  appareilsNotifies: integer("appareils_notifies"),
+  creePar: text("cree_par"),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+/*
+ * One answer per device, changeable while the poll is open.
+ *
+ * Keyed on the same anonymous device cookie as the visit counter, not on the
+ * account: most students answer without signing in, and asking them to would
+ * cost more answers than it would protect. No name is kept; the promo is only
+ * there so the result can be read per promo.
+ */
+export const sondageReponses = pgTable(
+  "sondage_reponse",
+  {
+    id: serial("id").primaryKey(),
+    sondageId: integer("sondage_id")
+      .notNull()
+      .references(() => sondages.id, { onDelete: "cascade" }),
+    deviceId: text("device_id").notNull(),
+    option: integer("option").notNull(),
+    classeId: integer("classe_id").references(() => classes.id, { onDelete: "set null" }),
+    repondA: timestamp("repond_a", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [unique("sondage_reponse_appareil").on(t.sondageId, t.deviceId)]
+);
