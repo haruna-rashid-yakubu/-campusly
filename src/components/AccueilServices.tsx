@@ -1,6 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Icon, type IconName } from "@/components/icons";
+import type { ReactNode } from "react";
+import { Icon } from "@/components/icons";
+import {
+  IllustrationCommander,
+  IllustrationLogements,
+  IllustrationProgramme,
+  IllustrationSujets,
+} from "@/components/IllustrationsServices";
 
 /*
  * The doors of the home screen. Each service has its own colour so it is
@@ -12,38 +19,36 @@ import { Icon, type IconName } from "@/components/icons";
  * and says in one line why to do it here rather than elsewhere.
  */
 
-type Tuile = { href: string; titre: string; sous: string; icon: IconName; couleurs: [string, string]; fond: string };
+type Tuile = { href: string; titre: string; sous: string; illustration: ReactNode; fond: string };
 
 const SUJETS: Tuile = {
   href: "/sujets",
   titre: "Sujets",
   sous: "Annales",
-  icon: "doc",
-  couleurs: ["#818cf8", "#4f46e5"],
+  illustration: <IllustrationSujets size={46} />,
   fond: "#eef0ff",
 };
 const LOGEMENTS: Tuile = {
   href: "/logements",
   titre: "Logements",
-  sous: "Cités vérifiées",
-  icon: "bed",
-  couleurs: ["#fdba74", "#ea580c"],
+  sous: "Vérifiés",
+  illustration: <IllustrationLogements size={46} />,
   fond: "#fff3e8",
 };
 const PROGRAMME: Tuile = {
   href: "/programme",
   titre: "Programme",
   sous: "De la semaine",
-  icon: "cal",
-  couleurs: ["#2dd4bf", "#0d9488"],
+  illustration: <IllustrationProgramme size={46} />,
   fond: "#e8f8f6",
 };
 const PRESSING: Tuile = {
   href: "/pressing",
   titre: "Pressing",
   sous: "Autour du campus",
-  icon: "shirt",
-  couleurs: ["#7dd3fc", "#0284c7"],
+  illustration: (
+    <Image src="/pressing/logo.png" alt="" width={46} height={46} className="h-[46px] w-[46px] rounded-[13px]" />
+  ),
   fond: "#eaf6fd",
 };
 
@@ -69,8 +74,8 @@ export function AccueilServices({
           <span aria-hidden className="absolute -bottom-12 right-16 h-28 w-28 rounded-full bg-white/10" />
 
           <div className="relative flex items-center gap-3.5">
-            <span className="grid h-[52px] w-[52px] flex-none place-items-center rounded-[16px] bg-white text-[#e5528a] shadow-[0_4px_12px_rgba(0,0,0,.12)]">
-              <Icon name="bag" size={26} strokeWidth={2} />
+            <span className="grid h-[60px] w-[60px] flex-none place-items-center rounded-[18px] bg-white shadow-[0_4px_12px_rgba(0,0,0,.12)]">
+              <IllustrationCommander size={54} />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-[21px] font-extrabold leading-tight tracking-tight">Commander</span>
@@ -127,11 +132,8 @@ export function AccueilServices({
             }`}
             style={{ background: t.fond }}
           >
-            <span
-              className="grid h-[42px] w-[42px] place-items-center rounded-[13px] text-white shadow-[0_4px_10px_rgba(15,23,42,.12)]"
-              style={{ background: `linear-gradient(135deg, ${t.couleurs[0]}, ${t.couleurs[1]})` }}
-            >
-              <Icon name={t.icon} size={21} strokeWidth={2} />
+            <span className="block overflow-hidden rounded-[13px] shadow-[0_4px_10px_rgba(15,23,42,.14)]">
+              {t.illustration}
             </span>
             <span>
               <span className="block text-[14.5px] font-extrabold leading-tight tracking-tight">{t.titre}</span>
