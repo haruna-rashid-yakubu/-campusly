@@ -742,3 +742,20 @@ export const commandeEvenements = pgTable(
     index("commande_evenement_user").on(t.userId, t.vendeurId),
   ]
 );
+
+/*
+ * An alert about past papers, held until a set time. Papers filed straight
+ * into the database at night would otherwise be announced either at once,
+ * waking a promo at 1am, or never. The morning cron sends what is due and
+ * stamps it, so a retried run cannot announce the same papers twice.
+ */
+export const notificationsAnnales = pgTable("notification_annales", {
+  id: serial("id").primaryKey(),
+  filiere: text("filiere").notNull(),
+  niveau: text("niveau").notNull(),
+  // Papers of this promo filed from this moment on are the ones announced.
+  depuis: timestamp("depuis", { mode: "date" }).notNull(),
+  envoyerApres: timestamp("envoyer_apres", { mode: "date" }).notNull(),
+  envoyeeLe: timestamp("envoyee_le", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});

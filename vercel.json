@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/rappel-du-soir",
       "schedule": "0 19 * * *"
+    },
+    {
+      "path": "/api/cron/matin",
+      "schedule": "0 7 * * *"
     }
   ]
 }
