@@ -644,6 +644,11 @@ export const vendeurs = pgTable("vendeur", {
   livraison: text("livraison"),
   // Added once per order, not per pack: one trip across campus.
   fraisLivraison: integer("frais_livraison").notNull().default(0),
+  // Weekly delivery: the day it happens and the last moment to order for it
+  // (1 = Monday … 7 = Sunday, hour in Cameroon time). All null = no schedule.
+  livraisonJour: integer("livraison_jour"),
+  limiteJour: integer("limite_jour"),
+  limiteHeure: integer("limite_heure"),
   horaires: text("horaires"),
   // A short clip shown at the top of the page, muted and looping.
   videoUrl: text("video_url"),

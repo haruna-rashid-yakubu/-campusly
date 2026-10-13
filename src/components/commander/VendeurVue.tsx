@@ -5,6 +5,7 @@ import { VideoVendeur } from "@/components/commander/VideoVendeur";
 import { Icon } from "@/components/icons";
 import type { Article, Formule, Vendeur } from "@/lib/vendeurs";
 import { fcfa } from "@/lib/utils";
+import { calendrierDe, prochaineLivraison } from "@/lib/livraison";
 
 export function VendeurVue({
   vendeur,
@@ -13,11 +14,15 @@ export function VendeurVue({
 }: {
   vendeur: Pick<
     Vendeur,
-    "id" | "nom" | "accroche" | "logoUrl" | "livraison" | "fraisLivraison" | "horaires" | "actif" | "videoUrl" | "videoPosterUrl"
+    "id" | "nom" | "accroche" | "logoUrl" | "livraisonJour" | "limiteJour" | "limiteHeure" | "livraison" | "fraisLivraison" | "horaires" | "actif" | "videoUrl" | "videoPosterUrl"
   >;
   formules: Formule[];
   articles: Article[];
 }) {
+  // Worked out on every request, so the date moves on by itself each week.
+  const calendrier = calendrierDe(vendeur);
+  const livraison = calendrier ? prochaineLivraison(calendrier) : null;
+
   return (
     <div className="min-h-dvh pb-[calc(170px+var(--safe-bottom))]">
       <BackHeader title={vendeur.nom} fallbackHref="/commander" />
@@ -68,6 +73,25 @@ export function VendeurVue({
         {/* Muted, so it can play without sound in a lecture hall. */}
         {vendeur.videoUrl && (
           <VideoVendeur src={vendeur.videoUrl} poster={vendeur.videoPosterUrl ?? undefined} />
+        )}
+
+        {livraison && (
+          <div
+            className={`mt-3 rounded-[16px] px-4 py-3 ${
+              livraison.cetteSemaine ? "bg-teal-tint-soft text-teal-active" : "bg-warn-tint text-warn-ink"
+            }`}
+          >
+            <div className="text-[14.5px] font-extrabold">
+              🚚 {livraison.cetteSemaine ? "Livré" : "Livraison"} le {livraison.label}
+            </div>
+            <div className="mt-0.5 text-[12.5px] leading-snug">
+              {livraison.cetteSemaine
+                ? livraison.heuresRestantes !== null
+                  ? `Plus que ${livraison.heuresRestantes} h pour commander : c'est jusqu'à ${livraison.limiteLabel}.`
+                  : `Commande avant ${livraison.limiteLabel} pour cette livraison.`
+                : `Les commandes pour ce vendredi sont closes depuis ${livraison.limiteLabel}. Ta commande part pour la semaine prochaine.`}
+            </div>
+          </div>
         )}
 
         {(vendeur.livraison || vendeur.horaires) && (

@@ -28,6 +28,7 @@ import {
 import { deleteFile, uploadFile } from "@/lib/blob";
 import { estOuvert, getSondage, getSondageOuvert } from "@/lib/sondage";
 import { getCatalogue, resumerDetail, type LignePanier } from "@/lib/vendeurs";
+import { calendrierDe, prochaineLivraison } from "@/lib/livraison";
 
 import {
   ensureClassesForFiliere,
@@ -1570,6 +1571,9 @@ export async function preparerCommande(input: {
   const sousTotal = total;
   total += frais;
 
+  const calendrier = calendrierDe(vendeur);
+  const livraisonPrevue = calendrier ? prochaineLivraison(calendrier) : null;
+
   const reference = nouvelleReference();
   const nom = session?.user?.name?.trim();
   const precision = input.precision?.trim().slice(0, 200);
@@ -1586,6 +1590,7 @@ export async function preparerCommande(input: {
         ]
       : []),
     `Total : ${fcfaMessage(total)}`,
+    ...(livraisonPrevue ? [`Livraison prévue : ${livraisonPrevue.label}`] : []),
     `Nom : ${nom ?? ""}`,
     precision ? `Précision : ${precision}` : "Lieu et heure de livraison : ",
   ].join("\n");
