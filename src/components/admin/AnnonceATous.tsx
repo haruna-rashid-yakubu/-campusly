@@ -34,7 +34,16 @@ const TITRE = "Tes habits veulent te parler 👕";
 const CORPS =
   "« On n\u2019en peut plus », signé : la pile dans le coin de la chambre. Campusly Pressing s\u2019en occupe.";
 
-export function AnnonceATous() {
+/*
+ * Shops get their own targets, but only once they are open to students: a
+ * push that lands on a hidden shop's page would open "introuvable" on every
+ * phone it reached. A hidden shop is listed, greyed, so it is clear why.
+ */
+export function AnnonceATous({
+  vendeurs = [],
+}: {
+  vendeurs?: { nom: string; slug: string; actif: boolean }[];
+}) {
   const [titre, setTitre] = useState(TITRE);
   const [corps, setCorps] = useState(CORPS);
   const [cible, setCible] = useState<string>("/pressing");
@@ -97,7 +106,11 @@ export function AnnonceATous() {
           <div className="mt-2.5">
             <div className="text-[12px] font-bold text-slate-light">Le tap ouvre</div>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {CIBLES.map((c) => (
+              {[
+                ...CIBLES,
+                ...vendeurs.filter((v) => v.actif).map((v) => ({ url: `/commander/${v.slug}`, label: v.nom })),
+                ...(vendeurs.some((v) => v.actif) ? [{ url: "/commander", label: "Commander" }] : []),
+              ].map((c) => (
                 <button
                   key={c.url}
                   onClick={() => {
@@ -113,6 +126,16 @@ export function AnnonceATous() {
                   {c.label}
                 </button>
               ))}
+              {vendeurs
+                .filter((v) => !v.actif)
+                .map((v) => (
+                  <span
+                    key={v.slug}
+                    className="flex h-[34px] items-center rounded-full border-[1.5px] border-dashed border-line-4 px-3 text-[12.5px] font-bold text-slate-light"
+                  >
+                    {v.nom} · masqué
+                  </span>
+                ))}
             </div>
           </div>
           <button

@@ -14,6 +14,7 @@ import { PropositionCard } from "@/components/admin/PropositionCard";
 import { ProgrammeGridForm } from "@/components/admin/ProgrammeGridForm";
 import { AnnonceATous } from "@/components/admin/AnnonceATous";
 import { SondageAdmin } from "@/components/admin/SondageAdmin";
+import { getVendeurs } from "@/lib/vendeurs";
 import { estOuvert, getDernierSondage, getResultats, getResultatsParPromo } from "@/lib/sondage";
 // Not from the form: it is a client module, and its exports reach the server
 // as opaque references, so calling cellKey() here threw mid-render.
@@ -95,6 +96,9 @@ export default async function AdminPage({
   const onglets = estAdmin ? TABS : TABS.filter((t) => TABS_DELEGUE.includes(t.id));
   const { tab: rawTab, q, classe: classeParam, semaine: semaineParam } = await searchParams;
   const tab = onglets.some((t) => t.id === rawTab) ? (rawTab as TabId) : onglets[0].id;
+  const vendeursAnnonce = estAdmin
+    ? (await getVendeurs({ inclureInactifs: true })).map((v) => ({ nom: v.nom, slug: v.slug, actif: v.actif }))
+    : [];
 
   return (
     <div className="min-h-dvh">
@@ -124,7 +128,7 @@ export default async function AdminPage({
             </Link>
           ))}
         </div>
-        {estAdmin && <AnnonceATous />}
+        {estAdmin && <AnnonceATous vendeurs={vendeursAnnonce} />}
         {estAdmin && <Panneau nom="Sondage" rendu={() => SondageSection()} />}
         {estAdmin && (
           <Link
