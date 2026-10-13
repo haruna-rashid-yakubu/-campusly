@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { Logo } from "@/components/Logo";
@@ -52,6 +53,7 @@ export default async function AccueilPage() {
 
   const firstName = session?.user?.name?.split(" ")[0] ?? null;
   const vendeursOuverts = await getVendeurs();
+  const vendeurAnnonce = vendeursOuverts[0] ?? null;
 
   // The open poll is answered right here, first thing under the greeting, and
   // stays with its results once answered, so the screen everyone lands on
@@ -184,7 +186,40 @@ export default async function AccueilPage() {
         </Link>
       </div>
       <div className="px-5">
-        {recentSubjects[0] && (
+        {/* A newly opened shop takes the first line while it is new; the
+            latest paper comes back when there is none to announce. */}
+        {vendeurAnnonce ? (
+          <Link
+            href={`/commander/${vendeurAnnonce.slug}`}
+            className="flex items-center gap-3 border-t border-line-3 py-3 active:opacity-60"
+          >
+            {vendeurAnnonce.logoCarreUrl ? (
+              <Image
+                src={vendeurAnnonce.logoCarreUrl}
+                alt=""
+                width={46}
+                height={46}
+                className="h-[46px] w-[46px] flex-none rounded-[14px] bg-black object-cover"
+              />
+            ) : (
+              <span className="grid h-[46px] w-[46px] flex-none place-items-center rounded-[14px] bg-surface text-teal-dark">
+                <Icon name="bag" size={20} />
+              </span>
+            )}
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-1.5">
+                <span className="text-[14.5px] font-bold">{vendeurAnnonce.nom}</span>
+                <span className="rounded-full bg-[#fde7ef] px-2 py-px text-[11px] font-extrabold text-[#c2185b]">
+                  Nouveau
+                </span>
+              </span>
+              <span className="mt-0.5 block truncate text-[12.5px] text-slate-light">
+                {vendeurAnnonce.accroche ?? "À commander sur Campusly"}
+              </span>
+            </span>
+            <Icon name="right" size={18} className="text-slate-light" />
+          </Link>
+        ) : recentSubjects[0] && (
           <Link
             href={`/sujets/${recentSubjects[0].id}`}
             className="flex items-center gap-3 border-t border-line-3 py-3 active:opacity-60"
