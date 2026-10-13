@@ -18,12 +18,16 @@ import {
   pushSubscriptions,
   sondageReponses,
   sondages,
+  commandeEvenements,
+  vendeurArticles,
+  vendeurs,
   subjectTypeEnum,
   users,
   visites,
 } from "@/db/schema";
 import { deleteFile, uploadFile } from "@/lib/blob";
 import { estOuvert, getSondage, getSondageOuvert } from "@/lib/sondage";
+import { getCatalogue, resumerDetail, type LignePanier } from "@/lib/vendeurs";
 
 import {
   ensureClassesForFiliere,
@@ -1444,4 +1448,165 @@ export async function repondreSondage(sondageId: number, option: number) {
   revalidatePath(`/sondage/${sondageId}`);
   revalidatePath("/");
   return { ok: true as const };
+}
+
+// --- Commander ---------------------------------------------------------------
+
+/*
+ * The anonymous device id, created when missing — the same cookie the visit
+ * counter and the poll use, so the three can be read together.
+ */
+async function appareilCourant() {
+  const store = await cookies();
+  let deviceId = store.get(DEVICE_COOKIE)?.value;
+  if (!deviceId) {
+    deviceId = crypto.randomUUID();
+    store.set(DEVICE_COOKIE, deviceId, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365 * 2,
+      httpOnly: true,
+      sameSite: "lax",
+    });
+  }
+  const label = store.get(CLASSE_COOKIE)?.value;
+  const classe = label ? await getClasseByLabel(label) : undefined;
+  return { deviceId, classeId: classe?.id ?? null };
+}
+
+/*
+ * A page opened, or a first pack put in the basket. Counted from the browser
+ * once the page is on screen rather than on render, so link previews and
+ * prefetches are not mistaken for students. Never allowed to fail the page.
+ */
+export async function noterEvenementVendeur(vendeurId: number, type: "vue" | "ajout") {
+  try {
+    const { deviceId, classeId } = await appareilCourant();
+    await db.insert(commandeEvenements).values({ vendeurId, type, deviceId, classeId });
+  } catch {
+    // Counting is the least important thing on the page.
+  }
+}
+
+// No 0/O or 1/I: the reference is read aloud and typed back.
+const ALPHABET_REF = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function nouvelleReference() {
+  let r = "C-";
+  for (let i = 0; i < 4; i += 1) r += ALPHABET_REF[crypto.getRandomValues(new Uint32Array(1))[0] % ALPHABET_REF.length];
+  return r;
+}
+
+function fcfaMessage(n: number) {
+  return `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} F`;
+}
+
+/*
+ * Turns a basket into the WhatsApp message, and counts it, before the student
+ * leaves for WhatsApp. Everything is re-read here: the packs and their prices,
+ * the flavours and whether they are in stock. What the browser sends is only
+ * which pack and how many of each flavour; a doctored total changes nothing.
+ */
+export async function preparerCommande(input: {
+  vendeurId: number;
+  panier: LignePanier[];
+  precision?: string;
+}) {
+  const [vendeur] = await db.select().from(vendeurs).where(eq(vendeurs.id, input.vendeurId));
+  if (!vendeur) return { ok: false as const, message: "Ce vendeur n'existe plus." };
+
+  const session = await auth();
+  if (!vendeur.actif && session?.user?.role !== "admin") {
+    return { ok: false as const, message: "Ce vendeur n'est pas encore ouvert." };
+  }
+
+  if (!Array.isArray(input.panier) || input.panier.length === 0) {
+    return { ok: false as const, message: "Ton panier est vide." };
+  }
+  if (input.panier.length > 10) {
+    return { ok: false as const, message: "10 packs au maximum par commande." };
+  }
+
+  const { formules, articles } = await getCatalogue(vendeur.id);
+  const lignes: { formule: string; parfums: Record<string, number> }[] = [];
+  let total = 0;
+  let nbArticles = 0;
+
+  for (const ligne of input.panier) {
+    const formule = formules.find((f) => f.id === ligne.formuleId);
+    if (!formule) return { ok: false as const, message: "Un pack n'est plus disponible." };
+    const parfums: Record<string, number> = {};
+    let compte = 0;
+    for (const [idTexte, quantite] of Object.entries(ligne.parfums ?? {})) {
+      if (!Number.isInteger(quantite) || quantite < 0) {
+        return { ok: false as const, message: "Quantité invalide." };
+      }
+      if (quantite === 0) continue;
+      const article = articles.find((a) => a.id === Number(idTexte));
+      if (!article) return { ok: false as const, message: "Un parfum n'est plus proposé." };
+      if (article.enRupture) {
+        return { ok: false as const, message: `${article.nom} est en rupture. Retire-le de ton pack.` };
+      }
+      parfums[article.nom] = (parfums[article.nom] ?? 0) + quantite;
+      compte += quantite;
+    }
+    if (compte !== formule.taille) {
+      return {
+        ok: false as const,
+        message: `Ton ${formule.nom.toLowerCase()} doit contenir ${formule.taille} donuts.`,
+      };
+    }
+    lignes.push({ formule: formule.nom, parfums });
+    total += formule.prix;
+    nbArticles += compte;
+  }
+
+  const reference = nouvelleReference();
+  const nom = session?.user?.name?.trim();
+  const precision = input.precision?.trim().slice(0, 200);
+
+  const message = [
+    `Bonjour ${vendeur.nom} 👋 Commande via Campusly ${reference}`,
+    "",
+    ...lignes.map((l) => `• ${resumerDetail([l])}`),
+    "",
+    `Total : ${fcfaMessage(total)}`,
+    `Nom : ${nom ?? ""}`,
+    precision ? `Précision : ${precision}` : "Livraison : ",
+  ].join("\n");
+
+  try {
+    const { deviceId, classeId } = await appareilCourant();
+    await db.insert(commandeEvenements).values({
+      vendeurId: vendeur.id,
+      type: "commander",
+      deviceId,
+      classeId,
+      reference,
+      nbArticles,
+      total,
+      detail: lignes,
+    });
+  } catch {
+    // The student still gets to WhatsApp; only the count is lost.
+  }
+
+  return {
+    ok: true as const,
+    reference,
+    url: `https://wa.me/${vendeur.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`,
+  };
+}
+
+export async function basculerVendeurActif(vendeurId: number, actif: boolean) {
+  await requireAdmin();
+  await db.update(vendeurs).set({ actif }).where(eq(vendeurs.id, vendeurId));
+  revalidatePath("/admin/vendeurs");
+  revalidatePath("/commander");
+  revalidatePath("/");
+}
+
+export async function basculerRupture(articleId: number, enRupture: boolean) {
+  await requireAdmin();
+  await db.update(vendeurArticles).set({ enRupture }).where(eq(vendeurArticles.id, articleId));
+  revalidatePath("/admin/vendeurs");
+  revalidatePath("/commander", "layout");
 }

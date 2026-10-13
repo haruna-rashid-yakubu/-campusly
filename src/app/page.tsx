@@ -23,6 +23,7 @@ import {
 import { dismissInstallBanner } from "@/lib/actions";
 import { SondageVote } from "@/components/SondageVote";
 import { getMaReponse, getResultats, getSondageOuvert } from "@/lib/sondage";
+import { getVendeurs } from "@/lib/vendeurs";
 import { distanceLabel, fcfa, isWithinLastWeek } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -49,6 +50,7 @@ export default async function AccueilPage() {
   const programmeRecent = latestProgramme && isWithinLastWeek(latestProgramme.publishedAt);
 
   const firstName = session?.user?.name?.split(" ")[0] ?? null;
+  const vendeursOuverts = await getVendeurs();
 
   // The open poll is answered right here, first thing under the greeting, and
   // stays with its results once answered, so the screen everyone lands on
@@ -61,7 +63,16 @@ export default async function AccueilPage() {
   const modules = [
     { href: "/sujets", titre: "Sujets", sous: "Anciens sujets", icon: "doc" as const },
     { href: "/logements", titre: "Logements", sous: "Cités vérifiées", icon: "bed" as const },
-    { href: "/pressing", titre: "Pressing", sous: "Autour du campus", icon: "shirt" as const },
+    // Once a shop is open, the tile becomes the door to all of them — the
+    // pressing included — instead of a tile per shop.
+    vendeursOuverts.length > 0
+      ? {
+          href: "/commander",
+          titre: "Commander",
+          sous: vendeursOuverts.map((v) => v.nom).concat("Pressing").join(", "),
+          icon: "bag" as const,
+        }
+      : { href: "/pressing", titre: "Pressing", sous: "Autour du campus", icon: "shirt" as const },
     { href: "/programme", titre: "Programme", sous: "De la semaine", icon: "cal" as const },
   ];
 

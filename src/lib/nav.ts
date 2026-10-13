@@ -32,7 +32,13 @@ export function estUnLienPartage(pathname: string): boolean {
 export function neDependPasDeLaPromo(pathname: string): boolean {
   // A poll asks the same question of everyone; its answers are read per
   // promo only when the device has already said which one it is in.
-  return pathname === "/pressing" || pathname === "/logements" || pathname.startsWith("/sondage/");
+  return (
+    pathname === "/pressing" ||
+    pathname === "/logements" ||
+    pathname.startsWith("/sondage/") ||
+    pathname === "/commander" ||
+    pathname.startsWith("/commander/")
+  );
 }
 
 export function hasTabBar(pathname: string): boolean {

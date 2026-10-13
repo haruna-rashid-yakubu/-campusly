@@ -620,3 +620,86 @@ export const sondageReponses = pgTable(
   },
   (t) => [unique("sondage_reponse_appareil").on(t.sondageId, t.deviceId)]
 );
+
+// --- Vendeurs (section Commander) -----------------------------------------
+
+/*
+ * A shop students can order from. The order itself is finished on WhatsApp,
+ * with the vendor; Campusly shows the catalogue, prepares the message and
+ * counts what it sent their way.
+ *
+ * Inactive vendors are visible to admins only, so a new shop can be filled
+ * and checked on a real phone before any student sees it.
+ */
+export const vendeurs = pgTable("vendeur", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  nom: text("nom").notNull(),
+  categorie: text("categorie").notNull(), // "manger", "service"…
+  accroche: text("accroche"),
+  whatsapp: text("whatsapp").notNull(), // digits only, with country code
+  livraison: text("livraison"),
+  horaires: text("horaires"),
+  actif: boolean("actif").notNull().default(false),
+  ordre: integer("ordre").notNull().default(0),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+/*
+ * What is sold: a pack of a set size, composed by the student from the
+ * vendor's flavours. The price lives here and is re-read on the server when
+ * the order is prepared — the client's total is never trusted.
+ */
+export const vendeurFormules = pgTable("vendeur_formule", {
+  id: serial("id").primaryKey(),
+  vendeurId: integer("vendeur_id")
+    .notNull()
+    .references(() => vendeurs.id, { onDelete: "cascade" }),
+  nom: text("nom").notNull(),
+  taille: integer("taille").notNull(),
+  prix: integer("prix").notNull(),
+  badge: text("badge"),
+  actif: boolean("actif").notNull().default(true),
+  ordre: integer("ordre").notNull().default(0),
+});
+
+/* The flavours a pack is composed from. Out of stock hides nothing: the card
+ * stays, greyed, so a student looking for it learns it is coming back. */
+export const vendeurArticles = pgTable("vendeur_article", {
+  id: serial("id").primaryKey(),
+  vendeurId: integer("vendeur_id")
+    .notNull()
+    .references(() => vendeurs.id, { onDelete: "cascade" }),
+  nom: text("nom").notNull(),
+  description: text("description"),
+  photoUrl: text("photo_url"),
+  enRupture: boolean("en_rupture").notNull().default(false),
+  ordre: integer("ordre").notNull().default(0),
+});
+
+/*
+ * The funnel, one row per event: a vendor page opened, a first pack put in
+ * the basket, the WhatsApp button pressed. Keyed on the anonymous device
+ * cookie like visits and polls; no name, no message text. A "commander" row
+ * carries the reference printed in the message, so orders the vendor
+ * actually received can be matched to Campusly afterwards.
+ */
+export const commandeEvenements = pgTable(
+  "commande_evenement",
+  {
+    id: serial("id").primaryKey(),
+    vendeurId: integer("vendeur_id")
+      .notNull()
+      .references(() => vendeurs.id, { onDelete: "cascade" }),
+    type: text("type", { enum: ["vue", "ajout", "commander"] }).notNull(),
+    deviceId: text("device_id").notNull(),
+    classeId: integer("classe_id").references(() => classes.id, { onDelete: "set null" }),
+    reference: text("reference"),
+    nbArticles: integer("nb_articles"),
+    total: integer("total"),
+    // For "commander": [{ formule, parfums: { nom: quantité } }]
+    detail: jsonb("detail"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [index("commande_evenement_vendeur").on(t.vendeurId, t.createdAt)]
+);

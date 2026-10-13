@@ -126,6 +126,18 @@ export default async function AdminPage({
         </div>
         {estAdmin && <AnnonceATous />}
         {estAdmin && <Panneau nom="Sondage" rendu={() => SondageSection()} />}
+        {estAdmin && (
+          <Link
+            href="/admin/vendeurs"
+            className="press-scale mt-4 flex h-[50px] items-center justify-between rounded-[16px] border-[1.5px] border-line-4 bg-white px-4 text-[14.5px] font-bold"
+          >
+            <span className="flex items-center gap-2">
+              <Icon name="bag" size={18} strokeWidth={1.9} />
+              Vendeurs et commandes
+            </span>
+            <Icon name="right" size={17} className="text-slate-light" />
+          </Link>
+        )}
       </div>
 
       <div className="px-5 pb-12">
