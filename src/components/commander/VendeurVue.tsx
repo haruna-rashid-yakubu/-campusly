@@ -85,7 +85,14 @@ export function VendeurVue({
           vendeurNom={vendeur.nom}
           livraison={vendeur.livraison}
           fraisLivraison={vendeur.fraisLivraison}
-          formules={formules.map((f) => ({ id: f.id, nom: f.nom, taille: f.taille, prix: f.prix, badge: f.badge }))}
+          formules={formules.map((f) => ({
+            id: f.id,
+            nom: f.nom,
+            taille: f.taille,
+            prix: f.prix,
+            prixBarre: f.prixBarre,
+            badge: f.badge,
+          }))}
           articles={articles.map((a) => ({
             id: a.id,
             nom: a.nom,

@@ -7,7 +7,14 @@ import { useToast } from "@/components/Toast";
 import { noterEvenementVendeur, preparerCommande } from "@/lib/actions";
 import { fcfa } from "@/lib/utils";
 
-type Formule = { id: number; nom: string; taille: number; prix: number; badge: string | null };
+type Formule = {
+  id: number;
+  nom: string;
+  taille: number;
+  prix: number;
+  prixBarre: number | null;
+  badge: string | null;
+};
 type Article = {
   id: number;
   nom: string;
@@ -134,7 +141,18 @@ export function Catalogue({
               )}
               <span className="text-[26px] font-extrabold leading-none tabular-nums">{f.taille}</span>
               <span className="mt-0.5 text-[12px] font-bold text-slate-light">donuts</span>
-              <span className="mt-2 text-[13.5px] font-extrabold tabular-nums">{fcfa(f.prix)}</span>
+              {f.prixBarre && (
+                <span className="mt-1.5 text-[11.5px] font-semibold text-slate-light line-through tabular-nums">
+                  {fcfa(f.prixBarre)}
+                </span>
+              )}
+              <span
+                className={`${f.prixBarre ? "" : "mt-2 "}text-[13.5px] font-extrabold tabular-nums ${
+                  f.prixBarre ? "text-[#c2185b]" : ""
+                }`}
+              >
+                {fcfa(f.prix)}
+              </span>
             </button>
           );
         })}

@@ -663,6 +663,9 @@ export const vendeurFormules = pgTable("vendeur_formule", {
   nom: text("nom").notNull(),
   taille: integer("taille").notNull(),
   prix: integer("prix").notNull(),
+  // The vendor's usual price, when Campusly students get a better one. Shown
+  // struck through, and named in the WhatsApp message so the vendor honours it.
+  prixBarre: integer("prix_barre"),
   badge: text("badge"),
   actif: boolean("actif").notNull().default(true),
   ordre: integer("ordre").notNull().default(0),

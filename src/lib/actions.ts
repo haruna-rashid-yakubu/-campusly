@@ -1527,6 +1527,7 @@ export async function preparerCommande(input: {
 
   const { formules, articles } = await getCatalogue(vendeur.id);
   const lignes: { formule: string; parfums: Record<string, number> }[] = [];
+  const lignesMessage: typeof lignes = [];
   let total = 0;
   let nbArticles = 0;
 
@@ -1555,6 +1556,12 @@ export async function preparerCommande(input: {
       };
     }
     lignes.push({ formule: formule.nom, parfums });
+    // The stats keep the plain pack name; the vendor is told the price agreed.
+    lignesMessage.push(
+      formule.prixBarre
+        ? { formule: `${formule.nom} (offre Campusly ${fcfaMessage(formule.prix)} au lieu de ${fcfaMessage(formule.prixBarre)})`, parfums }
+        : { formule: formule.nom, parfums }
+    );
     total += formule.prix;
     nbArticles += compte;
   }
@@ -1570,7 +1577,7 @@ export async function preparerCommande(input: {
   const message = [
     `Bonjour ${vendeur.nom} 👋 Commande via Campusly ${reference}`,
     "",
-    ...lignes.map((l) => `• ${resumerDetail([l])}`),
+    ...lignesMessage.map((l) => `• ${resumerDetail([l])}`),
     "",
     ...(frais > 0
       ? [

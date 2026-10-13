@@ -4,9 +4,9 @@ INSERT INTO "vendeur" ("slug","nom","categorie","accroche","whatsapp","livraison
 VALUES ('bronuts','Bronuts','manger','Donuts gourmands, en packs à composer toi-même','237656845289','Livraison sur le campus',2000,'Commandes en semaine','/vendeurs/bronuts/video.mp4','/vendeurs/bronuts/video-poster.jpg',false,0)
 ON CONFLICT ("slug") DO NOTHING;
 
-INSERT INTO "vendeur_formule" ("vendeur_id","nom","taille","prix","badge","ordre")
-SELECT v.id, f.nom, f.taille, f.prix, f.badge, f.ordre FROM "vendeur" v,
-(VALUES ('Pack de 4',4,4000,NULL,1),('Pack de 6',6,6000,NULL,2),('Pack de 12',12,11000,'1 000 F d''économie',3)) AS f(nom,taille,prix,badge,ordre)
+INSERT INTO "vendeur_formule" ("vendeur_id","nom","taille","prix","prix_barre","badge","ordre")
+SELECT v.id, f.nom, f.taille, f.prix, f.prix_barre, f.badge, f.ordre FROM "vendeur" v,
+(VALUES ('Pack de 4',4,4000,NULL::int,NULL,1),('Pack de 6',6,6000,NULL::int,NULL,2),('Pack de 12',12,10000,11000,'Offre Campusly',3)) AS f(nom,taille,prix,prix_barre,badge,ordre)
 WHERE v.slug='bronuts' AND NOT EXISTS (SELECT 1 FROM "vendeur_formule" x WHERE x.vendeur_id=v.id);
 
 INSERT INTO "vendeur_article" ("vendeur_id","nom","description","photo_url","ordre")

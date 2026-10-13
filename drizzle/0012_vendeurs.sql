@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS "vendeur_formule" (
 	"nom" text NOT NULL,
 	"taille" integer NOT NULL,
 	"prix" integer NOT NULL,
+	"prix_barre" integer,
 	"badge" text,
 	"actif" boolean DEFAULT true NOT NULL,
 	"ordre" integer DEFAULT 0 NOT NULL
