@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { BackHeader } from "@/components/BackHeader";
 import { Catalogue } from "@/components/commander/Catalogue";
+import { VideoVendeur } from "@/components/commander/VideoVendeur";
 import { Icon } from "@/components/icons";
 import type { Article, Formule, Vendeur } from "@/lib/vendeurs";
 import { fcfa } from "@/lib/utils";
@@ -64,19 +65,9 @@ export function VendeurVue({
           )}
         </div>
 
-        {/* Muted and looping, so it plays by itself without asking for sound
-            in a lecture hall; playsInline keeps iPhones from going fullscreen. */}
+        {/* Muted, so it can play without sound in a lecture hall. */}
         {vendeur.videoUrl && (
-          <video
-            src={vendeur.videoUrl}
-            poster={vendeur.videoPosterUrl ?? undefined}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            className="mt-3 aspect-video w-full rounded-[20px] bg-surface object-cover"
-          />
+          <VideoVendeur src={vendeur.videoUrl} poster={vendeur.videoPosterUrl ?? undefined} />
         )}
 
         {(vendeur.livraison || vendeur.horaires) && (
