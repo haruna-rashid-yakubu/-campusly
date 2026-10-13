@@ -55,6 +55,9 @@ export type StatsVendeur = {
   // Every press of the button, including someone sending a second order.
   envois: number;
   totalEnvoye: number;
+  // Marked by the vendor from their link.
+  livrees: number;
+  nonRecues: number;
   clients: {
     // Since the shop opened, whatever the period on screen.
     total: number;
@@ -98,6 +101,8 @@ export async function getStatsVendeur(vendeurId: number, jours: number): Promise
       commandes: sql<number>`count(distinct ${commandeEvenements.deviceId}) filter (where ${commandeEvenements.type} = 'commander')::int`,
       envois: sql<number>`count(*) filter (where ${commandeEvenements.type} = 'commander')::int`,
       totalEnvoye: sql<number>`coalesce(sum(${commandeEvenements.total}) filter (where ${commandeEvenements.type} = 'commander'), 0)::int`,
+      livrees: sql<number>`count(*) filter (where ${commandeEvenements.type} = 'commander' and ${commandeEvenements.statut} = 'livree')::int`,
+      nonRecues: sql<number>`count(*) filter (where ${commandeEvenements.type} = 'commander' and ${commandeEvenements.statut} = 'non_recue')::int`,
     })
     .from(commandeEvenements)
     .where(periode);
@@ -171,6 +176,8 @@ export async function getStatsVendeur(vendeurId: number, jours: number): Promise
     commandes: compteurs?.commandes ?? 0,
     envois: compteurs?.envois ?? 0,
     totalEnvoye: compteurs?.totalEnvoye ?? 0,
+    livrees: compteurs?.livrees ?? 0,
+    nonRecues: compteurs?.nonRecues ?? 0,
     clients: {
       total: Number(clients.total),
       actifs: Number(clients.actifs),
@@ -187,4 +194,20 @@ export async function getStatsVendeur(vendeurId: number, jours: number): Promise
       date: e.date,
     })),
   };
+}
+
+/* Orders sent from Campusly over the last days, newest first, for the vendor's page. */
+export async function getCommandesRecentes(vendeurId: number, jours: number) {
+  const depuis = new Date(Date.now() - jours * 24 * 3600_000);
+  return db
+    .select()
+    .from(commandeEvenements)
+    .where(
+      and(
+        eq(commandeEvenements.vendeurId, vendeurId),
+        eq(commandeEvenements.type, "commander"),
+        gte(commandeEvenements.createdAt, depuis)
+      )
+    )
+    .orderBy(desc(commandeEvenements.createdAt));
 }

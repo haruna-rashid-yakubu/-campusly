@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { BackHeader } from "@/components/BackHeader";
 import { SignInRequired } from "@/components/SignInRequired";
 import { EmptyState, Badge } from "@/components/EmptyState";
-import { OuvertureVendeur, RuptureToggle } from "@/components/admin/VendeurControles";
+import { LienVendeur, OuvertureVendeur, RuptureToggle } from "@/components/admin/VendeurControles";
 import { getCatalogue, getStatsVendeur, getVendeurs } from "@/lib/vendeurs";
 import { fcfa } from "@/lib/utils";
 
@@ -87,6 +87,7 @@ export default async function VendeursAdminPage({
               Voir la page {v.actif ? "" : "(aperçu)"} →
             </Link>
             <OuvertureVendeur id={v.id} nom={v.nom} actif={v.actif} />
+            {v.tokenEspace && <LienVendeur vendeurId={v.id} token={v.tokenEspace} nom={v.nom} />}
 
             <div className="mt-4 text-[12px] font-bold uppercase tracking-wide text-slate-light">
               Sur {s.jours} jours
@@ -111,6 +112,11 @@ export default async function VendeursAdminPage({
             <p className="mt-2.5 text-[13px] text-slate">
               <b>{s.envois}</b> commande{s.envois > 1 ? "s" : ""} envoyée{s.envois > 1 ? "s" : ""} vers WhatsApp,
               pour <b>{fcfa(s.totalEnvoye)}</b> au total, livraison comprise.
+            </p>
+            <p className="mt-1 text-[13px] text-slate">
+              Confirmées par {v.nom} : <b>{s.livrees}</b> livrée{s.livrees > 1 ? "s" : ""}
+              {s.nonRecues > 0 && <> · {s.nonRecues} jamais reçue{s.nonRecues > 1 ? "s" : ""}</>}
+              {" "}· {Math.max(0, s.envois - s.livrees - s.nonRecues)} en attente.
             </p>
 
             {s.parfums.length > 0 && (

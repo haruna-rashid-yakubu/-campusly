@@ -29,6 +29,7 @@ import { deleteFile, uploadFile } from "@/lib/blob";
 import { estOuvert, getSondage, getSondageOuvert } from "@/lib/sondage";
 import { getCatalogue, resumerDetail, type LignePanier } from "@/lib/vendeurs";
 import { calendrierDe, prochaineLivraison } from "@/lib/livraison";
+import { LIBELLES, carteDepuis, commandesLivrees, position, recompensePourRang } from "@/lib/fidelite";
 
 import {
   ensureClassesForFiliere,
@@ -1574,6 +1575,11 @@ export async function preparerCommande(input: {
   const calendrier = calendrierDe(vendeur);
   const livraisonPrevue = calendrier ? prochaineLivraison(calendrier) : null;
 
+  // The loyalty card counts signed-in orders only, so it follows the person.
+  const userId = session?.user?.id ?? null;
+  const rang = vendeur.fidelite && userId ? (await commandesLivrees(userId, vendeur.id)) + 1 : null;
+  const recompense = rang ? recompensePourRang(rang) : null;
+
   const reference = nouvelleReference();
   const nom = session?.user?.name?.trim();
   const precision = input.precision?.trim().slice(0, 200);
@@ -1591,6 +1597,12 @@ export async function preparerCommande(input: {
       : []),
     `Total : ${fcfaMessage(total)}`,
     ...(livraisonPrevue ? [`Livraison prévue : ${livraisonPrevue.label}`] : []),
+    ...(recompense && rang
+      ? [
+          "",
+          `🎁 Carte fidélité Campusly : ${position(rang)}e commande → ${LIBELLES[recompense]}`,
+        ]
+      : []),
     `Nom : ${nom ?? ""}`,
     ...(precision ? [`Précision : ${precision}`] : []),
   ].join("\n");
@@ -1606,6 +1618,9 @@ export async function preparerCommande(input: {
       nbArticles,
       total,
       detail: lignes,
+      userId,
+      rang,
+      recompense,
     });
   } catch {
     // The student still gets to WhatsApp; only the count is lost.
@@ -1631,4 +1646,61 @@ export async function basculerRupture(articleId: number, enRupture: boolean) {
   await db.update(vendeurArticles).set({ enRupture }).where(eq(vendeurArticles.id, articleId));
   revalidatePath("/admin/vendeurs");
   revalidatePath("/commander", "layout");
+}
+
+/*
+ * The vendor's tick, from their own link. The token in the link is the only
+ * credential: it is checked against the order's shop on every call, so a
+ * guessed order id from another shop does nothing.
+ *
+ * "Livrée" is what moves the student's loyalty card, and they are told so;
+ * undoing it (a mistap) takes the stamp back, silently.
+ */
+export async function marquerCommande(token: string, commandeId: number, statut: "livree" | "non_recue" | null) {
+  if (!token) return { ok: false as const };
+  const [vendeur] = await db.select().from(vendeurs).where(eq(vendeurs.tokenEspace, token));
+  if (!vendeur) return { ok: false as const };
+
+  const [commande] = await db
+    .select()
+    .from(commandeEvenements)
+    .where(
+      and(
+        eq(commandeEvenements.id, commandeId),
+        eq(commandeEvenements.vendeurId, vendeur.id),
+        eq(commandeEvenements.type, "commander")
+      )
+    );
+  if (!commande) return { ok: false as const };
+
+  await db
+    .update(commandeEvenements)
+    .set({ statut, statutLe: statut ? new Date() : null })
+    .where(eq(commandeEvenements.id, commande.id));
+
+  if (statut === "livree" && commande.statut !== "livree" && commande.userId && vendeur.fidelite) {
+    const carte = carteDepuis(await commandesLivrees(commande.userId, vendeur.id));
+    const suite =
+      carte.prochaine
+        ? `Ta prochaine commande : ${LIBELLES[carte.prochaine]} 🎁`
+        : `Encore ${carte.prochainCadeau.dans} commande${carte.prochainCadeau.dans > 1 ? "s" : ""} avant ${LIBELLES[carte.prochainCadeau.recompense]}.`;
+    await sendPushToUser(commande.userId, {
+      title: `🍩 Commande ${vendeur.nom} livrée`,
+      body: `Carte fidélité : ${carte.tampons === 0 ? 10 : carte.tampons}/10. ${suite}`,
+      url: `/commander/${vendeur.slug}`,
+    });
+  }
+
+  revalidatePath(`/vendeur/${token}`);
+  revalidatePath("/admin/vendeurs");
+  return { ok: true as const };
+}
+
+export async function regenererLienVendeur(vendeurId: number) {
+  await requireAdmin();
+  await db
+    .update(vendeurs)
+    .set({ tokenEspace: crypto.randomUUID().replace(/-/g, "") })
+    .where(eq(vendeurs.id, vendeurId));
+  revalidatePath("/admin/vendeurs");
 }

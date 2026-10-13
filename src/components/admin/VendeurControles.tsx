@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
-import { basculerRupture, basculerVendeurActif } from "@/lib/actions";
+import { basculerRupture, basculerVendeurActif, regenererLienVendeur } from "@/lib/actions";
 
 /*
  * Opening a shop is the one switch here that students see, so it takes the
@@ -70,5 +70,66 @@ export function RuptureToggle({ id, nom, enRupture }: { id: number; nom: string;
     >
       {pending ? "…" : enRupture ? "En rupture" : "Disponible"}
     </button>
+  );
+}
+
+/*
+ * The vendor's private link, ready to paste into WhatsApp. Regenerating it
+ * cuts off the old one at once — for a link that leaked, or a vendor who
+ * changed phone hands.
+ */
+export function LienVendeur({ vendeurId, token, nom }: { vendeurId: number; token: string; nom: string }) {
+  const [confirme, setConfirme] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const router = useRouter();
+  const { show } = useToast();
+  const chemin = `/vendeur/${token}`;
+
+  const copier = async () => {
+    const url = `${window.location.origin}${chemin}`;
+    const texte = `Ton espace commandes Campusly : ${url}\nAprès chaque livraison, touche « Livrée » : c'est ce qui remplit la carte fidélité des étudiants. Garde ce lien pour toi.`;
+    try {
+      await navigator.clipboard.writeText(texte);
+      show("Lien copié, colle-le dans WhatsApp", "success");
+    } catch {
+      show(url, "success");
+    }
+  };
+
+  return (
+    <div className="mt-4 rounded-[14px] bg-surface-2 p-3">
+      <div className="text-[13px] font-bold text-ink-soft">Lien de {nom} pour confirmer les livraisons</div>
+      <div className="mt-1 break-all text-[12px] text-slate-light">{chemin}</div>
+      <div className="mt-2 flex gap-2">
+        <button
+          onClick={copier}
+          className="press-scale h-[40px] flex-1 rounded-[12px] bg-teal text-[13.5px] font-bold text-white"
+        >
+          Copier le lien et le message
+        </button>
+        <a
+          href={chemin}
+          className="press-scale grid h-[40px] place-items-center rounded-[12px] border-[1.5px] border-line-4 bg-white px-3 text-[13px] font-bold"
+        >
+          Ouvrir
+        </a>
+      </div>
+      <button
+        onClick={() =>
+          confirme
+            ? startTransition(async () => {
+                await regenererLienVendeur(vendeurId);
+                setConfirme(false);
+                show("Nouveau lien créé, l'ancien ne marche plus", "success");
+                router.refresh();
+              })
+            : setConfirme(true)
+        }
+        disabled={pending}
+        className="mt-2 text-[12px] font-bold text-slate-light underline underline-offset-2 disabled:opacity-60"
+      >
+        {confirme ? "Confirmer : l'ancien lien cessera de marcher" : "Changer le lien"}
+      </button>
+    </div>
   );
 }

@@ -37,7 +37,8 @@ export function neDependPasDeLaPromo(pathname: string): boolean {
     pathname === "/logements" ||
     pathname.startsWith("/sondage/") ||
     pathname === "/commander" ||
-    pathname.startsWith("/commander/")
+    pathname.startsWith("/commander/") ||
+    pathname.startsWith("/vendeur/")
   );
 }
 
@@ -47,5 +48,7 @@ export function hasTabBar(pathname: string): boolean {
   if (pathname.endsWith("/plein")) return false;
   if (pathname.startsWith("/installer")) return false;
   if (pathname.startsWith("/admin")) return false;
+  // The vendor's own page is a tool, not a page of the student app.
+  if (pathname.startsWith("/vendeur/")) return false;
   return true;
 }

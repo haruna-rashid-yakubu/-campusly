@@ -655,6 +655,14 @@ export const vendeurs = pgTable("vendeur", {
   videoPosterUrl: text("video_poster_url"),
   actif: boolean("actif").notNull().default(false),
   ordre: integer("ordre").notNull().default(0),
+  // The Campusly loyalty card (see lib/fidelite.ts) applies to this shop.
+  fidelite: boolean("fidelite").notNull().default(false),
+  /*
+   * The secret in the vendor's own link, /vendeur/<token>, where they mark
+   * orders delivered. A link rather than an account: the vendor keeps one
+   * bookmark and never a password. Regenerated from the admin if it leaks.
+   */
+  tokenEspace: text("token_espace").unique(),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
@@ -715,7 +723,22 @@ export const commandeEvenements = pgTable(
     total: integer("total"),
     // For "commander": [{ formule, parfums: { nom: quantité } }]
     detail: jsonb("detail"),
+    /*
+     * The account, when the student was signed in. Only signed-in orders
+     * count on the loyalty card, so the card follows the person across
+     * phones; the name is never shown anywhere from here.
+     */
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+    // Set by the vendor from their link: "livree" or "non_recue". Null = to do.
+    statut: text("statut", { enum: ["livree", "non_recue"] }),
+    statutLe: timestamp("statut_le", { mode: "date" }),
+    // Which order this was on the card (1, 2, 3…) and the gift it carried.
+    rang: integer("rang"),
+    recompense: text("recompense"),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
-  (t) => [index("commande_evenement_vendeur").on(t.vendeurId, t.createdAt)]
+  (t) => [
+    index("commande_evenement_vendeur").on(t.vendeurId, t.createdAt),
+    index("commande_evenement_user").on(t.userId, t.vendeurId),
+  ]
 );

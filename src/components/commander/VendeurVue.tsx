@@ -6,11 +6,14 @@ import { Icon } from "@/components/icons";
 import type { Article, Formule, Vendeur } from "@/lib/vendeurs";
 import { fcfa } from "@/lib/utils";
 import { calendrierDe, prochaineLivraison } from "@/lib/livraison";
+import { LIBELLES, type Carte } from "@/lib/fidelite";
+import { CarteFidelite } from "@/components/commander/CarteFidelite";
 
 export function VendeurVue({
   vendeur,
   formules,
   articles,
+  fidelite = null,
 }: {
   vendeur: Pick<
     Vendeur,
@@ -18,6 +21,8 @@ export function VendeurVue({
   >;
   formules: Formule[];
   articles: Article[];
+  // null when the shop has no loyalty card; { carte: null } when signed out.
+  fidelite?: { carte: Carte | null } | null;
 }) {
   // Worked out on every request, so the date moves on by itself each week.
   const calendrier = calendrierDe(vendeur);
@@ -112,11 +117,15 @@ export function VendeurVue({
           </div>
         )}
 
+        {fidelite && <CarteFidelite carte={fidelite.carte} vendeurNom={vendeur.nom} />}
+
         <Catalogue
           vendeurId={vendeur.id}
           vendeurNom={vendeur.nom}
           livraison={vendeur.livraison}
           fraisLivraison={vendeur.fraisLivraison}
+          cadeau={fidelite?.carte?.prochaine ? LIBELLES[fidelite.carte.prochaine] : null}
+          sansCompte={fidelite !== null && fidelite.carte === null}
           formules={formules.map((f) => ({
             id: f.id,
             nom: f.nom,

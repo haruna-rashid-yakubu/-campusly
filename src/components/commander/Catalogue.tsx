@@ -40,6 +40,8 @@ export function Catalogue({
   vendeurNom,
   livraison,
   fraisLivraison,
+  cadeau = null,
+  sansCompte = false,
   formules,
   articles,
 }: {
@@ -47,6 +49,10 @@ export function Catalogue({
   vendeurNom: string;
   livraison: string | null;
   fraisLivraison: number;
+  // The loyalty gift this order will carry, if any.
+  cadeau?: string | null;
+  // The shop has a loyalty card but the student is not signed in.
+  sansCompte?: boolean;
   formules: Formule[];
   articles: Article[];
 }) {
@@ -287,6 +293,17 @@ export function Catalogue({
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {panier.length > 0 && cadeau && (
+          <div className="mt-2.5 rounded-[14px] bg-[#fde7ef] px-3.5 py-2.5 text-[13.5px] font-extrabold text-[#c2185b]">
+            🎁 Carte fidélité : {cadeau} avec cette commande
+          </div>
+        )}
+        {panier.length > 0 && sansCompte && (
+          <div className="mt-2.5 rounded-[14px] bg-surface-2 px-3.5 py-2.5 text-[12.5px] leading-snug text-slate">
+            Tu n&rsquo;es pas connecté : cette commande ne comptera pas sur ta carte fidélité.
           </div>
         )}
 
