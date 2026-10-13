@@ -24,6 +24,7 @@ import { dismissInstallBanner } from "@/lib/actions";
 import { SondageVote } from "@/components/SondageVote";
 import { getMaReponse, getResultats, getSondageOuvert } from "@/lib/sondage";
 import { getVendeurs } from "@/lib/vendeurs";
+import { AccueilServices } from "@/components/AccueilServices";
 import { distanceLabel, fcfa, isWithinLastWeek } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -60,21 +61,6 @@ export default async function AccueilPage() {
     ? await Promise.all([getResultats(sondage), getMaReponse(sondage.id)])
     : [null, null];
 
-  const modules = [
-    { href: "/sujets", titre: "Sujets", sous: "Anciens sujets", icon: "doc" as const },
-    { href: "/logements", titre: "Logements", sous: "Cités vérifiées", icon: "bed" as const },
-    // Once a shop is open, the tile becomes the door to all of them — the
-    // pressing included — instead of a tile per shop.
-    vendeursOuverts.length > 0
-      ? {
-          href: "/commander",
-          titre: "Commander",
-          sous: vendeursOuverts.map((v) => v.nom).concat("Pressing").join(", "),
-          icon: "bag" as const,
-        }
-      : { href: "/pressing", titre: "Pressing", sous: "Autour du campus", icon: "shirt" as const },
-    { href: "/programme", titre: "Programme", sous: "De la semaine", icon: "cal" as const },
-  ];
 
   return (
     <div className="min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
@@ -189,23 +175,7 @@ export default async function AccueilPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 px-5 pt-5">
-        {modules.map((m) => (
-          <Link
-            key={m.href}
-            href={m.href}
-            className="press-scale flex min-h-[100px] flex-col items-start justify-between rounded-[20px] border border-line bg-white p-3.5 active:bg-surface-3"
-          >
-            <span className="grid h-[42px] w-[42px] place-items-center rounded-[13px] bg-teal-tint text-teal-dark">
-              <Icon name={m.icon} size={21} />
-            </span>
-            <span>
-              <span className="block text-[15.5px] font-extrabold">{m.titre}</span>
-              <span className="mt-px block text-[12.5px] text-slate-light">{m.sous}</span>
-            </span>
-          </Link>
-        ))}
-      </div>
+      <AccueilServices boutiques={vendeursOuverts.map((v) => ({ nom: v.nom, logo: v.logoCarreUrl }))} />
 
       <div className="flex items-baseline justify-between px-5 pb-1.5 pt-6">
         <div className="text-lg font-extrabold tracking-tight">Nouveautés</div>
