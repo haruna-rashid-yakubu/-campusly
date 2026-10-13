@@ -53,7 +53,7 @@ export function LigneCommandeVendeur({
         <span className="text-[12.5px] text-slate-light">{quand}</span>
       </div>
       <div className="mt-1 text-[14px] leading-snug">{detail}</div>
-      <div className="mt-1 text-[13.5px] font-bold">{total}</div>
+      {total && <div className="mt-1 text-[13.5px] font-bold">{total}</div>}
       {cadeau && (
         <div className="mt-2 inline-block rounded-full bg-[#fde7ef] px-2.5 py-1 text-[12.5px] font-extrabold text-[#c2185b]">
           🎁 Fidélité : {cadeau}

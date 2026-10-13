@@ -46,7 +46,7 @@ export default async function VendeursAdminPage({
 
   const { jours: brut } = await searchParams;
   const jours = PERIODES.includes(Number(brut) as (typeof PERIODES)[number]) ? Number(brut) : 7;
-  const vendeurs = await getVendeurs({ inclureInactifs: true });
+  const vendeurs = await getVendeurs({ inclureInactifs: true, inclureInternes: true });
   const fiches = await Promise.all(
     vendeurs.map(async (v) => ({
       vendeur: v,
@@ -111,7 +111,11 @@ export default async function VendeursAdminPage({
             </p>
             <p className="mt-2.5 text-[13px] text-slate">
               <b>{s.envois}</b> commande{s.envois > 1 ? "s" : ""} envoyée{s.envois > 1 ? "s" : ""} vers WhatsApp,
-              pour <b>{fcfa(s.totalEnvoye)}</b> au total, livraison comprise.
+              {s.totalEnvoye > 0 && (
+                <>
+                  {" "}pour <b>{fcfa(s.totalEnvoye)}</b> au total, livraison comprise.
+                </>
+              )}
             </p>
             <p className="mt-1 text-[13px] text-slate">
               Confirmées par {v.nom} : <b>{s.livrees}</b> livrée{s.livrees > 1 ? "s" : ""}

@@ -53,8 +53,10 @@ export default async function EspaceVendeurPage({ params }: { params: Promise<{ 
         <div className="text-[13px] font-bold uppercase tracking-wide text-teal-dark">Espace vendeur · Campusly</div>
         <h1 className="mt-1 text-[26px] font-extrabold tracking-tight">{vendeur.nom}</h1>
         <p className="mt-1.5 text-[13.5px] leading-snug text-slate">
-          Les commandes passées par Campusly arrivent ici, avec leur référence <b>C-…</b>. Après la
-          livraison, touche <b>Livrée</b> : c&rsquo;est ce qui remplit la carte fidélité de l&rsquo;étudiant.
+          Les commandes passées par Campusly arrivent ici, avec leur référence{" "}
+          <b>{vendeur.categorie === "interne" ? "P-…" : "C-…"}</b>. Après la livraison, touche{" "}
+          <b>Livrée</b>
+          {vendeur.fidelite ? <> : c&rsquo;est ce qui remplit la carte fidélité de l&rsquo;étudiant</> : null}.
           Une commande jamais reçue sur WhatsApp : <b>Pas reçue</b>.
         </p>
         <div className="mt-3 rounded-[14px] bg-surface-2 px-3.5 py-2.5 text-[12.5px] leading-snug text-slate">
@@ -95,8 +97,8 @@ export default async function EspaceVendeurPage({ params }: { params: Promise<{ 
                       minute: "2-digit",
                       timeZone: "Africa/Douala",
                     })}
-                    detail={resumerDetail((c.detail as Detail | null) ?? [])}
-                    total={`Total ${fcfa(c.total ?? 0)}`}
+                    detail={resumerDetail((c.detail as Detail | null) ?? []) || "Demande de ramassage"}
+                    total={c.total ? `Total ${fcfa(c.total)}` : ""}
                     cadeau={c.recompense ? LIBELLES[c.recompense as Recompense] ?? c.recompense : null}
                     statut={(c.statut as "livree" | "non_recue" | null) ?? null}
                   />

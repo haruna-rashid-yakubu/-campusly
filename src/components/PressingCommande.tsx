@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Image from "next/image";
+import { noterVuePressing, preparerPressing } from "@/lib/actions";
 import { Icon } from "@/components/icons";
 import {
   PRESSING_CONDITIONS,
@@ -23,15 +24,26 @@ export function PressingCommande({ nom }: { nom?: string | null }) {
   const configure = PRESSING_WHATSAPP.length > 0;
   const actif = accepte && configure;
 
-  const message = [
-    "Bonjour 👋 Je souhaite commander un service de pressing via Campusly.",
-    "J'ai lu et accepté les conditions du service.",
-    `Nom : ${nom?.trim() ?? ""}.`,
-    "Liste des articles : ",
-    "Lieu de récupération : ",
-  ].join(" ");
+  const [envoi, startEnvoi] = useTransition();
 
-  const lien = `https://wa.me/${PRESSING_WHATSAPP}?text=${encodeURIComponent(message)}`;
+  useEffect(() => {
+    void noterVuePressing();
+  }, []);
+
+  // The reference is drawn on the server, which records the order at the same
+  // time, so the service can match each WhatsApp message to Campusly.
+  const commander = () =>
+    startEnvoi(async () => {
+      const { reference } = await preparerPressing();
+      const message = [
+        `Bonjour 👋 Je souhaite commander un service de pressing via Campusly (${reference}).`,
+        "J'ai lu et accepté les conditions du service.",
+        `Nom : ${nom?.trim() ?? ""}.`,
+        "Liste des articles : ",
+        "Lieu de récupération : ",
+      ].join(" ");
+      window.location.href = `https://wa.me/${PRESSING_WHATSAPP}?text=${encodeURIComponent(message)}`;
+    });
 
   return (
     <div>
@@ -112,24 +124,19 @@ export function PressingCommande({ nom }: { nom?: string | null }) {
       </div>
 
       {configure ? (
-        <a
-          href={actif ? lien : undefined}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-disabled={!actif}
-          onClick={(e) => {
-            if (!actif) e.preventDefault();
-          }}
+        <button
+          onClick={commander}
+          disabled={!actif || envoi}
           className="press-scale mt-3.5 flex h-[54px] w-full items-center justify-center gap-2.5 rounded-2xl text-[15.5px] font-bold transition-colors"
           style={
             actif
               ? { backgroundColor: "#14B8AC", color: "#fff" }
-              : { backgroundColor: "#E2E8F0", color: "#94A3B8", pointerEvents: "none" }
+              : { backgroundColor: "#E2E8F0", color: "#94A3B8" }
           }
         >
           <Icon name="chat" size={20} strokeWidth={2} />
-          Commander sur WhatsApp
-        </a>
+          {envoi ? "Ouverture…" : "Commander sur WhatsApp"}
+        </button>
       ) : (
         /* Better an honest notice than a button opening a conversation with
            nobody — the dead campusly.app link taught that once already. */

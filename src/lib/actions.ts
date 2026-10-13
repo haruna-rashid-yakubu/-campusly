@@ -1491,8 +1491,8 @@ export async function noterEvenementVendeur(vendeurId: number, type: "vue" | "aj
 
 // No 0/O or 1/I: the reference is read aloud and typed back.
 const ALPHABET_REF = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-function nouvelleReference() {
-  let r = "C-";
+function nouvelleReference(prefixe = "C") {
+  let r = `${prefixe}-`;
   for (let i = 0; i < 4; i += 1) r += ALPHABET_REF[crypto.getRandomValues(new Uint32Array(1))[0] % ALPHABET_REF.length];
   return r;
 }
@@ -1703,4 +1703,46 @@ export async function regenererLienVendeur(vendeurId: number) {
     .set({ tokenEspace: crypto.randomUUID().replace(/-/g, "") })
     .where(eq(vendeurs.id, vendeurId));
   revalidatePath("/admin/vendeurs");
+}
+
+/*
+ * The pressing's page opened. Same funnel as a shop, keyed on the pressing's
+ * own row in the vendor table.
+ */
+export async function noterVuePressing() {
+  const pressing = await getVendeurParSlugAction("pressing");
+  if (pressing) await noterEvenementVendeur(pressing.id, "vue");
+}
+
+/*
+ * Counts the pressing order and hands back the reference printed in the
+ * WhatsApp message (P-…), before the student leaves for WhatsApp. The message
+ * itself is still written in the browser, to the number the service is
+ * configured with; this only records that it was sent, and by whom.
+ */
+export async function preparerPressing() {
+  const reference = nouvelleReference("P");
+  try {
+    const pressing = await getVendeurParSlugAction("pressing");
+    if (pressing) {
+      const session = await auth();
+      const { deviceId, classeId } = await appareilCourant();
+      await db.insert(commandeEvenements).values({
+        vendeurId: pressing.id,
+        type: "commander",
+        deviceId,
+        classeId,
+        reference,
+        userId: session?.user?.id ?? null,
+      });
+    }
+  } catch {
+    // The student still gets to WhatsApp; only the count is lost.
+  }
+  return { reference };
+}
+
+async function getVendeurParSlugAction(slug: string) {
+  const [row] = await db.select().from(vendeurs).where(eq(vendeurs.slug, slug)).limit(1);
+  return row ?? null;
 }

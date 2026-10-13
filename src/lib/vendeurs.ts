@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   classes,
@@ -16,11 +16,22 @@ export type Article = typeof vendeurArticles.$inferSelect;
 export type LignePanier = { formuleId: number; parfums: Record<number, number> };
 
 /* Shops a student can see, or every shop for an admin checking one before it opens. */
-export async function getVendeurs({ inclureInactifs = false } = {}): Promise<Vendeur[]> {
+/*
+ * Shops a student can see, or every shop for an admin checking one before it
+ * opens. Campusly's own services (category "interne", the pressing) live in
+ * the same table so their orders are counted and confirmed the same way, but
+ * they have their own pages and are not listed as shops — except on the
+ * admin's stats page, which asks for them.
+ */
+export async function getVendeurs({ inclureInactifs = false, inclureInternes = false } = {}): Promise<Vendeur[]> {
+  const conditions = [
+    inclureInactifs ? undefined : eq(vendeurs.actif, true),
+    inclureInternes ? undefined : ne(vendeurs.categorie, "interne"),
+  ].filter(Boolean);
   return db
     .select()
     .from(vendeurs)
-    .where(inclureInactifs ? undefined : eq(vendeurs.actif, true))
+    .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(asc(vendeurs.ordre), asc(vendeurs.id));
 }
 
