@@ -293,7 +293,7 @@ export function Catalogue({
         {panier.length > 0 && (
           <>
             <div className="mb-1.5 mt-4 text-[13px] font-bold text-ink-soft">
-              Où et quand te livrer ? <span className="font-medium text-slate-light">— facultatif</span>
+              Où te livrer sur le campus ? <span className="font-medium text-slate-light">— facultatif</span>
             </div>
             <input
               value={precision}
