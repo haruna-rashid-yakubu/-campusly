@@ -293,18 +293,18 @@ export function Catalogue({
         {panier.length > 0 && (
           <>
             <div className="mb-1.5 mt-4 text-[13px] font-bold text-ink-soft">
-              Où te livrer sur le campus ? <span className="font-medium text-slate-light">— facultatif</span>
+              Une précision pour {vendeurNom} ? <span className="font-medium text-slate-light">— facultatif</span>
             </div>
             <input
               value={precision}
               onChange={(e) => setPrecision(e.target.value)}
               maxLength={200}
-              placeholder="Ex. : Salle B, à la pause de 12h"
+              placeholder="Ex. : une question sur ta commande"
               className="h-[48px] w-full rounded-[14px] border-[1.5px] border-line-4 px-3.5 text-[14.5px] outline-none focus:border-teal"
             />
             <p className="mt-3 text-[12.5px] leading-snug text-slate-light">
-              WhatsApp s&rsquo;ouvre avec ta commande déjà écrite. Tu l&rsquo;envoies, et tu finalises
-              directement avec {vendeurNom}.
+              WhatsApp s&rsquo;ouvre avec ta commande déjà écrite. Tu l&rsquo;envoies, et {vendeurNom} te
+              dit sur WhatsApp où et à quelle heure récupérer ta commande.
             </p>
           </>
         )}

@@ -1592,7 +1592,7 @@ export async function preparerCommande(input: {
     `Total : ${fcfaMessage(total)}`,
     ...(livraisonPrevue ? [`Livraison prévue : ${livraisonPrevue.label}`] : []),
     `Nom : ${nom ?? ""}`,
-    precision ? `Précision : ${precision}` : "Lieu et heure de livraison : ",
+    ...(precision ? [`Précision : ${precision}`] : []),
   ].join("\n");
 
   try {
