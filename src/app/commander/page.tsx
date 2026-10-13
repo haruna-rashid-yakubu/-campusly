@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { Badge } from "@/components/EmptyState";
@@ -50,12 +51,22 @@ export default async function CommanderPage() {
                 href={`/commander/${v.slug}`}
                 className="press-scale flex items-center gap-3.5 overflow-hidden rounded-[22px] border border-line bg-white p-3 active:bg-surface-3"
               >
-                <span
-                  className="grid h-[64px] w-[64px] flex-none place-items-center rounded-[16px] text-[30px]"
-                  style={{ background: "repeating-linear-gradient(135deg, #f7b6c9 0 9px, #fff4f7 9px 18px)" }}
-                >
-                  🍩
-                </span>
+                {v.logoCarreUrl ? (
+                  <Image
+                    src={v.logoCarreUrl}
+                    alt=""
+                    width={64}
+                    height={64}
+                    className="h-[64px] w-[64px] flex-none rounded-[16px] bg-black object-cover"
+                  />
+                ) : (
+                  <span
+                    className="grid h-[64px] w-[64px] flex-none place-items-center rounded-[16px] text-[30px]"
+                    style={{ background: "repeating-linear-gradient(135deg, #f7b6c9 0 9px, #fff4f7 9px 18px)" }}
+                  >
+                    🍩
+                  </span>
+                )}
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-2">
                     <span className="text-[17px] font-extrabold">{v.nom}</span>

@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS "vendeur" (
 	"nom" text NOT NULL,
 	"categorie" text NOT NULL,
 	"accroche" text,
+	"logo_url" text,
+	"logo_carre_url" text,
 	"whatsapp" text NOT NULL,
 	"livraison" text,
 	"frais_livraison" integer DEFAULT 0 NOT NULL,

@@ -1,7 +1,7 @@
 -- Bronuts, the first vendor. Inserted inactive: visible to admins only until
 -- it is switched on from /admin/vendeurs.
-INSERT INTO "vendeur" ("slug","nom","categorie","accroche","whatsapp","livraison","frais_livraison","horaires","video_url","video_poster_url","actif","ordre")
-VALUES ('bronuts','Bronuts','manger','Donuts gourmands, en packs à composer toi-même','237656845289','Livraison sur le campus',2000,'Commandes en semaine','/vendeurs/bronuts/video.mp4','/vendeurs/bronuts/video-poster.jpg',false,0)
+INSERT INTO "vendeur" ("slug","nom","categorie","accroche","logo_url","logo_carre_url","whatsapp","livraison","frais_livraison","horaires","video_url","video_poster_url","actif","ordre")
+VALUES ('bronuts','Bronuts','manger','Donuts gourmands, en packs à composer toi-même','/vendeurs/bronuts/logo-large.jpg','/vendeurs/bronuts/logo-carre.jpg','237656845289','Livraison sur le campus',2000,'Commandes en semaine','/vendeurs/bronuts/video.mp4','/vendeurs/bronuts/video-poster.jpg',false,0)
 ON CONFLICT ("slug") DO NOTHING;
 
 INSERT INTO "vendeur_formule" ("vendeur_id","nom","taille","prix","prix_barre","badge","ordre")

@@ -637,6 +637,9 @@ export const vendeurs = pgTable("vendeur", {
   nom: text("nom").notNull(),
   categorie: text("categorie").notNull(), // "manger", "service"…
   accroche: text("accroche"),
+  // Wide wordmark for the page header, square version for the list.
+  logoUrl: text("logo_url"),
+  logoCarreUrl: text("logo_carre_url"),
   whatsapp: text("whatsapp").notNull(), // digits only, with country code
   livraison: text("livraison"),
   // Added once per order, not per pack: one trip across campus.

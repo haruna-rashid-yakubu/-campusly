@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { BackHeader } from "@/components/BackHeader";
 import { Catalogue } from "@/components/commander/Catalogue";
 import { Icon } from "@/components/icons";
@@ -11,7 +12,7 @@ export function VendeurVue({
 }: {
   vendeur: Pick<
     Vendeur,
-    "id" | "nom" | "accroche" | "livraison" | "fraisLivraison" | "horaires" | "actif" | "videoUrl" | "videoPosterUrl"
+    "id" | "nom" | "accroche" | "logoUrl" | "livraison" | "fraisLivraison" | "horaires" | "actif" | "videoUrl" | "videoPosterUrl"
   >;
   formules: Formule[];
   articles: Article[];
@@ -35,16 +36,32 @@ export function VendeurVue({
               "repeating-linear-gradient(135deg, #f7b6c9 0 18px, #fff4f7 18px 36px)",
           }}
         >
-          <div className="inline-block rounded-[16px] bg-white/90 px-4 py-3 shadow-[0_4px_14px_rgba(229,82,138,.18)]">
-            <div className="text-[26px] font-extrabold leading-none tracking-tight text-[#c2185b]">
-              {vendeur.nom} 🍩
+          {vendeur.logoUrl ? (
+            <div className="mx-auto max-w-[300px] overflow-hidden rounded-[18px] bg-black px-5 pb-4 pt-3 text-center shadow-[0_6px_18px_rgba(15,23,42,.25)]">
+              <Image
+                src={vendeur.logoUrl}
+                alt={vendeur.nom}
+                width={654}
+                height={313}
+                priority
+                className="mx-auto h-auto w-[210px]"
+              />
+              {vendeur.accroche && (
+                <div className="mt-1 text-[13px] font-semibold leading-snug text-white/85">{vendeur.accroche}</div>
+              )}
             </div>
-            {vendeur.accroche && (
-              <div className="mt-1.5 max-w-[240px] text-[13px] font-semibold leading-snug text-ink-soft">
-                {vendeur.accroche}
+          ) : (
+            <div className="inline-block rounded-[16px] bg-white/90 px-4 py-3 shadow-[0_4px_14px_rgba(229,82,138,.18)]">
+              <div className="text-[26px] font-extrabold leading-none tracking-tight text-[#c2185b]">
+                {vendeur.nom}
               </div>
-            )}
-          </div>
+              {vendeur.accroche && (
+                <div className="mt-1.5 max-w-[240px] text-[13px] font-semibold leading-snug text-ink-soft">
+                  {vendeur.accroche}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Muted and looping, so it plays by itself without asking for sound
@@ -58,7 +75,7 @@ export function VendeurVue({
             loop
             playsInline
             preload="metadata"
-            className="mt-3 aspect-[4/3] w-full rounded-[20px] bg-surface object-cover"
+            className="mt-3 aspect-video w-full rounded-[20px] bg-surface object-cover"
           />
         )}
 
