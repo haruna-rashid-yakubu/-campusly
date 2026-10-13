@@ -16,7 +16,7 @@ SELECT v.id, a.nom, a.description, a.photo, a.ordre FROM "vendeur" v,
  ('The Broculos','Glaçage blanc, éclats de biscuit spéculoos, filet de chocolat','/vendeurs/bronuts/broculos.jpg',2),
  ('Broreo Dark','Nappage chocolat, éclats d''Oreo, filets chocolat et blanc','/vendeurs/bronuts/broreo-dark.jpg',3),
  ('Broreo White','Glaçage blanc, éclats d''Oreo, filets caramel et blanc','/vendeurs/bronuts/broreo-white.jpg',4),
- ('The Brostachio','Glaçage blanc, filets et éclats de pistache','/vendeurs/bronuts/brostachio.jpg',5),
+ ('The Brostachio','Glaçage à la pistache, filets et éclats de pistache','/vendeurs/bronuts/brostachio.jpg',5),
  ('The Broconut','Glaçage blanc, noix de coco râpée, filet de chocolat','/vendeurs/bronuts/broconut.jpg',6)
 ) AS a(nom,description,photo,ordre)
 WHERE v.slug='bronuts' AND NOT EXISTS (SELECT 1 FROM "vendeur_article" x WHERE x.vendeur_id=v.id);
