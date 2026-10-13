@@ -4,6 +4,9 @@
  * only — its tile's, in a few shades, plus white — so the screen reads as
  * four services rather than a box of crayons.
  *
+ * A light gloss on the top of each square and a soft shadow under the
+ * drawing give them some depth, like app icons.
+ *
  * Gradient ids are prefixed per illustration: the four sit on one page, and
  * SVG ids are global to the document.
  */
@@ -18,8 +21,13 @@ export function IllustrationSujets({ size = 48 }: Props) {
           <stop offset="0" stopColor="#8b93ff" />
           <stop offset="1" stopColor="#4f46e5" />
         </linearGradient>
+        <filter id="su-ombre" x="-20%" y="-20%" width="140%" height="150%">
+          <feDropShadow dx="0" dy="1.6" stdDeviation="1.6" floodColor="#1e1b4b" floodOpacity=".35" />
+        </filter>
       </defs>
       <rect width="64" height="64" rx="18" fill="url(#su-fond)" />
+      <path d="M0 18 A18 18 0 0 1 18 0 H46 A18 18 0 0 1 64 18 V24 Q32 33 0 24 Z" fill="#ffffff" opacity=".16" />
+      <g filter="url(#su-ombre)">
       {/* pile de copies */}
       <rect x="17" y="15" width="28" height="36" rx="3" fill="#c7cbff" transform="rotate(-8 31 33)" />
       <rect x="19" y="13" width="28" height="36" rx="3" fill="#ffffff" />
@@ -38,6 +46,7 @@ export function IllustrationSujets({ size = 48 }: Props) {
         <path d="M40 52 h7 l-3.5 6 z" fill="#ffffff" />
         <path d="M42.6 56.4 h1.8 l-0.9 1.6 z" fill="#3730a3" />
       </g>
+      </g>
     </svg>
   );
 }
@@ -50,9 +59,14 @@ export function IllustrationLogements({ size = 48 }: Props) {
           <stop offset="0" stopColor="#ffb36b" />
           <stop offset="1" stopColor="#ea580c" />
         </linearGradient>
+        <filter id="lo-ombre" x="-20%" y="-20%" width="140%" height="150%">
+          <feDropShadow dx="0" dy="1.6" stdDeviation="1.6" floodColor="#7c2d12" floodOpacity=".35" />
+        </filter>
       </defs>
       <rect width="64" height="64" rx="18" fill="url(#lo-fond)" />
+      <path d="M0 18 A18 18 0 0 1 18 0 H46 A18 18 0 0 1 64 18 V24 Q32 33 0 24 Z" fill="#ffffff" opacity=".16" />
       <circle cx="49" cy="15" r="5" fill="#ffffff" opacity=".45" />
+      <g filter="url(#lo-ombre)">
       {/* sol */}
       <rect x="8" y="50" width="48" height="4" rx="2" fill="#9a3412" opacity=".35" />
       {/* immeuble */}
@@ -77,6 +91,7 @@ export function IllustrationLogements({ size = 48 }: Props) {
       {/* buissons */}
       <circle cx="50" cy="46" r="4.5" fill="#ffffff" opacity=".55" />
       <circle cx="12" cy="47" r="3.5" fill="#ffffff" opacity=".55" />
+      </g>
     </svg>
   );
 }
@@ -89,8 +104,13 @@ export function IllustrationProgramme({ size = 48 }: Props) {
           <stop offset="0" stopColor="#3ee0cf" />
           <stop offset="1" stopColor="#0d9488" />
         </linearGradient>
+        <filter id="pr-ombre" x="-20%" y="-20%" width="140%" height="150%">
+          <feDropShadow dx="0" dy="1.6" stdDeviation="1.6" floodColor="#134e4a" floodOpacity=".35" />
+        </filter>
       </defs>
       <rect width="64" height="64" rx="18" fill="url(#pr-fond)" />
+      <path d="M0 18 A18 18 0 0 1 18 0 H46 A18 18 0 0 1 64 18 V24 Q32 33 0 24 Z" fill="#ffffff" opacity=".16" />
+      <g filter="url(#pr-ombre)">
       {/* calendrier */}
       <rect x="12" y="15" width="36" height="34" rx="4" fill="#ffffff" />
       <path d="M12 19 a4 4 0 0 1 4 -4 h28 a4 4 0 0 1 4 4 v6 h-36 z" fill="#0f766e" />
@@ -105,6 +125,7 @@ export function IllustrationProgramme({ size = 48 }: Props) {
       {/* horloge */}
       <circle cx="46" cy="45" r="10" fill="#ffffff" stroke="#0f766e" strokeWidth="2.5" />
       <path d="M46 39.5 V45 L50 47.5" stroke="#0f766e" strokeWidth="2.4" strokeLinecap="round" fill="none" />
+      </g>
     </svg>
   );
 }

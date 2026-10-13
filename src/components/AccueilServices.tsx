@@ -19,28 +19,31 @@ import {
  * and says in one line why to do it here rather than elsewhere.
  */
 
-type Tuile = { href: string; titre: string; sous: string; illustration: ReactNode; fond: string };
+type Tuile = { href: string; titre: string; sous: string; illustration: ReactNode; fond: string; teinte: string };
 
 const SUJETS: Tuile = {
   href: "/sujets",
   titre: "Sujets",
   sous: "Annales",
-  illustration: <IllustrationSujets size={46} />,
+  illustration: <IllustrationSujets size={48} />,
   fond: "#eef0ff",
+  teinte: "#4f46e5",
 };
 const LOGEMENTS: Tuile = {
   href: "/logements",
   titre: "Logements",
   sous: "Vérifiés",
-  illustration: <IllustrationLogements size={46} />,
+  illustration: <IllustrationLogements size={48} />,
   fond: "#fff3e8",
+  teinte: "#ea580c",
 };
 const PROGRAMME: Tuile = {
   href: "/programme",
   titre: "Programme",
   sous: "De la semaine",
-  illustration: <IllustrationProgramme size={46} />,
+  illustration: <IllustrationProgramme size={48} />,
   fond: "#e8f8f6",
+  teinte: "#0d9488",
 };
 const PRESSING: Tuile = {
   href: "/pressing",
@@ -50,6 +53,7 @@ const PRESSING: Tuile = {
     <Image src="/pressing/logo.png" alt="" width={46} height={46} className="h-[46px] w-[46px] rounded-[13px]" />
   ),
   fond: "#eaf6fd",
+  teinte: "#0284c7",
 };
 
 export function AccueilServices({
@@ -72,6 +76,7 @@ export function AccueilServices({
           {/* Soft circles, so the card reads as a poster rather than a button. */}
           <span aria-hidden className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/15" />
           <span aria-hidden className="absolute -bottom-12 right-16 h-28 w-28 rounded-full bg-white/10" />
+          <span aria-hidden className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/12 to-transparent" />
 
           <div className="relative flex items-center gap-3.5">
             <span className="grid h-[60px] w-[60px] flex-none place-items-center rounded-[18px] bg-white shadow-[0_4px_12px_rgba(0,0,0,.12)]">
@@ -95,7 +100,7 @@ export function AccueilServices({
                     alt={b.nom}
                     width={44}
                     height={44}
-                    className="h-11 w-11 rounded-[13px] bg-black object-cover ring-2 ring-white/70"
+                    className="h-11 w-11 rounded-[13px] bg-black object-cover ring-2 ring-white/80 shadow-[0_4px_10px_rgba(0,0,0,.18)]"
                   />
                 ) : (
                   <span
@@ -111,10 +116,10 @@ export function AccueilServices({
                 alt="Pressing"
                 width={44}
                 height={44}
-                className="h-11 w-11 rounded-[13px] ring-2 ring-white/70"
+                className="h-11 w-11 rounded-[13px] ring-2 ring-white/80 shadow-[0_4px_10px_rgba(0,0,0,.18)]"
               />
             </span>
-            <span className="flex flex-none items-center gap-1 rounded-full bg-white px-3.5 py-2 text-[13.5px] font-extrabold text-[#c2185b]">
+            <span className="flex flex-none items-center gap-1 rounded-full bg-white px-3.5 py-2 text-[13.5px] font-extrabold text-[#c2185b] shadow-[0_4px_12px_rgba(122,31,82,.25)]">
               J&rsquo;en profite
               <Icon name="right" size={15} strokeWidth={2.6} />
             </span>
@@ -127,13 +132,27 @@ export function AccueilServices({
           <Link
             key={t.href}
             href={t.href}
-            className={`press-scale flex flex-col items-start justify-between rounded-[20px] p-3 text-ink active:opacity-80 ${
-              commander ? "min-h-[108px]" : "min-h-[100px] p-3.5"
+            className={`press-scale relative flex flex-col items-start justify-between rounded-[20px] border p-3 text-ink active:opacity-80 ${
+              commander ? "min-h-[112px]" : "min-h-[104px] p-3.5"
             }`}
-            style={{ background: t.fond }}
+            style={{
+              background: `linear-gradient(165deg, ${t.fond} 0%, #ffffff 95%)`,
+              borderColor: `${t.teinte}1f`,
+              boxShadow: `0 6px 16px ${t.teinte}14`,
+            }}
           >
-            <span className="block overflow-hidden rounded-[13px] shadow-[0_4px_10px_rgba(15,23,42,.14)]">
+            <span
+              className="block overflow-hidden rounded-[14px]"
+              style={{ boxShadow: `0 6px 14px ${t.teinte}4d` }}
+            >
               {t.illustration}
+            </span>
+            <span
+              aria-hidden
+              className="absolute right-2.5 top-2.5 grid h-[22px] w-[22px] place-items-center rounded-full bg-white/80"
+              style={{ color: t.teinte }}
+            >
+              <Icon name="right" size={13} strokeWidth={2.6} />
             </span>
             <span>
               <span className="block text-[14.5px] font-extrabold leading-tight tracking-tight">{t.titre}</span>
