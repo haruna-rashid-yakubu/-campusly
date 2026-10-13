@@ -87,9 +87,13 @@ export default async function CommanderPage() {
           href="/pressing"
           className="press-scale flex items-center gap-3.5 rounded-[22px] border border-line bg-white p-3 active:bg-surface-3"
         >
-          <span className="grid h-[64px] w-[64px] flex-none place-items-center rounded-[16px] bg-teal-tint text-teal-dark">
-            <Icon name="shirt" size={28} />
-          </span>
+          <Image
+            src="/pressing/logo.png"
+            alt=""
+            width={64}
+            height={64}
+            className="h-[64px] w-[64px] flex-none rounded-[16px]"
+          />
           <span className="min-w-0 flex-1">
             <span className="block text-[17px] font-extrabold">Pressing Campusly</span>
             <span className="mt-0.5 block text-[13px] leading-snug text-slate-light">

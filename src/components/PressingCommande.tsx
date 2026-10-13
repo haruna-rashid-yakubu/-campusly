@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Icon } from "@/components/icons";
 import {
   PRESSING_CONDITIONS,
@@ -36,9 +37,13 @@ export function PressingCommande({ nom }: { nom?: string | null }) {
     <div>
       <div className="rounded-[22px] border border-line p-4">
         <div className="flex items-start gap-3">
-          <span className="grid h-11 w-11 flex-none place-items-center rounded-[14px] bg-teal-tint text-teal-dark">
-            <Icon name="shirt" size={21} />
-          </span>
+          <Image
+            src="/pressing/logo.png"
+            alt=""
+            width={56}
+            height={56}
+            className="h-14 w-14 flex-none rounded-[16px]"
+          />
           <div className="min-w-0 flex-1">
             <div className="text-[17px] font-extrabold tracking-tight">Pressing Campusly</div>
             <div className="mt-0.5 text-[13px] text-slate-light">
