@@ -22,7 +22,7 @@ export default async function PressingPage() {
       <div className="sticky top-0 z-10 bg-white px-5" style={{ paddingTop: "calc(20px + var(--safe-top))" }}>
         <div className="text-[24px] font-extrabold tracking-tight">Pressing</div>
         <div className="mt-0.5 pb-3 text-[13.5px] text-slate-light">
-          Récupération, lavage et livraison sur le campus
+          Récupération, lavage et livraison sur le campus et aux alentours
         </div>
       </div>
 

@@ -59,7 +59,7 @@ export function PressingCommande({ nom }: { nom?: string | null }) {
           <div className="min-w-0 flex-1">
             <div className="text-[17px] font-extrabold tracking-tight">Pressing Campusly</div>
             <div className="mt-0.5 text-[13px] text-slate-light">
-              Récupération et livraison sur le campus
+              Récupération et livraison sur le campus et aux alentours
             </div>
           </div>
         </div>

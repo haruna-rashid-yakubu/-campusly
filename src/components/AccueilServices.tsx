@@ -80,7 +80,7 @@ export function AccueilServices({
             <span className="min-w-0 flex-1">
               <span className="block text-[21px] font-extrabold leading-tight tracking-tight">Commander</span>
               <span className="mt-0.5 block text-[13px] font-semibold leading-snug text-white/90">
-                Livré sur le campus · offres réservées à Campusly
+                Livré sur le campus et aux alentours · offres Campusly
               </span>
             </span>
           </div>
