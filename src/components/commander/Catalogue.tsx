@@ -304,7 +304,7 @@ export function Catalogue({
             />
             <p className="mt-3 text-[12.5px] leading-snug text-slate-light">
               WhatsApp s&rsquo;ouvre avec ta commande déjà écrite. Tu l&rsquo;envoies, et {vendeurNom} te
-              dit sur WhatsApp où et à quelle heure récupérer ta commande.
+              dit sur WhatsApp où récupérer ta commande à la pause de midi.
             </p>
           </>
         )}
