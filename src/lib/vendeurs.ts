@@ -55,6 +55,16 @@ export type StatsVendeur = {
   // Every press of the button, including someone sending a second order.
   envois: number;
   totalEnvoye: number;
+  clients: {
+    // Since the shop opened, whatever the period on screen.
+    total: number;
+    // Ordered during the period.
+    actifs: number;
+    // Whose first order falls inside the period.
+    nouveaux: number;
+    // Two orders or more, ever — the ones who came back.
+    fideles: number;
+  };
   parfums: { nom: string; quantite: number }[];
   formules: { nom: string; quantite: number }[];
   parPromo: { promo: string | null; commandes: number }[];
@@ -91,6 +101,33 @@ export async function getStatsVendeur(vendeurId: number, jours: number): Promise
     })
     .from(commandeEvenements)
     .where(periode);
+
+  /*
+   * A client is a device that pressed "Commander" at least once. It counts
+   * phones, not people — two students sharing one phone are one client, and
+   * one student on two phones is two — but it is the closest honest measure
+   * without asking anyone to sign in to order.
+   */
+  const clientsResult = await db.execute<{
+    total: number;
+    actifs: number;
+    nouveaux: number;
+    fideles: number;
+  }>(sql`
+    with c as (
+      select device_id, min(created_at) as premier, max(created_at) as dernier, count(*) as n
+      from commande_evenement
+      where vendeur_id = ${vendeurId} and type = 'commander'
+      group by device_id
+    )
+    select
+      count(*)::int as total,
+      (count(*) filter (where dernier >= ${depuis}))::int as actifs,
+      (count(*) filter (where premier >= ${depuis}))::int as nouveaux,
+      (count(*) filter (where n >= 2))::int as fideles
+    from c
+  `);
+  const clients = clientsResult.rows[0] ?? { total: 0, actifs: 0, nouveaux: 0, fideles: 0 };
 
   const envois = await db
     .select({
@@ -134,6 +171,12 @@ export async function getStatsVendeur(vendeurId: number, jours: number): Promise
     commandes: compteurs?.commandes ?? 0,
     envois: compteurs?.envois ?? 0,
     totalEnvoye: compteurs?.totalEnvoye ?? 0,
+    clients: {
+      total: Number(clients.total),
+      actifs: Number(clients.actifs),
+      nouveaux: Number(clients.nouveaux),
+      fideles: Number(clients.fideles),
+    },
     parfums: trier(parfums),
     formules: trier(formules),
     parPromo,

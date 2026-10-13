@@ -1559,6 +1559,10 @@ export async function preparerCommande(input: {
     nbArticles += compte;
   }
 
+  const frais = vendeur.fraisLivraison;
+  const sousTotal = total;
+  total += frais;
+
   const reference = nouvelleReference();
   const nom = session?.user?.name?.trim();
   const precision = input.precision?.trim().slice(0, 200);
@@ -1568,9 +1572,15 @@ export async function preparerCommande(input: {
     "",
     ...lignes.map((l) => `• ${resumerDetail([l])}`),
     "",
+    ...(frais > 0
+      ? [
+          `Sous-total : ${fcfaMessage(sousTotal)}`,
+          `${vendeur.livraison ?? "Livraison"} : ${fcfaMessage(frais)}`,
+        ]
+      : []),
     `Total : ${fcfaMessage(total)}`,
     `Nom : ${nom ?? ""}`,
-    precision ? `Précision : ${precision}` : "Livraison : ",
+    precision ? `Précision : ${precision}` : "Lieu et heure de livraison : ",
   ].join("\n");
 
   try {

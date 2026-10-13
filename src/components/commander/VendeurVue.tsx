@@ -2,13 +2,17 @@ import { BackHeader } from "@/components/BackHeader";
 import { Catalogue } from "@/components/commander/Catalogue";
 import { Icon } from "@/components/icons";
 import type { Article, Formule, Vendeur } from "@/lib/vendeurs";
+import { fcfa } from "@/lib/utils";
 
 export function VendeurVue({
   vendeur,
   formules,
   articles,
 }: {
-  vendeur: Pick<Vendeur, "id" | "nom" | "accroche" | "livraison" | "horaires" | "actif">;
+  vendeur: Pick<
+    Vendeur,
+    "id" | "nom" | "accroche" | "livraison" | "fraisLivraison" | "horaires" | "actif" | "videoUrl" | "videoPosterUrl"
+  >;
   formules: Formule[];
   articles: Article[];
 }) {
@@ -43,6 +47,21 @@ export function VendeurVue({
           </div>
         </div>
 
+        {/* Muted and looping, so it plays by itself without asking for sound
+            in a lecture hall; playsInline keeps iPhones from going fullscreen. */}
+        {vendeur.videoUrl && (
+          <video
+            src={vendeur.videoUrl}
+            poster={vendeur.videoPosterUrl ?? undefined}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            className="mt-3 aspect-[4/3] w-full rounded-[20px] bg-surface object-cover"
+          />
+        )}
+
         {(vendeur.livraison || vendeur.horaires) && (
           <div className="mt-3 flex flex-col gap-1.5 text-[13px] text-slate">
             {vendeur.horaires && (
@@ -55,6 +74,7 @@ export function VendeurVue({
               <div className="flex items-center gap-2">
                 <Icon name="pin" size={16} className="text-teal-dark" />
                 {vendeur.livraison}
+                {vendeur.fraisLivraison > 0 && ` · ${fcfa(vendeur.fraisLivraison)}`}
               </div>
             )}
           </div>
@@ -63,6 +83,8 @@ export function VendeurVue({
         <Catalogue
           vendeurId={vendeur.id}
           vendeurNom={vendeur.nom}
+          livraison={vendeur.livraison}
+          fraisLivraison={vendeur.fraisLivraison}
           formules={formules.map((f) => ({ id: f.id, nom: f.nom, taille: f.taille, prix: f.prix, badge: f.badge }))}
           articles={articles.map((a) => ({
             id: a.id,

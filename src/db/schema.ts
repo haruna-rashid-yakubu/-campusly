@@ -639,7 +639,12 @@ export const vendeurs = pgTable("vendeur", {
   accroche: text("accroche"),
   whatsapp: text("whatsapp").notNull(), // digits only, with country code
   livraison: text("livraison"),
+  // Added once per order, not per pack: one trip across campus.
+  fraisLivraison: integer("frais_livraison").notNull().default(0),
   horaires: text("horaires"),
+  // A short clip shown at the top of the page, muted and looping.
+  videoUrl: text("video_url"),
+  videoPosterUrl: text("video_poster_url"),
   actif: boolean("actif").notNull().default(false),
   ordre: integer("ordre").notNull().default(0),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),

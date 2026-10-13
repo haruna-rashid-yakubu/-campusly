@@ -96,9 +96,21 @@ export default async function VendeursAdminPage({
               <Chiffre valeur={s.paniers} legende={`Ont rempli un panier · ${pct(s.paniers, s.visiteurs)}`} />
               <Chiffre valeur={s.commandes} legende={`Ont cliqué Commander · ${pct(s.commandes, s.visiteurs)}`} />
             </div>
+
+            <div className="mt-4 text-[12px] font-bold uppercase tracking-wide text-slate-light">Clients</div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <Chiffre valeur={s.clients.actifs} legende={`Clients sur ${s.jours} jours`} />
+              <Chiffre valeur={s.clients.nouveaux} legende="Nouveaux clients sur la période" />
+              <Chiffre valeur={s.clients.fideles} legende="Clients revenus (2 commandes ou plus)" />
+              <Chiffre valeur={s.clients.total} legende="Clients depuis l'ouverture" />
+            </div>
+            <p className="mt-1.5 text-[11.5px] leading-snug text-slate-light">
+              Un client = un téléphone qui a cliqué « Commander ». La commande elle-même se confirme
+              sur WhatsApp, avec les références ci-dessous.
+            </p>
             <p className="mt-2.5 text-[13px] text-slate">
               <b>{s.envois}</b> commande{s.envois > 1 ? "s" : ""} envoyée{s.envois > 1 ? "s" : ""} vers WhatsApp,
-              pour <b>{fcfa(s.totalEnvoye)}</b> au total.
+              pour <b>{fcfa(s.totalEnvoye)}</b> au total, livraison comprise.
             </p>
 
             {s.parfums.length > 0 && (

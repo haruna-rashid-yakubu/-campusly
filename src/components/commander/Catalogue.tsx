@@ -31,11 +31,15 @@ type Ligne = { formuleId: number; parfums: Record<number, number> };
 export function Catalogue({
   vendeurId,
   vendeurNom,
+  livraison,
+  fraisLivraison,
   formules,
   articles,
 }: {
   vendeurId: number;
   vendeurNom: string;
+  livraison: string | null;
+  fraisLivraison: number;
   formules: Formule[];
   articles: Article[];
 }) {
@@ -55,10 +59,12 @@ export function Catalogue({
   const formule = formules.find((f) => f.id === formuleId) ?? null;
   const compte = Object.values(compo).reduce((a, b) => a + b, 0);
   const plein = formule !== null && compte === formule.taille;
-  const total = useMemo(
+  const sousTotal = useMemo(
     () => panier.reduce((s, l) => s + (formules.find((f) => f.id === l.formuleId)?.prix ?? 0), 0),
     [panier, formules]
   );
+  // Once per order, however many packs: the same trip across campus.
+  const total = panier.length > 0 ? sousTotal + fraisLivraison : 0;
 
   const choisirFormule = (id: number) => {
     setFormuleId(id);
@@ -247,19 +253,35 @@ export function Catalogue({
                 </div>
               );
             })}
+            {fraisLivraison > 0 && (
+              <div className="border-t border-line-3 px-3.5 py-2.5 text-[13.5px]">
+                <div className="flex justify-between text-slate">
+                  <span>Sous-total</span>
+                  <span className="tabular-nums">{fcfa(sousTotal)}</span>
+                </div>
+                <div className="mt-1 flex justify-between text-slate">
+                  <span>{livraison ?? "Livraison"}</span>
+                  <span className="tabular-nums">{fcfa(fraisLivraison)}</span>
+                </div>
+                <div className="mt-1.5 flex justify-between text-[15px] font-extrabold">
+                  <span>Total</span>
+                  <span className="tabular-nums">{fcfa(total)}</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {panier.length > 0 && (
           <>
             <div className="mb-1.5 mt-4 text-[13px] font-bold text-ink-soft">
-              Une précision pour {vendeurNom} ? <span className="font-medium text-slate-light">— facultatif</span>
+              Où et quand te livrer ? <span className="font-medium text-slate-light">— facultatif</span>
             </div>
             <input
               value={precision}
               onChange={(e) => setPrecision(e.target.value)}
               maxLength={200}
-              placeholder="Ex. : livraison Salle B, à 12h"
+              placeholder="Ex. : Salle B, à la pause de 12h"
               className="h-[48px] w-full rounded-[14px] border-[1.5px] border-line-4 px-3.5 text-[14.5px] outline-none focus:border-teal"
             />
             <p className="mt-3 text-[12.5px] leading-snug text-slate-light">
