@@ -11,7 +11,7 @@ VALUES ('la-bergere','La Bergère','manger','Bergère fraise, menthe ou cacao, s
   '/vendeurs/la-bergere/logo-large.png','/vendeurs/la-bergere/logo-carre.jpg','#faf9ef',
   'radial-gradient(circle at 6% 14%, rgba(232,121,143,.6) 0 44px, transparent 45px), radial-gradient(circle at 96% 12%, rgba(79,154,95,.55) 0 40px, transparent 41px), radial-gradient(circle at 92% 92%, rgba(122,74,46,.5) 0 52px, transparent 53px), radial-gradient(circle at 4% 94%, rgba(79,154,95,.4) 0 30px, transparent 31px), radial-gradient(circle at 50% 2%, rgba(122,74,46,.3) 0 14px, transparent 15px), radial-gradient(circle at 62% 99%, rgba(232,121,143,.45) 0 18px, transparent 19px), linear-gradient(160deg, #fdf4e7 0%, #f1e3cf 100%)',
   '/vendeurs/la-bergere/une.jpg',
-  '/vendeurs/la-bergere/video-la-bergere.mp4','/vendeurs/la-bergere/video-la-bergere-poster.jpg','237699440929',
+  '/vendeurs/la-bergere/video-la-bergere.mp4','/vendeurs/la-bergere/video-la-bergere-poster.jpg','237654925206',
   'Offre spéciale Campusly : livraison gratuite sur le campus · hors campus, frais à voir avec La Bergère',0,'Livraison tous les jours : à la pause de 12h à 14h, et de 18h à 20h',false,1,
   'bouteille',false,
   '{"cycle":4,"icone":"🥛","paliers":[{"rang":4,"cle":"bouteille","libelle":"1 bouteille au choix offerte","icone":"🥛"}]}'::jsonb,
