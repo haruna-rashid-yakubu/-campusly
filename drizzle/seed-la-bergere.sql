@@ -9,7 +9,7 @@ INSERT INTO "vendeur" ("slug","nom","categorie","accroche","logo_url","logo_carr
 VALUES ('la-bergere','La Bergère','manger','Yaourt fraise, menthe ou cacao, sans conservateurs artificiels',
   '/vendeurs/la-bergere/logo-large.png','/vendeurs/la-bergere/logo-carre.jpg','#faf9ef',
   '/vendeurs/la-bergere/video-la-bergere.mp4','/vendeurs/la-bergere/video-la-bergere-poster.jpg','237699440929',
-  'Livraison gratuite sur le campus · hors campus, frais de livraison à voir avec La Bergère',0,'Tous les jours sur le campus',false,1,
+  'Livraison gratuite sur le campus · hors campus, frais de livraison à voir avec La Bergère',0,'Livraison tous les jours : à la pause de 12h à 14h, et de 18h à 20h',false,1,
   'bouteille',true,
   '{"cycle":4,"icone":"🥛","paliers":[{"rang":4,"cle":"bouteille","libelle":"1 bouteille au choix offerte","icone":"🥛"}]}'::jsonb,
   'commission',50,2500,replace(gen_random_uuid()::text,'-',''))
