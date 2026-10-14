@@ -644,6 +644,8 @@ export const vendeurs = pgTable("vendeur", {
   logoFond: text("logo_fond"),
   // The page header's own backdrop, a CSS background. Null: Bronuts' pink stripes.
   banniere: text("banniere"),
+  // A wide photo for the home screen's "À la une" card. Null: the shop is not featured there.
+  uneImage: text("une_image"),
   whatsapp: text("whatsapp").notNull(), // digits only, with country code
   livraison: text("livraison"),
   // Added once per order, not per pack: one trip across campus.
