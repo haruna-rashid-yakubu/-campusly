@@ -11,10 +11,16 @@ import { fcfa } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Mes commandes",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
+  const { token } = await params;
+  return {
+    title: "Mes commandes",
+    robots: { index: false, follow: false },
+    // Installs as "Mes commandes", opening on this page rather than on Campusly's home.
+    manifest: `/vendeur/${token}/manifest.webmanifest`,
+    appleWebApp: { capable: true, statusBarStyle: "default", title: "Mes commandes" },
+  };
+}
 
 type Detail = { formule: string; parfums: Record<string, number> }[];
 
