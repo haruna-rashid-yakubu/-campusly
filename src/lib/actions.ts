@@ -30,6 +30,7 @@ import { estOuvert, getSondage, getSondageOuvert } from "@/lib/sondage";
 import { getCatalogue, resumerDetail, type LignePanier } from "@/lib/vendeurs";
 import { calendrierDe, prochaineLivraison } from "@/lib/livraison";
 import { carteDepuis, commandesLivrees, palierPourRang, position, regleDe } from "@/lib/fidelite";
+import { MAX_UNITES, venteALUnite } from "@/lib/catalogue";
 
 import {
   ensureClassesForFiliere,
@@ -1528,6 +1529,7 @@ export async function preparerCommande(input: {
   }
 
   const { formules, articles } = await getCatalogue(vendeur.id);
+  const unite = venteALUnite(formules);
   const lignes: { formule: string; parfums: Record<string, number> }[] = [];
   const lignesMessage: typeof lignes = [];
   let total = 0;
@@ -1550,6 +1552,18 @@ export async function preparerCommande(input: {
       }
       parfums[article.nom] = (parfums[article.nom] ?? 0) + quantite;
       compte += quantite;
+    }
+    if (unite) {
+      // One line, any number of each flavour, each at the unit price.
+      if (compte < 1 || compte > MAX_UNITES) {
+        return { ok: false as const, message: `Entre 1 et ${MAX_UNITES} ${vendeur.unite ?? "article"}s par commande.` };
+      }
+      const nom = `${compte} ${vendeur.unite ?? "article"}${compte > 1 ? "s" : ""} à ${fcfaMessage(formule.prix)}`;
+      lignes.push({ formule: "À l'unité", parfums });
+      lignesMessage.push({ formule: nom, parfums });
+      total += formule.prix * compte;
+      nbArticles += compte;
+      continue;
     }
     if (compte !== formule.taille) {
       return {

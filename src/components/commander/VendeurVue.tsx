@@ -8,6 +8,8 @@ import { fcfa } from "@/lib/utils";
 import { calendrierDe, prochaineLivraison } from "@/lib/livraison";
 import type { Carte, Regle } from "@/lib/fidelite";
 import { CarteFidelite } from "@/components/commander/CarteFidelite";
+import { CatalogueUnite } from "@/components/commander/CatalogueUnite";
+import { venteALUnite } from "@/lib/catalogue";
 
 export function VendeurVue({
   vendeur,
@@ -17,7 +19,7 @@ export function VendeurVue({
 }: {
   vendeur: Pick<
     Vendeur,
-    "id" | "nom" | "unite" | "accroche" | "logoUrl" | "logoFond" | "livraisonJour" | "limiteJour" | "limiteHeure" | "livraison" | "fraisLivraison" | "horaires" | "actif" | "videoUrl" | "videoPosterUrl"
+    "id" | "nom" | "unite" | "accroche" | "logoUrl" | "logoFond" | "banniere" | "livraisonJour" | "limiteJour" | "limiteHeure" | "livraison" | "fraisLivraison" | "horaires" | "actif" | "videoUrl" | "videoPosterUrl"
   >;
   formules: Formule[];
   articles: Article[];
@@ -48,8 +50,8 @@ export function VendeurVue({
         <div
           className="overflow-hidden rounded-[22px] p-5"
           style={{
-            background:
-              "repeating-linear-gradient(135deg, #f7b6c9 0 18px, #fff4f7 18px 36px)",
+            // Each shop can have its own; the pink stripes were Bronuts' first.
+            background: vendeur.banniere ?? "repeating-linear-gradient(135deg, #f7b6c9 0 18px, #fff4f7 18px 36px)",
           }}
         >
           {vendeur.logoUrl ? (
@@ -131,30 +133,50 @@ export function VendeurVue({
 
         {fidelite && <CarteFidelite carte={fidelite.carte} regle={fidelite.regle} vendeurNom={vendeur.nom} />}
 
-        <Catalogue
-          vendeurId={vendeur.id}
-          vendeurNom={vendeur.nom}
-          unite={vendeur.unite ?? undefined}
-          livraison={vendeur.livraison}
-          fraisLivraison={vendeur.fraisLivraison}
-          cadeau={fidelite?.carte?.prochaine?.libelle ?? null}
-          sansCompte={fidelite !== null && fidelite.carte === null}
-          formules={formules.map((f) => ({
-            id: f.id,
-            nom: f.nom,
-            taille: f.taille,
-            prix: f.prix,
-            prixBarre: f.prixBarre,
-            badge: f.badge,
-          }))}
-          articles={articles.map((a) => ({
-            id: a.id,
-            nom: a.nom,
-            description: a.description,
-            photoUrl: a.photoUrl,
-            enRupture: a.enRupture,
-          }))}
-        />
+        {venteALUnite(formules) ? (
+          <CatalogueUnite
+            vendeurId={vendeur.id}
+            vendeurNom={vendeur.nom}
+            formuleId={formules[0].id}
+            prix={formules[0].prix}
+            unite={vendeur.unite ?? "article"}
+            fraisLivraison={vendeur.fraisLivraison}
+            cadeau={fidelite?.carte?.prochaine?.libelle ?? null}
+            sansCompte={fidelite !== null && fidelite.carte === null}
+            articles={articles.map((a) => ({
+              id: a.id,
+              nom: a.nom,
+              description: a.description,
+              photoUrl: a.photoUrl,
+              enRupture: a.enRupture,
+            }))}
+          />
+        ) : (
+          <Catalogue
+            vendeurId={vendeur.id}
+            vendeurNom={vendeur.nom}
+            unite={vendeur.unite ?? undefined}
+            livraison={vendeur.livraison}
+            fraisLivraison={vendeur.fraisLivraison}
+            cadeau={fidelite?.carte?.prochaine?.libelle ?? null}
+            sansCompte={fidelite !== null && fidelite.carte === null}
+            formules={formules.map((f) => ({
+              id: f.id,
+              nom: f.nom,
+              taille: f.taille,
+              prix: f.prix,
+              prixBarre: f.prixBarre,
+              badge: f.badge,
+            }))}
+            articles={articles.map((a) => ({
+              id: a.id,
+              nom: a.nom,
+              description: a.description,
+              photoUrl: a.photoUrl,
+              enRupture: a.enRupture,
+            }))}
+          />
+        )}
       </div>
     </div>
   );

@@ -642,6 +642,8 @@ export const vendeurs = pgTable("vendeur", {
   logoCarreUrl: text("logo_carre_url"),
   // The wordmark's own background (#rrggbb), behind it in the header. Null: black.
   logoFond: text("logo_fond"),
+  // The page header's own backdrop, a CSS background. Null: Bronuts' pink stripes.
+  banniere: text("banniere"),
   whatsapp: text("whatsapp").notNull(), // digits only, with country code
   livraison: text("livraison"),
   // Added once per order, not per pack: one trip across campus.
