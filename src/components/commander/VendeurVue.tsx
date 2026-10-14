@@ -9,6 +9,10 @@ import { calendrierDe, prochaineLivraison } from "@/lib/livraison";
 import type { Carte, Regle } from "@/lib/fidelite";
 import { CarteFidelite } from "@/components/commander/CarteFidelite";
 import { CatalogueUnite } from "@/components/commander/CatalogueUnite";
+import { CatalogueMenu } from "@/components/commander/CatalogueMenu";
+import { CarteHebdo } from "@/components/commander/CarteHebdo";
+import type { Menu } from "@/lib/menu";
+import type { ProgresHebdo, RegleHebdo } from "@/lib/fidelite";
 import { venteALUnite } from "@/lib/catalogue";
 
 export function VendeurVue({
@@ -16,6 +20,8 @@ export function VendeurVue({
   formules,
   articles,
   fidelite = null,
+  menu = null,
+  hebdo = null,
 }: {
   vendeur: Pick<
     Vendeur,
@@ -25,6 +31,10 @@ export function VendeurVue({
   articles: Article[];
   // null when the shop has no loyalty card; carte null when signed out.
   fidelite?: { carte: Carte | null; regle: Regle } | null;
+  // A restaurant's menu, when the shop has one: it replaces packs and units.
+  menu?: Menu | null;
+  // A weekly loyalty card (dishes since Monday); progres null when signed out.
+  hebdo?: { regle: RegleHebdo; progres: ProgresHebdo | null } | null;
 }) {
   // Worked out on every request, so the date moves on by itself each week.
   const calendrier = calendrierDe(vendeur);
@@ -131,9 +141,20 @@ export function VendeurVue({
           </div>
         )}
 
-        {fidelite && <CarteFidelite carte={fidelite.carte} regle={fidelite.regle} vendeurNom={vendeur.nom} />}
+        {hebdo ? (
+          <CarteHebdo regle={hebdo.regle} progres={hebdo.progres} vendeurNom={vendeur.nom} />
+        ) : (
+          fidelite && <CarteFidelite carte={fidelite.carte} regle={fidelite.regle} vendeurNom={vendeur.nom} />
+        )}
 
-        {venteALUnite(formules) ? (
+        {menu ? (
+          <CatalogueMenu
+            vendeurId={vendeur.id}
+            vendeurNom={vendeur.nom}
+            menu={menu}
+            cadeau={hebdo?.progres?.cadeauPret ? hebdo.regle.libelle : null}
+          />
+        ) : venteALUnite(formules) ? (
           <CatalogueUnite
             vendeurId={vendeur.id}
             vendeurNom={vendeur.nom}

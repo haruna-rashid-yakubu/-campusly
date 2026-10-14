@@ -31,6 +31,8 @@ import { getCatalogue, resumerDetail, type LignePanier } from "@/lib/vendeurs";
 import { calendrierDe, prochaineLivraison } from "@/lib/livraison";
 import { carteDepuis, commandesLivrees, palierPourRang, position, regleDe } from "@/lib/fidelite";
 import { MAX_UNITES, venteALUnite } from "@/lib/catalogue";
+import { MAX_LIGNES, MAX_PAR_LIGNE, libelleLigne, lireMenu, trouverItem, type LigneMenu } from "@/lib/menu";
+import { progresHebdo, regleHebdoDe } from "@/lib/fidelite";
 
 import {
   ensureClassesForFiliere,
@@ -49,6 +51,7 @@ import {
   sendPushToClasse,
   sendPushToDelegues,
   sendPushToEmail,
+  sendPushToEndpoint,
   sendPushToUser,
 } from "@/lib/push";
 
@@ -1665,6 +1668,120 @@ export async function basculerRupture(articleId: number, enRupture: boolean) {
 }
 
 /*
+ * A restaurant order, from its menu. Like the packs, everything is re-read
+ * here — the item, the size, its price, the choice — and the browser only
+ * says what and how many. Dishes add the box they leave in; the way it is
+ * handed over adds its fee. The phone's push address, when it has one, is
+ * kept so that "ready" reaches the student even if never signed in.
+ */
+export async function preparerCommandeMenu(input: {
+  vendeurId: number;
+  lignes: LigneMenu[];
+  mode: string;
+  precision?: string;
+  pushEndpoint?: string | null;
+}) {
+  const [vendeur] = await db.select().from(vendeurs).where(eq(vendeurs.id, input.vendeurId));
+  if (!vendeur) return { ok: false as const, message: "Ce restaurant n'existe plus." };
+  const session = await auth();
+  if (!vendeur.actif && session?.user?.role !== "admin") {
+    return { ok: false as const, message: "Ce restaurant n'est pas encore ouvert." };
+  }
+  const menu = lireMenu(vendeur.menu);
+  if (!menu) return { ok: false as const, message: "Le menu n'est pas disponible." };
+  if (!Array.isArray(input.lignes) || input.lignes.length === 0) {
+    return { ok: false as const, message: "Ton panier est vide." };
+  }
+  if (input.lignes.length > MAX_LIGNES) return { ok: false as const, message: "Trop de lignes dans le panier." };
+  const mode = menu.modes.find((m) => m.id === input.mode);
+  if (!mode) return { ok: false as const, message: "Choisis comment récupérer ta commande." };
+
+  const lignes: { formule: string; parfums: Record<string, number>; plat: boolean; quantite: number }[] = [];
+  const lignesMessage: string[] = [];
+  let sousTotal = 0;
+  let plats = 0;
+  let nbArticles = 0;
+  for (const l of input.lignes) {
+    const item = trouverItem(menu, l.item);
+    const taille = item?.tailles.find((t) => t.id === l.taille);
+    if (!item || !taille) return { ok: false as const, message: "Un article n'est plus au menu." };
+    if (!Number.isInteger(l.quantite) || l.quantite < 1 || l.quantite > MAX_PAR_LIGNE) {
+      return { ok: false as const, message: "Quantité invalide." };
+    }
+    let choix: string | undefined;
+    if (item.choix) {
+      if (!l.choix || !item.choix.options.includes(l.choix)) {
+        return { ok: false as const, message: `Choisis : ${item.choix.titre.toLowerCase()} pour ${item.nom}.` };
+      }
+      choix = l.choix;
+    }
+    const montant = taille.prix * l.quantite;
+    sousTotal += montant;
+    nbArticles += l.quantite;
+    if (item.plat) plats += l.quantite;
+    const libelle = libelleLigne(item, taille, choix);
+    lignes.push({ formule: libelle, parfums: { [choix ?? item.nom]: l.quantite }, plat: !!item.plat, quantite: l.quantite });
+    lignesMessage.push(`• ${l.quantite} × ${libelle} — ${fcfaMessage(montant)}`);
+  }
+
+  const gamelles = plats * menu.gamelle;
+  const total = sousTotal + gamelles + mode.prix;
+
+  // The weekly card: the order after the threshold carries the gift, once a week.
+  const userId = session?.user?.id ?? null;
+  const hebdo = vendeur.fidelite ? regleHebdoDe(vendeur) : null;
+  const progres = hebdo && userId ? await progresHebdo(userId, vendeur.id, hebdo) : null;
+  const cadeau = hebdo && progres?.cadeauPret ? hebdo.libelle : null;
+
+  const reference = nouvelleReference();
+  const nom = session?.user?.name?.trim();
+  const precision = input.precision?.trim().slice(0, 200);
+  const message = [
+    `Bonjour ${vendeur.nom} 👋 Commande via Campusly ${reference}`,
+    "",
+    ...lignesMessage,
+    "",
+    ...(gamelles > 0 ? [`Gamelle${plats > 1 ? "s" : ""} (${plats} plat${plats > 1 ? "s" : ""}) : ${fcfaMessage(gamelles)}`] : []),
+    ...(mode.prix > 0 ? [`${mode.libelle} : ${fcfaMessage(mode.prix)}`] : []),
+    `Total : ${fcfaMessage(total)}`,
+    `Remise : ${mode.libelle}`,
+    ...(cadeau ? ["", `🎁 Carte fidélité Campusly : ${cadeau}`] : []),
+    `Nom : ${nom ?? ""}`,
+    ...(precision ? [`Précision : ${precision}`] : []),
+  ].join("\n");
+
+  try {
+    const { deviceId, classeId } = await appareilCourant();
+    const pushEndpoint =
+      typeof input.pushEndpoint === "string" && input.pushEndpoint.startsWith("https://")
+        ? input.pushEndpoint.slice(0, 1000)
+        : null;
+    await db.insert(commandeEvenements).values({
+      vendeurId: vendeur.id,
+      type: "commander",
+      deviceId,
+      classeId,
+      reference,
+      nbArticles,
+      total,
+      detail: lignes,
+      userId,
+      recompense: cadeau ? "hebdo" : null,
+      mode: mode.id,
+      pushEndpoint,
+    });
+  } catch {
+    // The student still gets to WhatsApp; only the count is lost.
+  }
+
+  return {
+    ok: true as const,
+    reference,
+    url: `https://wa.me/${vendeur.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`,
+  };
+}
+
+/*
  * The vendor's tick, from their own link. The token in the link is the only
  * credential: it is checked against the order's shop on every call, so a
  * guessed order id from another shop does nothing.
@@ -1672,7 +1789,11 @@ export async function basculerRupture(articleId: number, enRupture: boolean) {
  * "Livrée" is what moves the student's loyalty card, and they are told so;
  * undoing it (a mistap) takes the stamp back, silently.
  */
-export async function marquerCommande(token: string, commandeId: number, statut: "livree" | "non_recue" | null) {
+export async function marquerCommande(
+  token: string,
+  commandeId: number,
+  statut: "prete" | "livree" | "non_recue" | null
+) {
   if (!token) return { ok: false as const };
   const [vendeur] = await db.select().from(vendeurs).where(eq(vendeurs.tokenEspace, token));
   if (!vendeur) return { ok: false as const };
@@ -1694,7 +1815,33 @@ export async function marquerCommande(token: string, commandeId: number, statut:
     .set({ statut, statutLe: statut ? new Date() : null })
     .where(eq(commandeEvenements.id, commande.id));
 
-  if (statut === "livree" && commande.statut !== "livree" && commande.userId && vendeur.fidelite) {
+  // "Ready": the student is told, on their account or else on the phone that ordered.
+  if (statut === "prete" && commande.statut !== "prete") {
+    const message = {
+      title: `🔔 Ta commande ${vendeur.nom} est prête`,
+      body:
+        commande.mode === "retrait"
+          ? `Référence ${commande.reference}. Tu peux passer la récupérer.`
+          : `Référence ${commande.reference}. Elle part vers toi.`,
+      url: `/commander/${vendeur.slug}`,
+    };
+    if (commande.userId) await sendPushToUser(commande.userId, message);
+    else if (commande.pushEndpoint) await sendPushToEndpoint(commande.pushEndpoint, message);
+  }
+
+  const hebdo = regleHebdoDe(vendeur);
+  if (statut === "livree" && commande.statut !== "livree" && commande.userId && vendeur.fidelite && hebdo) {
+    const p = await progresHebdo(commande.userId, vendeur.id, hebdo);
+    await sendPushToUser(commande.userId, {
+      title: `${hebdo.icone} Commande ${vendeur.nom} livrée`,
+      body: p.dejaOffert
+        ? "Bon appétit ! Ta carte fidélité repart à zéro lundi."
+        : p.cadeauPret
+          ? `Carte fidélité : ${p.plats} plats cette semaine. Ta prochaine commande : ${hebdo.libelle} 🎁`
+          : `Carte fidélité : ${p.plats}/${p.seuil} plats cette semaine.`,
+      url: `/commander/${vendeur.slug}`,
+    });
+  } else if (statut === "livree" && commande.statut !== "livree" && commande.userId && vendeur.fidelite) {
     const regle = regleDe(vendeur);
     const carte = carteDepuis(regle, await commandesLivrees(commande.userId, vendeur.id));
     const suite =

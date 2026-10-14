@@ -85,15 +85,18 @@ export type StatsVendeur = {
   dernieres: { reference: string; total: number; detail: string; date: Date }[];
 };
 
-type DetailCommande = { formule: string; parfums: Record<string, number> }[];
+// Menu lines also carry quantite (and plat); pack lines only formule and parfums.
+type DetailCommande = { formule: string; parfums: Record<string, number>; quantite?: number; plat?: boolean }[];
 
 export function resumerDetail(detail: DetailCommande): string {
   return detail
-    .map(
-      (l) =>
-        `${l.formule} : ${Object.entries(l.parfums)
-          .map(([nom, q]) => `${q} ${nom}`)
-          .join(", ")}`
+    .map((l) =>
+      // A menu line already names its choice: "2 × Poulet pané (Grand) · Frites de plantain".
+      typeof l.quantite === "number"
+        ? `${l.quantite} × ${l.formule}`
+        : `${l.formule} : ${Object.entries(l.parfums)
+            .map(([nom, q]) => `${q} ${nom}`)
+            .join(", ")}`
     )
     .join(" · ");
 }

@@ -1,4 +1,4 @@
-import { and, count, eq } from "drizzle-orm";
+import { and, count, eq, gte, isNotNull, isNull, ne, or } from "drizzle-orm";
 import { db } from "@/db";
 import { commandeEvenements } from "@/db/schema";
 
@@ -139,4 +139,63 @@ export function resumeRegle(regle: Regle) {
 
 export async function getCarte(userId: string, vendeurId: number, regle: Regle) {
   return carteDepuis(regle, await commandesLivrees(userId, vendeurId));
+}
+
+/*
+ * A weekly card, for a restaurant: so many dishes delivered between Monday
+ * and Saturday earn a gift on the next order, once a week. The count starts
+ * again every Monday in Yaoundé. Dishes, not orders — three plates in one
+ * order are three — and an ice cream is not a dish.
+ */
+export type RegleHebdo = { type: "hebdo"; seuil: number; libelle: string; icone: string };
+
+export function regleHebdoDe(v: { fideliteRegle?: unknown }): RegleHebdo | null {
+  const r = v.fideliteRegle as Partial<RegleHebdo> | null | undefined;
+  if (!r || r.type !== "hebdo" || !Number.isInteger(r.seuil) || (r.seuil ?? 0) < 1 || !r.libelle) return null;
+  return { type: "hebdo", seuil: r.seuil!, libelle: r.libelle, icone: r.icone || "🎁" };
+}
+
+const WAT_MS = 3600_000;
+
+/** Monday 00:00 in Yaoundé, as a UTC instant. */
+export function debutSemaineWAT(maintenant = new Date()) {
+  const wat = new Date(maintenant.getTime() + WAT_MS);
+  const jour = (wat.getUTCDay() + 6) % 7; // 0 = Monday
+  const lundi = Date.UTC(wat.getUTCFullYear(), wat.getUTCMonth(), wat.getUTCDate() - jour);
+  return new Date(lundi - WAT_MS);
+}
+
+type LigneDetail = { plat?: boolean; quantite?: number };
+
+export type ProgresHebdo = { plats: number; seuil: number; cadeauPret: boolean; dejaOffert: boolean };
+
+export async function progresHebdo(userId: string, vendeurId: number, regle: RegleHebdo, maintenant = new Date()) {
+  const depuis = debutSemaineWAT(maintenant);
+  const semaine = and(
+    eq(commandeEvenements.userId, userId),
+    eq(commandeEvenements.vendeurId, vendeurId),
+    eq(commandeEvenements.type, "commander"),
+    gte(commandeEvenements.createdAt, depuis)
+  );
+  const livrees = await db
+    .select({ detail: commandeEvenements.detail })
+    .from(commandeEvenements)
+    .where(and(semaine, eq(commandeEvenements.statut, "livree")));
+  const plats = livrees
+    .flatMap((r) => (Array.isArray(r.detail) ? (r.detail as LigneDetail[]) : []))
+    .filter((l) => l.plat)
+    .reduce((n, l) => n + (l.quantite ?? 0), 0);
+  const [offert] = await db
+    .select({ n: count() })
+    .from(commandeEvenements)
+    .where(
+      and(
+        semaine,
+        isNotNull(commandeEvenements.recompense),
+        // A gift on an order still on its way counts too, or two quick orders would both carry one.
+        or(isNull(commandeEvenements.statut), ne(commandeEvenements.statut, "non_recue"))
+      )
+    );
+  const dejaOffert = (offert?.n ?? 0) > 0;
+  return { plats, seuil: regle.seuil, dejaOffert, cadeauPret: plats >= regle.seuil && !dejaOffert } satisfies ProgresHebdo;
 }

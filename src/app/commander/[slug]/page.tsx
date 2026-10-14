@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { VendeurVue } from "@/components/commander/VendeurVue";
 import { getCatalogue, getVendeurParSlug } from "@/lib/vendeurs";
-import { getCarte, regleDe } from "@/lib/fidelite";
+import { getCarte, progresHebdo, regleDe, regleHebdoDe } from "@/lib/fidelite";
+import { lireMenu } from "@/lib/menu";
 
 export const dynamic = "force-dynamic";
 
@@ -30,14 +31,22 @@ export default async function VendeurPage({ params }: { params: Promise<{ slug: 
   if (!vendeur.actif && !admin) notFound();
 
   const { formules, articles } = await getCatalogue(vendeur.id);
-  const carte = vendeur.fidelite && session?.user?.id ? await getCarte(session.user.id, vendeur.id, regleDe(vendeur)) : null;
+  const menu = lireMenu(vendeur.menu);
+  const regleHebdo = vendeur.fidelite ? regleHebdoDe(vendeur) : null;
+  const carte =
+    vendeur.fidelite && !regleHebdo && session?.user?.id
+      ? await getCarte(session.user.id, vendeur.id, regleDe(vendeur))
+      : null;
+  const progres = regleHebdo && session?.user?.id ? await progresHebdo(session.user.id, vendeur.id, regleHebdo) : null;
 
   return (
     <VendeurVue
       vendeur={vendeur}
       formules={formules}
       articles={articles}
-      fidelite={vendeur.fidelite ? { carte, regle: regleDe(vendeur) } : null}
+      fidelite={vendeur.fidelite && !regleHebdo ? { carte, regle: regleDe(vendeur) } : null}
+      menu={menu}
+      hebdo={regleHebdo ? { regle: regleHebdo, progres } : null}
     />
   );
 }

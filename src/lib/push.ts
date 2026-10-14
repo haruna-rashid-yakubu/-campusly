@@ -212,3 +212,14 @@ export async function sendPushToEmail(email: string, payload: PushPayload) {
     .where(sql`lower(${users.email}) = ${email.toLowerCase()}`);
   return diffuser(subs, payload, "delegation", null);
 }
+
+/*
+ * One phone, by its push address: the device that placed an order without
+ * an account, told that the order is ready. Nothing goes out if the address
+ * is no longer subscribed.
+ */
+export async function sendPushToEndpoint(endpoint: string, payload: PushPayload) {
+  if (!ensureConfigured()) return 0;
+  const subs = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+  return diffuser(subs, payload, "etudiant");
+}

@@ -155,6 +155,13 @@
       "when": 1792080000000,
       "tag": "0021_vendeur_une",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1792090000000,
+      "tag": "0022_menu",
+      "breakpoints": true
     }
   ]
 }

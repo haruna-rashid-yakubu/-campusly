@@ -646,6 +646,9 @@ export const vendeurs = pgTable("vendeur", {
   banniere: text("banniere"),
   // A wide photo for the home screen's "À la une" card. Null: the shop is not featured there.
   uneImage: text("une_image"),
+  // A restaurant's menu: sections of items, each with its sizes and prices.
+  // Null: the shop sells packs or single items (see lib/catalogue.ts).
+  menu: jsonb("menu"),
   whatsapp: text("whatsapp").notNull(), // digits only, with country code
   livraison: text("livraison"),
   // Added once per order, not per pack: one trip across campus.
@@ -751,7 +754,12 @@ export const commandeEvenements = pgTable(
      */
     userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
     // Set by the vendor from their link: "livree" or "non_recue". Null = to do.
-    statut: text("statut", { enum: ["livree", "non_recue"] }),
+    // "prete": the vendor said it is ready, and the student was told. Still to deliver.
+    statut: text("statut", { enum: ["prete", "livree", "non_recue"] }),
+    // How a menu order is handed over ("retrait", "cite"…), as chosen by the student.
+    mode: text("mode"),
+    // The ordering device's push address, so "ready" reaches someone never signed in.
+    pushEndpoint: text("push_endpoint"),
     statutLe: timestamp("statut_le", { mode: "date" }),
     // Which order this was on the card (1, 2, 3…) and the gift it carried.
     rang: integer("rang"),

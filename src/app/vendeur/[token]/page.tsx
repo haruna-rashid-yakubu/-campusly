@@ -5,8 +5,9 @@ import { db } from "@/db";
 import { vendeurs } from "@/db/schema";
 import { LigneCommandeVendeur } from "@/components/commander/LigneCommandeVendeur";
 import { calendrierDe, prochaineLivraison } from "@/lib/livraison";
-import { libelleRecompense, regleDe } from "@/lib/fidelite";
+import { libelleRecompense, regleDe, regleHebdoDe } from "@/lib/fidelite";
 import { getCommandesRecentes, resumerDetail } from "@/lib/vendeurs";
+import { lireMenu } from "@/lib/menu";
 import { fcfa } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -39,6 +40,8 @@ export default async function EspaceVendeurPage({ params }: { params: Promise<{ 
 
   const commandes = await getCommandesRecentes(vendeur.id, 21);
   const regle = regleDe(vendeur);
+  const menu = lireMenu(vendeur.menu);
+  const libelleMode = (id: string | null) => menu?.modes.find((m) => m.id === id)?.libelle ?? null;
 
   const calendrier = calendrierDe(vendeur);
   const groupes = new Map<string, { label: string; tri: number; lignes: typeof commandes }>();
@@ -49,10 +52,10 @@ export default async function EspaceVendeurPage({ params }: { params: Promise<{ 
     g.lignes.push(c);
     groupes.set(cle, g);
   }
-  const ordreStatut = (s: string | null) => (s === null ? 0 : s === "livree" ? 1 : 2);
+  const ordreStatut = (s: string | null) => (s === null || s === "prete" ? 0 : s === "livree" ? 1 : 2);
   const liste = [...groupes.values()].sort((a, b) => b.tri - a.tri);
 
-  const aTraiter = commandes.filter((c) => c.statut === null).length;
+  const aTraiter = commandes.filter((c) => c.statut === null || c.statut === "prete").length;
 
   return (
     <div className="min-h-dvh bg-white pb-12">
@@ -106,8 +109,10 @@ export default async function EspaceVendeurPage({ params }: { params: Promise<{ 
                     })}
                     detail={resumerDetail((c.detail as Detail | null) ?? []) || "Demande de ramassage"}
                     total={c.total ? `Total ${fcfa(c.total)}` : ""}
-                    cadeau={c.recompense ? libelleRecompense(regle, c.recompense) : null}
-                    statut={(c.statut as "livree" | "non_recue" | null) ?? null}
+                    cadeau={c.recompense === "hebdo" ? (regleHebdoDe(vendeur)?.libelle ?? "Cadeau fidélité") : c.recompense ? libelleRecompense(regle, c.recompense) : null}
+                    statut={(c.statut as "prete" | "livree" | "non_recue" | null) ?? null}
+                    mode={libelleMode(c.mode)}
+                    avecPrete={menu !== null}
                   />
                 ))}
             </div>

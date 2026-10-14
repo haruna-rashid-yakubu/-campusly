@@ -1,0 +1,53 @@
+import { SignInButton } from "@/components/SignInButton";
+import type { ProgresHebdo, RegleHebdo } from "@/lib/fidelite";
+
+/*
+ * The weekly card: a bar that fills with the dishes delivered since Monday,
+ * and the one sentence that matters — how many are left, or that the gift
+ * comes with the next order. Signed out, the rule and the reason to sign in.
+ */
+export function CarteHebdo({
+  regle,
+  progres,
+  vendeurNom,
+}: {
+  regle: RegleHebdo;
+  progres: ProgresHebdo | null;
+  vendeurNom: string;
+}) {
+  const plats = Math.min(progres?.plats ?? 0, regle.seuil);
+  return (
+    <div className="mt-3 rounded-[18px] border-[1.5px] border-[#f7b6c9] bg-[#fff6f9] p-3.5">
+      <div className="flex items-baseline justify-between">
+        <span className="text-[14.5px] font-extrabold">Ta carte fidélité {vendeurNom}</span>
+        {progres && (
+          <span className="text-[12.5px] font-bold tabular-nums text-[#c2185b]">
+            {plats}/{regle.seuil} plats
+          </span>
+        )}
+      </div>
+      <div className="mt-2.5 h-3 overflow-hidden rounded-full bg-white ring-1 ring-[#f0a3bd]">
+        <div className="h-full rounded-full bg-[#e5528a]" style={{ width: `${(plats / regle.seuil) * 100}%` }} />
+      </div>
+      <div className="mt-2.5 text-[12.5px] leading-snug text-ink-soft">
+        {!progres ? (
+          <>
+            {regle.seuil} plats commandés dans la semaine (du lundi au samedi) : {regle.libelle}.{" "}
+            <span className="font-bold">Connecte-toi pour cumuler tes plats</span> <SignInButton />
+          </>
+        ) : progres.dejaOffert ? (
+          <>Cadeau de la semaine déjà offert. Ta carte repart à zéro lundi.</>
+        ) : progres.cadeauPret ? (
+          <span className="font-extrabold text-[#c2185b]">
+            {regle.icone} Ta prochaine commande : {regle.libelle} !
+          </span>
+        ) : (
+          <>
+            Encore <b>{regle.seuil - plats}</b> plat{regle.seuil - plats > 1 ? "s" : ""} cette semaine avant :{" "}
+            {regle.libelle}. Un plat compte quand {vendeurNom} l&rsquo;a livré. Remise à zéro chaque lundi.
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

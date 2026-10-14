@@ -19,6 +19,8 @@ export function LigneCommandeVendeur({
   total,
   cadeau,
   statut,
+  mode = null,
+  avecPrete = false,
 }: {
   token: string;
   id: number;
@@ -27,12 +29,16 @@ export function LigneCommandeVendeur({
   detail: string;
   total: string;
   cadeau: string | null;
-  statut: "livree" | "non_recue" | null;
+  statut: "prete" | "livree" | "non_recue" | null;
+  // How the student collects it ("Je passe la chercher", "Livraison en cité").
+  mode?: string | null;
+  // Restaurants tell the student the order is ready; a weekly delivery does not.
+  avecPrete?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
-  const marquer = (s: "livree" | "non_recue" | null) =>
+  const marquer = (s: "prete" | "livree" | "non_recue" | null) =>
     startTransition(async () => {
       await marquerCommande(token, id, s);
       router.refresh();
@@ -54,13 +60,27 @@ export function LigneCommandeVendeur({
       </div>
       <div className="mt-1 text-[14px] leading-snug">{detail}</div>
       {total && <div className="mt-1 text-[13.5px] font-bold">{total}</div>}
+      {mode && <div className="mt-1 text-[13px] font-bold text-teal-dark">{mode}</div>}
       {cadeau && (
         <div className="mt-2 inline-block rounded-full bg-[#fde7ef] px-2.5 py-1 text-[12.5px] font-extrabold text-[#c2185b]">
           🎁 Fidélité : {cadeau}
         </div>
       )}
 
-      {statut === null ? (
+      {avecPrete && (statut === null || statut === "prete") && (
+        <button
+          onClick={() => marquer(statut === "prete" ? null : "prete")}
+          disabled={pending}
+          className={`press-scale mt-3 flex h-[48px] w-full items-center justify-center gap-1.5 rounded-[14px] text-[14.5px] font-bold disabled:opacity-60 ${
+            statut === "prete" ? "border-[1.5px] border-teal text-teal-dark" : "bg-[#f59e0b] text-white"
+          }`}
+        >
+          <Icon name="bell" size={18} strokeWidth={2.2} />
+          {statut === "prete" ? "Prête · étudiant prévenu (annuler)" : "Prête : prévenir l'étudiant"}
+        </button>
+      )}
+
+      {statut === null || statut === "prete" ? (
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button
             onClick={() => marquer("livree")}
