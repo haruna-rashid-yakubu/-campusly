@@ -224,15 +224,14 @@ export async function getCommandesRecentes(vendeurId: number, jours: number) {
 }
 
 /*
- * The shop the home screen announces under "Nouveautés": the most recently
- * added of the open ones, for its first month. After that it is no longer
- * news, and the latest paper takes the line back.
+ * The shops the home screen announces under "Nouveautés": the open ones
+ * added in the last month, newest first, two at most. After a month a shop
+ * is no longer news, and the latest paper takes the line back.
  */
-export function boutiqueRecente(ouvertes: Vendeur[], jours = 30) {
+export function boutiquesRecentes(ouvertes: Vendeur[], jours = 30, max = 2) {
   const depuis = Date.now() - jours * 24 * 3600_000;
-  return (
-    [...ouvertes]
-      .filter((v) => v.createdAt.getTime() >= depuis)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null
-  );
+  return [...ouvertes]
+    .filter((v) => v.createdAt.getTime() >= depuis)
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(0, max);
 }
