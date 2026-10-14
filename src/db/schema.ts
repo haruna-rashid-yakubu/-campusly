@@ -640,6 +640,8 @@ export const vendeurs = pgTable("vendeur", {
   // Wide wordmark for the page header, square version for the list.
   logoUrl: text("logo_url"),
   logoCarreUrl: text("logo_carre_url"),
+  // The wordmark's own background (#rrggbb), behind it in the header. Null: black.
+  logoFond: text("logo_fond"),
   whatsapp: text("whatsapp").notNull(), // digits only, with country code
   livraison: text("livraison"),
   // Added once per order, not per pack: one trip across campus.

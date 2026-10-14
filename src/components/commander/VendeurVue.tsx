@@ -17,7 +17,7 @@ export function VendeurVue({
 }: {
   vendeur: Pick<
     Vendeur,
-    "id" | "nom" | "unite" | "accroche" | "logoUrl" | "livraisonJour" | "limiteJour" | "limiteHeure" | "livraison" | "fraisLivraison" | "horaires" | "actif" | "videoUrl" | "videoPosterUrl"
+    "id" | "nom" | "unite" | "accroche" | "logoUrl" | "logoFond" | "livraisonJour" | "limiteJour" | "limiteHeure" | "livraison" | "fraisLivraison" | "horaires" | "actif" | "videoUrl" | "videoPosterUrl"
   >;
   formules: Formule[];
   articles: Article[];
@@ -27,6 +27,11 @@ export function VendeurVue({
   // Worked out on every request, so the date moves on by itself each week.
   const calendrier = calendrierDe(vendeur);
   const livraison = calendrier ? prochaineLivraison(calendrier) : null;
+
+  // The box behind the logo takes the logo's own background, so the logo
+  // reads as one piece with it; the tagline turns dark on a light one.
+  const fondLogo = vendeur.logoFond ?? "#000000";
+  const fondClair = estClair(fondLogo);
 
   return (
     <div className="min-h-dvh pb-[calc(170px+var(--safe-bottom))]">
@@ -48,7 +53,10 @@ export function VendeurVue({
           }}
         >
           {vendeur.logoUrl ? (
-            <div className="mx-auto max-w-[300px] overflow-hidden rounded-[18px] bg-black px-5 pb-4 pt-3 text-center shadow-[0_6px_18px_rgba(15,23,42,.25)]">
+            <div
+              className="mx-auto max-w-[300px] overflow-hidden rounded-[18px] px-5 pb-4 pt-3 text-center shadow-[0_6px_18px_rgba(15,23,42,.25)]"
+              style={{ background: fondLogo }}
+            >
               <Image
                 src={vendeur.logoUrl}
                 alt={vendeur.nom}
@@ -58,7 +66,11 @@ export function VendeurVue({
                 className="mx-auto h-auto w-[210px]"
               />
               {vendeur.accroche && (
-                <div className="mt-1 text-[13px] font-semibold leading-snug text-white/85">{vendeur.accroche}</div>
+                <div
+                  className={`mt-1 text-[13px] font-semibold leading-snug ${fondClair ? "text-ink-soft" : "text-white/85"}`}
+                >
+                  {vendeur.accroche}
+                </div>
               )}
             </div>
           ) : (
@@ -146,4 +158,12 @@ export function VendeurVue({
       </div>
     </div>
   );
+}
+
+/** Whether a #rrggbb colour is light enough to need dark text on it. */
+function estClair(hex: string) {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  if (!m) return false;
+  const [r, g, b] = m.slice(1).map((x) => parseInt(x, 16));
+  return 0.299 * r + 0.587 * g + 0.114 * b > 160;
 }
