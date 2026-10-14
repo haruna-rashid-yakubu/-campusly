@@ -222,3 +222,17 @@ export async function getCommandesRecentes(vendeurId: number, jours: number) {
     )
     .orderBy(desc(commandeEvenements.createdAt));
 }
+
+/*
+ * The shop the home screen announces under "Nouveautés": the most recently
+ * added of the open ones, for its first month. After that it is no longer
+ * news, and the latest paper takes the line back.
+ */
+export function boutiqueRecente(ouvertes: Vendeur[], jours = 30) {
+  const depuis = Date.now() - jours * 24 * 3600_000;
+  return (
+    [...ouvertes]
+      .filter((v) => v.createdAt.getTime() >= depuis)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null
+  );
+}

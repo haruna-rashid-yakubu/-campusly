@@ -655,8 +655,23 @@ export const vendeurs = pgTable("vendeur", {
   videoPosterUrl: text("video_poster_url"),
   actif: boolean("actif").notNull().default(false),
   ordre: integer("ordre").notNull().default(0),
+  // What one item of a pack is called, singular ("bouteille"). Null: "donut".
+  unite: text("unite"),
   // The Campusly loyalty card (see lib/fidelite.ts) applies to this shop.
   fidelite: boolean("fidelite").notNull().default(false),
+  // The shop's own card: { cycle, icone, paliers: [{ rang, cle, libelle, icone }] }.
+  // Null keeps the first card, Bronuts'.
+  fideliteRegle: jsonb("fidelite_regle"),
+  /*
+   * What the shop pays Campusly. "forfait": a flat monthly fee. "commission":
+   * so much per item sold through the app, with a monthly minimum paid in
+   * advance at the start of the month — the balance is settled with the next
+   * month's advance. Null: nothing billed (the pressing, a trial).
+   */
+  facturation: text("facturation", { enum: ["forfait", "commission"] }),
+  forfaitMensuel: integer("forfait_mensuel"),
+  commissionParArticle: integer("commission_par_article"),
+  minimumMensuel: integer("minimum_mensuel"),
   /*
    * The secret in the vendor's own link, /vendeur/<token>, where they mark
    * orders delivered. A link rather than an account: the vendor keeps one

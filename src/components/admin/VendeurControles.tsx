@@ -133,3 +133,24 @@ export function LienVendeur({ vendeurId, token, nom }: { vendeurId: number; toke
     </div>
   );
 }
+
+/* The month's statement, ready to paste in the vendor's WhatsApp. */
+export function CopierReleve({ texte }: { texte: string }) {
+  const { show } = useToast();
+  const copier = async () => {
+    try {
+      await navigator.clipboard.writeText(texte);
+      show("Relevé copié, colle-le dans WhatsApp", "success");
+    } catch {
+      show("Copie impossible sur ce navigateur", "warn");
+    }
+  };
+  return (
+    <button
+      onClick={copier}
+      className="press-scale mt-2 h-[40px] w-full rounded-[12px] bg-teal text-[13.5px] font-bold text-white"
+    >
+      Copier le relevé pour WhatsApp
+    </button>
+  );
+}

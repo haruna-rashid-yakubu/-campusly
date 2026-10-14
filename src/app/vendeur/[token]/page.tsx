@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { vendeurs } from "@/db/schema";
 import { LigneCommandeVendeur } from "@/components/commander/LigneCommandeVendeur";
 import { calendrierDe, prochaineLivraison } from "@/lib/livraison";
-import { LIBELLES, type Recompense } from "@/lib/fidelite";
+import { libelleRecompense, regleDe } from "@/lib/fidelite";
 import { getCommandesRecentes, resumerDetail } from "@/lib/vendeurs";
 import { fcfa } from "@/lib/utils";
 
@@ -32,6 +32,7 @@ export default async function EspaceVendeurPage({ params }: { params: Promise<{ 
   if (!vendeur) notFound();
 
   const commandes = await getCommandesRecentes(vendeur.id, 21);
+  const regle = regleDe(vendeur);
 
   const calendrier = calendrierDe(vendeur);
   const groupes = new Map<string, { label: string; tri: number; lignes: typeof commandes }>();
@@ -99,7 +100,7 @@ export default async function EspaceVendeurPage({ params }: { params: Promise<{ 
                     })}
                     detail={resumerDetail((c.detail as Detail | null) ?? []) || "Demande de ramassage"}
                     total={c.total ? `Total ${fcfa(c.total)}` : ""}
-                    cadeau={c.recompense ? LIBELLES[c.recompense as Recompense] ?? c.recompense : null}
+                    cadeau={c.recompense ? libelleRecompense(regle, c.recompense) : null}
                     statut={(c.statut as "livree" | "non_recue" | null) ?? null}
                   />
                 ))}

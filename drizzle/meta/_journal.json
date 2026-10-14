@@ -134,6 +134,13 @@
       "when": 1792050000000,
       "tag": "0018_notification_annales",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792060000000,
+      "tag": "0019_vendeur_regles",
+      "breakpoints": true
     }
   ]
 }

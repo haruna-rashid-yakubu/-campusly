@@ -24,7 +24,7 @@ import {
 import { dismissInstallBanner } from "@/lib/actions";
 import { SondageVote } from "@/components/SondageVote";
 import { getMaReponse, getResultats, getSondageOuvert } from "@/lib/sondage";
-import { getVendeurs } from "@/lib/vendeurs";
+import { boutiqueRecente, getVendeurs } from "@/lib/vendeurs";
 import { AccueilServices } from "@/components/AccueilServices";
 import { distanceLabel, fcfa, isWithinLastWeek } from "@/lib/utils";
 
@@ -53,7 +53,7 @@ export default async function AccueilPage() {
 
   const firstName = session?.user?.name?.split(" ")[0] ?? null;
   const vendeursOuverts = await getVendeurs();
-  const vendeurAnnonce = vendeursOuverts[0] ?? null;
+  const vendeurAnnonce = boutiqueRecente(vendeursOuverts);
 
   // The open poll is answered right here, first thing under the greeting, and
   // stays with its results once answered, so the screen everyone lands on

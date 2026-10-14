@@ -44,6 +44,7 @@ export function Catalogue({
   sansCompte = false,
   formules,
   articles,
+  unite = "donut",
 }: {
   vendeurId: number;
   vendeurNom: string;
@@ -55,7 +56,10 @@ export function Catalogue({
   sansCompte?: boolean;
   formules: Formule[];
   articles: Article[];
+  // What one item of a pack is called, singular: "donut", "bouteille".
+  unite?: string;
 }) {
+  const unites = (n: number) => `${unite}${n > 1 ? "s" : ""}`;
   const [formuleId, setFormuleId] = useState<number | null>(null);
   const [compo, setCompo] = useState<Record<number, number>>({});
   const [panier, setPanier] = useState<Ligne[]>([]);
@@ -146,7 +150,7 @@ export function Catalogue({
                 </span>
               )}
               <span className="text-[26px] font-extrabold leading-none tabular-nums">{f.taille}</span>
-              <span className="mt-0.5 text-[12px] font-bold text-slate-light">donuts</span>
+              <span className="mt-0.5 text-[12px] font-bold text-slate-light">{unites(f.taille)}</span>
               {f.prixBarre && (
                 <span className="mt-1.5 text-[11.5px] font-semibold text-slate-light line-through tabular-nums">
                   {fcfa(f.prixBarre)}
@@ -171,7 +175,7 @@ export function Catalogue({
         droite={
           formule ? (
             <span className={`text-[13px] font-extrabold tabular-nums ${plein ? "text-teal-dark" : "text-slate-light"}`}>
-              {compte} / {formule.taille} donuts
+              {compte} / {formule.taille} {unites(formule.taille)}
             </span>
           ) : null
         }
@@ -239,7 +243,7 @@ export function Catalogue({
           <Icon name="plus" size={18} strokeWidth={2.2} />
           {plein
             ? `Ajouter le ${formule.nom.toLowerCase()} au panier`
-            : `Encore ${formule.taille - compte} donut${formule.taille - compte > 1 ? "s" : ""} à choisir`}
+            : `Encore ${formule.taille - compte} ${unites(formule.taille - compte)} à choisir`}
         </button>
       )}
 

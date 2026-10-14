@@ -29,7 +29,7 @@ import { deleteFile, uploadFile } from "@/lib/blob";
 import { estOuvert, getSondage, getSondageOuvert } from "@/lib/sondage";
 import { getCatalogue, resumerDetail, type LignePanier } from "@/lib/vendeurs";
 import { calendrierDe, prochaineLivraison } from "@/lib/livraison";
-import { LIBELLES, carteDepuis, commandesLivrees, position, recompensePourRang } from "@/lib/fidelite";
+import { carteDepuis, commandesLivrees, palierPourRang, position, regleDe } from "@/lib/fidelite";
 
 import {
   ensureClassesForFiliere,
@@ -1554,7 +1554,7 @@ export async function preparerCommande(input: {
     if (compte !== formule.taille) {
       return {
         ok: false as const,
-        message: `Ton ${formule.nom.toLowerCase()} doit contenir ${formule.taille} donuts.`,
+        message: `Ton ${formule.nom.toLowerCase()} doit contenir ${formule.taille} ${vendeur.unite ?? "donut"}${formule.taille > 1 ? "s" : ""}.`,
       };
     }
     lignes.push({ formule: formule.nom, parfums });
@@ -1578,7 +1578,9 @@ export async function preparerCommande(input: {
   // The loyalty card counts signed-in orders only, so it follows the person.
   const userId = session?.user?.id ?? null;
   const rang = vendeur.fidelite && userId ? (await commandesLivrees(userId, vendeur.id)) + 1 : null;
-  const recompense = rang ? recompensePourRang(rang) : null;
+  const regle = regleDe(vendeur);
+  const palier = rang ? palierPourRang(regle, rang) : null;
+  const recompense = palier?.cle ?? null;
 
   const reference = nouvelleReference();
   const nom = session?.user?.name?.trim();
@@ -1597,10 +1599,10 @@ export async function preparerCommande(input: {
       : []),
     `Total : ${fcfaMessage(total)}`,
     ...(livraisonPrevue ? [`Livraison prévue : ${livraisonPrevue.label}`] : []),
-    ...(recompense && rang
+    ...(palier && rang
       ? [
           "",
-          `🎁 Carte fidélité Campusly : ${position(rang)}e commande → ${LIBELLES[recompense]}`,
+          `🎁 Carte fidélité Campusly : ${position(regle, rang)}e commande → ${palier.libelle}`,
         ]
       : []),
     `Nom : ${nom ?? ""}`,
@@ -1679,14 +1681,15 @@ export async function marquerCommande(token: string, commandeId: number, statut:
     .where(eq(commandeEvenements.id, commande.id));
 
   if (statut === "livree" && commande.statut !== "livree" && commande.userId && vendeur.fidelite) {
-    const carte = carteDepuis(await commandesLivrees(commande.userId, vendeur.id));
+    const regle = regleDe(vendeur);
+    const carte = carteDepuis(regle, await commandesLivrees(commande.userId, vendeur.id));
     const suite =
       carte.prochaine
-        ? `Ta prochaine commande : ${LIBELLES[carte.prochaine]} 🎁`
-        : `Encore ${carte.prochainCadeau.dans} commande${carte.prochainCadeau.dans > 1 ? "s" : ""} avant ${LIBELLES[carte.prochainCadeau.recompense]}.`;
+        ? `Ta prochaine commande : ${carte.prochaine.libelle} 🎁`
+        : `Encore ${carte.prochainCadeau.dans} commande${carte.prochainCadeau.dans > 1 ? "s" : ""} avant ${carte.prochainCadeau.palier.libelle}.`;
     await sendPushToUser(commande.userId, {
-      title: `🍩 Commande ${vendeur.nom} livrée`,
-      body: `Carte fidélité : ${carte.tampons === 0 ? 10 : carte.tampons}/10. ${suite}`,
+      title: `${regle.icone} Commande ${vendeur.nom} livrée`,
+      body: `Carte fidélité : ${carte.tampons === 0 ? regle.cycle : carte.tampons}/${regle.cycle}. ${suite}`,
       url: `/commander/${vendeur.slug}`,
     });
   }

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { VendeurVue } from "@/components/commander/VendeurVue";
 import { getCatalogue, getVendeurParSlug } from "@/lib/vendeurs";
-import { getCarte } from "@/lib/fidelite";
+import { getCarte, regleDe } from "@/lib/fidelite";
 
 export const dynamic = "force-dynamic";
 
@@ -30,14 +30,14 @@ export default async function VendeurPage({ params }: { params: Promise<{ slug: 
   if (!vendeur.actif && !admin) notFound();
 
   const { formules, articles } = await getCatalogue(vendeur.id);
-  const carte = vendeur.fidelite && session?.user?.id ? await getCarte(session.user.id, vendeur.id) : null;
+  const carte = vendeur.fidelite && session?.user?.id ? await getCarte(session.user.id, vendeur.id, regleDe(vendeur)) : null;
 
   return (
     <VendeurVue
       vendeur={vendeur}
       formules={formules}
       articles={articles}
-      fidelite={vendeur.fidelite ? { carte } : null}
+      fidelite={vendeur.fidelite ? { carte, regle: regleDe(vendeur) } : null}
     />
   );
 }

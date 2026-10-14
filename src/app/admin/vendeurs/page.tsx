@@ -4,7 +4,8 @@ import { auth } from "@/auth";
 import { BackHeader } from "@/components/BackHeader";
 import { SignInRequired } from "@/components/SignInRequired";
 import { EmptyState, Badge } from "@/components/EmptyState";
-import { LienVendeur, OuvertureVendeur, RuptureToggle } from "@/components/admin/VendeurControles";
+import { CopierReleve, LienVendeur, OuvertureVendeur, RuptureToggle } from "@/components/admin/VendeurControles";
+import { getReleve, moisDe, type Releve } from "@/lib/facturation";
 import { getCatalogue, getStatsVendeur, getVendeurs } from "@/lib/vendeurs";
 import { fcfa } from "@/lib/utils";
 
@@ -47,11 +48,19 @@ export default async function VendeursAdminPage({
   const { jours: brut } = await searchParams;
   const jours = PERIODES.includes(Number(brut) as (typeof PERIODES)[number]) ? Number(brut) : 7;
   const vendeurs = await getVendeurs({ inclureInactifs: true, inclureInternes: true });
+  const ceMois = moisDe(new Date());
+  const moisPasse =
+    ceMois.mois === 0 ? { annee: ceMois.annee - 1, mois: 11 } : { annee: ceMois.annee, mois: ceMois.mois - 1 };
   const fiches = await Promise.all(
     vendeurs.map(async (v) => ({
       vendeur: v,
       stats: await getStatsVendeur(v.id, jours),
       catalogue: await getCatalogue(v.id),
+      releves: v.facturation
+        ? await Promise.all(
+            [ceMois, moisPasse].map((m) => getReleve(v, m.annee, m.mois))
+          )
+        : [],
     }))
   );
 
@@ -77,7 +86,7 @@ export default async function VendeursAdminPage({
           <p className="mt-6 text-[14px] text-slate-light">Aucun vendeur pour l&rsquo;instant.</p>
         )}
 
-        {fiches.map(({ vendeur: v, stats: s, catalogue }) => (
+        {fiches.map(({ vendeur: v, stats: s, catalogue, releves }) => (
           <section key={v.id} className="mt-5 rounded-[20px] border-[1.5px] border-line-4 p-4">
             <div className="flex items-center justify-between gap-2">
               <div className="text-[18px] font-extrabold">{v.nom}</div>
@@ -88,6 +97,9 @@ export default async function VendeursAdminPage({
             </Link>
             <OuvertureVendeur id={v.id} nom={v.nom} actif={v.actif} />
             {v.tokenEspace && <LienVendeur vendeurId={v.id} token={v.tokenEspace} nom={v.nom} />}
+            {releves.map((r, i) =>
+              r ? <ReleveMois key={r.mois} releve={r} vendeur={v} enCours={i === 0} /> : null
+            )}
 
             <div className="mt-4 text-[12px] font-bold uppercase tracking-wide text-slate-light">
               Sur {s.jours} jours
@@ -196,5 +208,67 @@ function Liste({ titre, lignes }: { titre: string; lignes: [string, string][] })
         </div>
       ))}
     </>
+  );
+}
+
+/*
+ * The month's bill for a shop on commission or flat fee. The current month
+ * is a running count; the previous one is what to ask for at the start of
+ * this month, with the new advance.
+ */
+function ReleveMois({
+  releve: r,
+  vendeur: v,
+  enCours,
+}: {
+  releve: Releve;
+  vendeur: { nom: string; facturation: string | null; commissionParArticle: number | null };
+  enCours: boolean;
+}) {
+  const commission = v.facturation === "commission";
+  const texte = [
+    `Relevé Campusly · ${v.nom} · ${r.mois}`,
+    "",
+    ...r.lignes.map(
+      (l) =>
+        `${l.reference} · ${l.date.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", timeZone: "Africa/Douala" })} · ${l.articles} article${l.articles > 1 ? "s" : ""}${
+          l.note === "pas_recue" ? " · Pas reçue, non comptée" : l.note === "pas_recue_tardive" ? " · Pas reçue après 48 h, comptée" : ""
+        }`
+    ),
+    "",
+    ...(commission
+      ? [
+          `Articles comptés : ${r.articles} × ${fcfa(v.commissionParArticle ?? 0)} = ${fcfa(r.articles * (v.commissionParArticle ?? 0))}`,
+          `Avance payée en début de mois : ${fcfa(r.avance)}`,
+          `Reste à payer avec l'avance du mois prochain : ${fcfa(r.reste)}`,
+        ]
+      : [`Forfait du mois : ${fcfa(r.du)}`]),
+  ].join("\n");
+
+  return (
+    <div className="mt-4 rounded-[14px] border border-line p-3">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-[13px] font-bold text-ink-soft first-letter:uppercase">
+          {r.mois} {enCours ? "· en cours" : ""}
+        </span>
+        <span className="text-[12px] text-slate-light">{commission ? "Commission" : "Forfait"}</span>
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        <Chiffre valeur={r.articles} legende="Articles comptés" />
+        <Chiffre valeur={r.du} legende="Dû pour le mois (F)" />
+        <Chiffre valeur={r.reste} legende="Reste après l'avance (F)" />
+      </div>
+      {(r.exclues > 0 || r.tardives > 0) && (
+        <p className="mt-1.5 text-[11.5px] leading-snug text-slate-light">
+          {r.exclues > 0 && <>{r.exclues} « Pas reçue » non comptée{r.exclues > 1 ? "s" : ""}. </>}
+          {r.tardives > 0 && (
+            <b className="text-warn-ink">
+              {r.tardives} « Pas reçue » marquée{r.tardives > 1 ? "s" : ""} après 48 h, comptée{r.tardives > 1 ? "s" : ""}.
+            </b>
+          )}
+        </p>
+      )}
+      {r.lignes.length > 0 && <CopierReleve texte={texte} />}
+    </div>
   );
 }
