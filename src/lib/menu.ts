@@ -20,10 +20,11 @@ export type ItemMenu = {
   plat?: boolean;
 };
 export type SectionMenu = { titre: string; items: ItemMenu[] };
-export type ModeRemise = { id: string; libelle: string; prix: number; detail?: string };
+// gamelle: the dishes leave in a box, charged per dish (takeaway, delivery — not eating in).
+export type ModeRemise = { id: string; libelle: string; prix: number; detail?: string; gamelle?: boolean };
 export type Menu = {
   sections: SectionMenu[];
-  // Per dish, for the box it leaves in.
+  // Per dish, for the box it leaves in, when the way it is handed over needs one.
   gamelle: number;
   modes: ModeRemise[];
 };

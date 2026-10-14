@@ -53,8 +53,8 @@ export function CatalogueMenu({
   const prixLigne = (l: LigneMenu) => (items.get(l.item)?.tailles.find((t) => t.id === l.taille)?.prix ?? 0) * l.quantite;
   const sousTotal = panier.reduce((s, l) => s + prixLigne(l), 0);
   const plats = panier.reduce((n, l) => n + (items.get(l.item)?.plat ? l.quantite : 0), 0);
-  const gamelles = plats * menu.gamelle;
   const modeChoisi = menu.modes.find((m) => m.id === mode) ?? menu.modes[0];
+  const gamelles = modeChoisi.gamelle ? plats * menu.gamelle : 0;
   const total = panier.length > 0 ? sousTotal + gamelles + modeChoisi.prix : 0;
   const nbArticles = panier.reduce((n, l) => n + l.quantite, 0);
 
@@ -168,8 +168,11 @@ export function CatalogueMenu({
                       <span className="block text-[14px] font-bold">{m.libelle}</span>
                       {m.detail && <span className="block text-[12px] text-slate-light">{m.detail}</span>}
                     </span>
-                    <span className="flex-none text-[13px] font-extrabold tabular-nums">
+                    <span className="flex-none text-right text-[13px] font-extrabold tabular-nums">
                       {m.prix > 0 ? `+ ${f(m.prix)}` : "Gratuit"}
+                      {m.gamelle && menu.gamelle > 0 && plats > 0 && (
+                        <span className="block text-[11px] font-semibold text-slate-light">+ gamelle</span>
+                      )}
                     </span>
                   </button>
                 ))}

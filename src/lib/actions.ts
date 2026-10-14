@@ -1724,7 +1724,7 @@ export async function preparerCommandeMenu(input: {
     lignesMessage.push(`• ${l.quantite} × ${libelle} — ${fcfaMessage(montant)}`);
   }
 
-  const gamelles = plats * menu.gamelle;
+  const gamelles = mode.gamelle ? plats * menu.gamelle : 0;
   const total = sousTotal + gamelles + mode.prix;
 
   // The weekly card: the order after the threshold carries the gift, once a week.
@@ -1815,12 +1815,15 @@ export async function marquerCommande(
     .set({ statut, statutLe: statut ? new Date() : null })
     .where(eq(commandeEvenements.id, commande.id));
 
-  // "Ready": the student is told, on their account or else on the phone that ordered.
-  if (statut === "prete" && commande.statut !== "prete") {
+  // "Ready": the student is told, on their account or else on the phone that
+  // ordered. Ticking "Livrée" straight away tells them too — once: an order
+  // already marked ready is not announced a second time.
+  const dejaPrevenu = commande.statut === "prete" || commande.statut === "livree";
+  if ((statut === "prete" || (statut === "livree" && lireMenu(vendeur.menu))) && !dejaPrevenu) {
     const message = {
       title: `🔔 Ta commande ${vendeur.nom} est prête`,
       body:
-        commande.mode === "retrait"
+        commande.mode === "retrait" || commande.mode === "sur-place"
           ? `Référence ${commande.reference}. Tu peux passer la récupérer.`
           : `Référence ${commande.reference}. Elle part vers toi.`,
       url: `/commander/${vendeur.slug}`,
