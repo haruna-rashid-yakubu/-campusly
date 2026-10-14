@@ -9,6 +9,8 @@
  * order from what this returns.
  */
 
+import type { CSSProperties } from "react";
+
 export type Taille = { id: string; nom: string; prix: number };
 export type ItemMenu = {
   id: string;
@@ -22,8 +24,15 @@ export type ItemMenu = {
 export type SectionMenu = { titre: string; items: ItemMenu[] };
 // gamelle: the dishes leave in a box, charged per dish (takeaway, delivery — not eating in).
 export type ModeRemise = { id: string; libelle: string; prix: number; detail?: string; gamelle?: boolean };
+/*
+ * A shop's own colours for its page, so a chicken shop does not wear the
+ * donut shop's pink and black: accent for the buttons and what is picked,
+ * fonce for its name and figures, doux and bord for the soft panels.
+ */
+export type Theme = { accent: string; fonce: string; doux: string; bord: string };
 export type Menu = {
   sections: SectionMenu[];
+  theme?: Theme;
   // Per dish, for the box it leaves in, when the way it is handed over needs one.
   gamelle: number;
   modes: ModeRemise[];
@@ -56,7 +65,29 @@ export function lireMenu(brut: unknown): Menu | null {
     (x): x is ModeRemise => !!x && typeof x.id === "string" && typeof x.libelle === "string" && Number.isInteger(x.prix)
   );
   if (sections.length === 0 || modes.length === 0) return null;
-  return { sections, modes, gamelle: Number.isInteger(m.gamelle) ? (m.gamelle as number) : 0 };
+  return { sections, modes, gamelle: Number.isInteger(m.gamelle) ? (m.gamelle as number) : 0, theme: lireTheme(m.theme) };
+}
+
+const HEX = /^#[0-9a-fA-F]{6}$/;
+
+// The colours end up in a style attribute: only plain hex gets through.
+function lireTheme(brut: unknown): Theme | undefined {
+  const t = brut as Partial<Theme> | null | undefined;
+  if (!t) return undefined;
+  const { accent, fonce, doux, bord } = t;
+  if (![accent, fonce, doux, bord].every((c) => typeof c === "string" && HEX.test(c))) return undefined;
+  return { accent: accent!, fonce: fonce!, doux: doux!, bord: bord! };
+}
+
+/** The theme as CSS variables, read by the shop page's pieces with their usual colours as fallback. */
+export function variablesTheme(theme?: Theme) {
+  if (!theme) return undefined;
+  return {
+    "--v-accent": theme.accent,
+    "--v-fonce": theme.fonce,
+    "--v-doux": theme.doux,
+    "--v-bord": theme.bord,
+  } as CSSProperties;
 }
 
 export function trouverItem(menu: Menu, id: string) {

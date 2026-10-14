@@ -11,7 +11,7 @@ import { CarteFidelite } from "@/components/commander/CarteFidelite";
 import { CatalogueUnite } from "@/components/commander/CatalogueUnite";
 import { CatalogueMenu } from "@/components/commander/CatalogueMenu";
 import { CarteHebdo } from "@/components/commander/CarteHebdo";
-import type { Menu } from "@/lib/menu";
+import { variablesTheme, type Menu } from "@/lib/menu";
 import type { ProgresHebdo, RegleHebdo } from "@/lib/fidelite";
 import { venteALUnite } from "@/lib/catalogue";
 
@@ -46,7 +46,7 @@ export function VendeurVue({
   const fondClair = estClair(fondLogo);
 
   return (
-    <div className="min-h-dvh pb-[calc(170px+var(--safe-bottom))]">
+    <div className="min-h-dvh pb-[calc(170px+var(--safe-bottom))]" style={variablesTheme(menu?.theme)}>
       <BackHeader title={vendeur.nom} fallbackHref="/commander" />
 
       <div className="px-5">
@@ -86,8 +86,8 @@ export function VendeurVue({
               )}
             </div>
           ) : (
-            <div className="inline-block rounded-[16px] bg-white/90 px-4 py-3 shadow-[0_4px_14px_rgba(229,82,138,.18)]">
-              <div className="text-[26px] font-extrabold leading-none tracking-tight text-[#c2185b]">
+            <div className="inline-block rounded-[16px] bg-white/90 px-4 py-3 shadow-[0_4px_14px_rgba(15,23,42,.14)]">
+              <div className="text-[26px] font-extrabold leading-none tracking-tight text-[var(--v-fonce,#c2185b)]">
                 {vendeur.nom}
               </div>
               {vendeur.accroche && (
@@ -127,13 +127,13 @@ export function VendeurVue({
           <div className="mt-3 flex flex-col gap-1.5 text-[13px] text-slate">
             {vendeur.horaires && (
               <div className="flex items-center gap-2">
-                <Icon name="cal" size={16} className="text-teal-dark" />
+                <Icon name="cal" size={16} className="text-[var(--v-accent,#0a7f77)]" />
                 {vendeur.horaires}
               </div>
             )}
             {vendeur.livraison && (
               <div className="flex items-center gap-2">
-                <Icon name="pin" size={16} className="text-teal-dark" />
+                <Icon name="pin" size={16} className="text-[var(--v-accent,#0a7f77)]" />
                 {vendeur.livraison}
                 {vendeur.fraisLivraison > 0 && ` · ${fcfa(vendeur.fraisLivraison)}`}
               </div>

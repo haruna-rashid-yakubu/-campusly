@@ -17,17 +17,17 @@ export function CarteHebdo({
 }) {
   const plats = Math.min(progres?.plats ?? 0, regle.seuil);
   return (
-    <div className="mt-3 rounded-[18px] border-[1.5px] border-[#f7b6c9] bg-[#fff6f9] p-3.5">
+    <div className="mt-3 rounded-[18px] border-[1.5px] border-[var(--v-bord,#f7b6c9)] bg-[var(--v-doux,#fff6f9)] p-3.5">
       <div className="flex items-baseline justify-between">
         <span className="text-[14.5px] font-extrabold">Ta carte fidélité {vendeurNom}</span>
         {progres && (
-          <span className="text-[12.5px] font-bold tabular-nums text-[#c2185b]">
+          <span className="text-[12.5px] font-bold tabular-nums text-[var(--v-fonce,#c2185b)]">
             {plats}/{regle.seuil} plats
           </span>
         )}
       </div>
-      <div className="mt-2.5 h-3 overflow-hidden rounded-full bg-white ring-1 ring-[#f0a3bd]">
-        <div className="h-full rounded-full bg-[#e5528a]" style={{ width: `${(plats / regle.seuil) * 100}%` }} />
+      <div className="mt-2.5 h-3 overflow-hidden rounded-full bg-white ring-1 ring-[var(--v-bord,#f0a3bd)]">
+        <div className="h-full rounded-full bg-[var(--v-accent,#e5528a)]" style={{ width: `${(plats / regle.seuil) * 100}%` }} />
       </div>
       <div className="mt-2.5 text-[12.5px] leading-snug text-ink-soft">
         {!progres ? (
@@ -38,7 +38,7 @@ export function CarteHebdo({
         ) : progres.dejaOffert ? (
           <>Cadeau de la semaine déjà offert. Ta carte repart à zéro lundi.</>
         ) : progres.cadeauPret ? (
-          <span className="font-extrabold text-[#c2185b]">
+          <span className="font-extrabold text-[var(--v-fonce,#c2185b)]">
             {regle.icone} Ta prochaine commande : {regle.libelle} !
           </span>
         ) : (

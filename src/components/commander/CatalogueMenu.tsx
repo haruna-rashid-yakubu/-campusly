@@ -145,7 +145,7 @@ export function CatalogueMenu({
                   <button
                     onClick={() => changer(i, 1)}
                     aria-label="Un de plus"
-                    className="press-scale grid h-8 w-8 place-items-center rounded-full bg-teal text-white"
+                    className="press-scale grid h-8 w-8 place-items-center rounded-full bg-[var(--v-accent,#14b8ac)] text-white"
                   >
                     <Icon name="plus" size={15} strokeWidth={2.4} />
                   </button>
@@ -161,7 +161,7 @@ export function CatalogueMenu({
                     key={m.id}
                     onClick={() => setMode(m.id)}
                     className={`flex items-center justify-between gap-2 rounded-[14px] border-[1.5px] px-3 py-2.5 text-left ${
-                      mode === m.id ? "border-teal bg-teal-tint-soft" : "border-line-4"
+                      mode === m.id ? "border-[var(--v-accent,#14b8ac)] bg-[var(--v-doux,#f4fbfa)]" : "border-line-4"
                     }`}
                   >
                     <span className="min-w-0">
@@ -206,7 +206,7 @@ export function CatalogueMenu({
           </div>
 
           {cadeau && (
-            <div className="mt-2.5 rounded-[14px] bg-[#fde7ef] px-3.5 py-2.5 text-[13.5px] font-extrabold text-[#c2185b]">
+            <div className="mt-2.5 rounded-[14px] bg-[var(--v-doux,#fde7ef)] px-3.5 py-2.5 text-[13.5px] font-extrabold text-[var(--v-fonce,#c2185b)]">
               🎁 Carte fidélité : {cadeau} avec cette commande
             </div>
           )}
@@ -287,7 +287,7 @@ function CarteItem({ item, onAjouter }: { item: ItemMenu; onAjouter: (l: Omit<Li
               key={t.id}
               onClick={() => setTaille(t.id)}
               className={`rounded-[12px] border-[1.5px] px-1 py-1.5 text-center ${
-                taille === t.id ? "border-teal bg-teal-tint-soft" : "border-line-4"
+                taille === t.id ? "border-[var(--v-accent,#14b8ac)] bg-[var(--v-doux,#f4fbfa)]" : "border-line-4"
               }`}
             >
               <span className="block text-[12px] font-bold text-slate">{t.nom}</span>
@@ -306,7 +306,7 @@ function CarteItem({ item, onAjouter }: { item: ItemMenu; onAjouter: (l: Omit<Li
                 key={o}
                 onClick={() => setChoix(o)}
                 className={`h-[34px] rounded-full px-3 text-[12.5px] font-bold ${
-                  choix === o ? "bg-teal text-white" : "border-[1.5px] border-line-4 text-slate"
+                  choix === o ? "bg-[var(--v-accent,#14b8ac)] text-white" : "border-[1.5px] border-line-4 text-slate"
                 }`}
               >
                 {o}
@@ -319,7 +319,7 @@ function CarteItem({ item, onAjouter }: { item: ItemMenu; onAjouter: (l: Omit<Li
       <button
         onClick={() => onAjouter({ item: item.id, taille, choix })}
         disabled={manqueChoix}
-        className="press-scale mt-3 flex h-[44px] w-full items-center justify-center gap-1.5 rounded-[13px] bg-ink text-[14px] font-bold text-white disabled:opacity-40"
+        className="press-scale mt-3 flex h-[44px] w-full items-center justify-center gap-1.5 rounded-[13px] bg-[var(--v-accent,#0f172a)] text-[14px] font-bold text-white disabled:opacity-40"
       >
         <Icon name="plus" size={16} strokeWidth={2.4} />
         {manqueChoix ? `Choisis ${item.choix!.titre.toLowerCase()}` : "Ajouter"}
