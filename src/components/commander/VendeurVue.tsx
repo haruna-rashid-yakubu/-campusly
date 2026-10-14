@@ -11,6 +11,7 @@ import { CarteFidelite } from "@/components/commander/CarteFidelite";
 import { CatalogueUnite } from "@/components/commander/CatalogueUnite";
 import { CatalogueMenu } from "@/components/commander/CatalogueMenu";
 import { CarteHebdo } from "@/components/commander/CarteHebdo";
+import { EnteteResto } from "@/components/commander/EnteteResto";
 import { variablesTheme, type Menu } from "@/lib/menu";
 import type { ProgresHebdo, RegleHebdo } from "@/lib/fidelite";
 import { venteALUnite } from "@/lib/catalogue";
@@ -56,7 +57,16 @@ export function VendeurVue({
           </div>
         )}
 
-        {/* The box the donuts come in: pink and white stripes. */}
+        {menu?.theme ? (
+          <EnteteResto
+            nom={vendeur.nom}
+            accroche={vendeur.accroche}
+            theme={menu.theme}
+            fond={vendeur.banniere}
+            icone={menu.sections[0]?.icone}
+          />
+        ) : (
+        /* The box the donuts come in: pink and white stripes. */
         <div
           className="overflow-hidden rounded-[22px] p-5"
           style={{
@@ -98,6 +108,7 @@ export function VendeurVue({
             </div>
           )}
         </div>
+        )}
 
         {/* Muted, so it can play without sound in a lecture hall. */}
         {vendeur.videoUrl && (

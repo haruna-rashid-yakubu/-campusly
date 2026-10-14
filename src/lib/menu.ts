@@ -21,15 +21,18 @@ export type ItemMenu = {
   choix?: { titre: string; options: string[] };
   plat?: boolean;
 };
-export type SectionMenu = { titre: string; items: ItemMenu[] };
+// icone: drawn by the section title, and in an item's square while it has no photo.
+export type SectionMenu = { titre: string; icone?: string; items: ItemMenu[] };
 // gamelle: the dishes leave in a box, charged per dish (takeaway, delivery — not eating in).
 export type ModeRemise = { id: string; libelle: string; prix: number; detail?: string; gamelle?: boolean };
 /*
  * A shop's own colours for its page, so a chicken shop does not wear the
  * donut shop's pink and black: accent for the buttons and what is picked,
- * fonce for its name and figures, doux and bord for the soft panels.
+ * fonce for its name and figures, doux and bord for the soft panels. A shop
+ * with a theme gets the restaurant header: accroche in a pill, badges under
+ * its name.
  */
-export type Theme = { accent: string; fonce: string; doux: string; bord: string };
+export type Theme = { accent: string; fonce: string; doux: string; bord: string; accroche?: string; badges?: string[] };
 export type Menu = {
   sections: SectionMenu[];
   theme?: Theme;
@@ -50,6 +53,7 @@ export function lireMenu(brut: unknown): Menu | null {
   const sections = m.sections
     .map((s) => ({
       titre: String(s?.titre ?? ""),
+      icone: typeof s?.icone === "string" && s.icone.length <= 8 ? s.icone : undefined,
       items: (Array.isArray(s?.items) ? s.items : []).filter(
         (i): i is ItemMenu =>
           !!i &&
@@ -76,7 +80,15 @@ function lireTheme(brut: unknown): Theme | undefined {
   if (!t) return undefined;
   const { accent, fonce, doux, bord } = t;
   if (![accent, fonce, doux, bord].every((c) => typeof c === "string" && HEX.test(c))) return undefined;
-  return { accent: accent!, fonce: fonce!, doux: doux!, bord: bord! };
+  const texte = (x: unknown) => (typeof x === "string" && x.length > 0 && x.length <= 40 ? x : undefined);
+  return {
+    accent: accent!,
+    fonce: fonce!,
+    doux: doux!,
+    bord: bord!,
+    accroche: texte(t.accroche),
+    badges: Array.isArray(t.badges) ? t.badges.map(texte).filter((b): b is string => !!b).slice(0, 4) : undefined,
+  };
 }
 
 /** The theme as CSS variables, read by the shop page's pieces with their usual colours as fallback. */

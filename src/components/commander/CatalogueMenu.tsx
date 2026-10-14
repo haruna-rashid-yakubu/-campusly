@@ -112,10 +112,15 @@ export function CatalogueMenu({
     <div>
       {menu.sections.map((s) => (
         <section key={s.titre}>
-          <div className="mb-2.5 mt-6 text-[16.5px] font-extrabold tracking-tight">{s.titre}</div>
+          <div className="mb-2.5 mt-6 flex items-center gap-2 text-[16.5px] font-extrabold tracking-tight">
+            {s.icone && (
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--v-doux,#f4fbfa)] text-[17px]">{s.icone}</span>
+            )}
+            {s.titre}
+          </div>
           <div className="flex flex-col gap-2.5">
             {s.items.map((item) => (
-              <CarteItem key={item.id} item={item} onAjouter={ajouter} />
+              <CarteItem key={item.id} item={item} icone={s.icone} onAjouter={ajouter} />
             ))}
           </div>
         </section>
@@ -263,7 +268,15 @@ export function CatalogueMenu({
 }
 
 /* One item of the menu: its sizes, its choice if it has one, and "add". */
-function CarteItem({ item, onAjouter }: { item: ItemMenu; onAjouter: (l: Omit<LigneMenu, "quantite">) => void }) {
+function CarteItem({
+  item,
+  icone,
+  onAjouter,
+}: {
+  item: ItemMenu;
+  icone?: string;
+  onAjouter: (l: Omit<LigneMenu, "quantite">) => void;
+}) {
   const [taille, setTaille] = useState(item.tailles.length === 1 ? item.tailles[0].id : item.tailles[Math.min(1, item.tailles.length - 1)].id);
   const [choix, setChoix] = useState<string | undefined>(undefined);
   const manqueChoix = !!item.choix && !choix;
@@ -271,8 +284,12 @@ function CarteItem({ item, onAjouter }: { item: ItemMenu; onAjouter: (l: Omit<Li
   return (
     <div className="rounded-[18px] border border-line bg-white p-3">
       <div className="flex gap-3">
-        <div className="relative h-[72px] w-[72px] flex-none overflow-hidden rounded-[14px] bg-surface">
-          {item.photo && <Image src={item.photo} alt={item.nom} fill sizes="72px" className="object-cover" />}
+        <div className="relative grid h-[72px] w-[72px] flex-none place-items-center overflow-hidden rounded-[14px] bg-[var(--v-doux,#f1f5f6)]">
+          {item.photo ? (
+            <Image src={item.photo} alt={item.nom} fill sizes="72px" className="object-cover" />
+          ) : (
+            icone && <span className="text-[34px]">{icone}</span>
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-[15.5px] font-extrabold leading-tight">{item.nom}</div>
