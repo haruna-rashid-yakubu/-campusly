@@ -25,7 +25,7 @@ export type CarteUne = {
   bouton: string; // "Commander"
 };
 
-const INTERVALLE_MS = 4500;
+const INTERVALLE_MS = 3000;
 const PAUSE_APRES_TOUCHER_MS = 12000;
 
 export function AlaUne({ cartes }: { cartes: CarteUne[] }) {
