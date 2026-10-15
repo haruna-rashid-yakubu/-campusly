@@ -269,6 +269,7 @@ export async function cartesALaUne(ouvertes: Vendeur[]): Promise<CarteUne[]> {
           offre: null,
           badge: "Service Campusly",
           bouton: "Réserver",
+          affiche: true,
         };
       }
       const { formules, articles } = await getCatalogue(v.id);

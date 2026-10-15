@@ -23,6 +23,8 @@ export type CarteUne = {
   offre: string | null; // "Livraison gratuite"
   badge: string; // "Nouveau sur Campusly"
   bouton: string; // "Commander"
+  // A poster that carries its own title: shown as it is, the name moves under it.
+  affiche?: boolean;
 };
 
 const INTERVALLE_MS = 3000;
@@ -79,17 +81,22 @@ export function AlaUne({ cartes }: { cartes: CarteUne[] }) {
                   sizes="(max-width: 480px) 100vw, 440px"
                   className="object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <span className="absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-[11.5px] font-extrabold uppercase tracking-wide text-[#c2185b] shadow">
-                  {c.badge}
-                </span>
-                <div className="absolute inset-x-0 bottom-0 p-4">
-                  <div className="text-[24px] font-extrabold leading-none tracking-tight">{c.nom}</div>
-                  <div className="mt-1 truncate text-[13.5px] font-semibold text-white/90">{c.ligne}</div>
-                </div>
+                {!c.affiche && (
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    <span className="absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-[11.5px] font-extrabold uppercase tracking-wide text-[#c2185b] shadow">
+                      {c.badge}
+                    </span>
+                    <div className="absolute inset-x-0 bottom-0 p-4">
+                      <div className="text-[24px] font-extrabold leading-none tracking-tight">{c.nom}</div>
+                      <div className="mt-1 truncate text-[13.5px] font-semibold text-white/90">{c.ligne}</div>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">
+                  {c.affiche && <div className="truncate text-[12px] font-bold uppercase tracking-wide text-[#5eead4]">{c.badge}</div>}
                   <div className="truncate text-[15px] font-extrabold">{c.prix}</div>
                   {c.offre && <div className="mt-0.5 truncate text-[12.5px] font-semibold text-[#5eead4]">🚚 {c.offre}</div>}
                 </div>
