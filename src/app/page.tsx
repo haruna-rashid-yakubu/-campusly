@@ -55,7 +55,8 @@ export default async function AccueilPage() {
   const firstName = session?.user?.name?.split(" ")[0] ?? null;
   const vendeursOuverts = await getVendeurs();
   const boutiquesAnnoncees = boutiquesRecentes(vendeursOuverts);
-  const cartesUne = await cartesALaUne(vendeursOuverts);
+  // The pressing is a Campusly service, not a shop in the list, but it has its own card here.
+  const cartesUne = await cartesALaUne(await getVendeurs({ inclureInternes: true }));
 
   // The open poll is answered right here, first thing under the greeting, and
   // stays with its results once answered, so the screen everyone lands on
