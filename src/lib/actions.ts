@@ -1660,6 +1660,20 @@ export async function basculerVendeurActif(vendeurId: number, actif: boolean) {
   revalidatePath("/");
 }
 
+/*
+ * Wipes an order as if it had never been placed: a basket filled on the page
+ * whose WhatsApp message was never sent still left a row. Admin only, and
+ * only orders — visits and baskets are not touched. It leaves the statistics,
+ * the statement and the loyalty cards, which all count from these rows.
+ */
+export async function supprimerCommande(id: number) {
+  await requireAdmin();
+  await db
+    .delete(commandeEvenements)
+    .where(and(eq(commandeEvenements.id, id), eq(commandeEvenements.type, "commander")));
+  revalidatePath("/admin/vendeurs");
+}
+
 export async function basculerRupture(articleId: number, enRupture: boolean) {
   await requireAdmin();
   await db.update(vendeurArticles).set({ enRupture }).where(eq(vendeurArticles.id, articleId));

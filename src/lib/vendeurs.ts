@@ -82,7 +82,7 @@ export type StatsVendeur = {
   parfums: { nom: string; quantite: number }[];
   formules: { nom: string; quantite: number }[];
   parPromo: { promo: string | null; commandes: number }[];
-  dernieres: { reference: string; total: number; detail: string; date: Date }[];
+  dernieres: { id: number; reference: string; total: number; detail: string; date: Date; statut: string | null }[];
 };
 
 // Menu lines also carry quantite (and plat); pack lines only formule and parfums.
@@ -150,7 +150,9 @@ export async function getStatsVendeur(vendeurId: number, jours: number): Promise
 
   const envois = await db
     .select({
+      id: commandeEvenements.id,
       reference: commandeEvenements.reference,
+      statut: commandeEvenements.statut,
       total: commandeEvenements.total,
       detail: commandeEvenements.detail,
       date: commandeEvenements.createdAt,
@@ -202,6 +204,8 @@ export async function getStatsVendeur(vendeurId: number, jours: number): Promise
     formules: trier(formules),
     parPromo,
     dernieres: envois.slice(0, 30).map((e) => ({
+      id: e.id,
+      statut: e.statut,
       reference: e.reference ?? "",
       total: e.total ?? 0,
       detail: resumerDetail((e.detail as DetailCommande | null) ?? []),

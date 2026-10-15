@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { BackHeader } from "@/components/BackHeader";
 import { SignInRequired } from "@/components/SignInRequired";
 import { EmptyState, Badge } from "@/components/EmptyState";
-import { CopierReleve, LienVendeur, OuvertureVendeur, RuptureToggle } from "@/components/admin/VendeurControles";
+import { CopierReleve, LienVendeur, OuvertureVendeur, RuptureToggle, SupprimerCommande } from "@/components/admin/VendeurControles";
 import { getReleve, moisDe, type Releve } from "@/lib/facturation";
 import { getCatalogue, getStatsVendeur, getVendeurs } from "@/lib/vendeurs";
 import { fcfa } from "@/lib/utils";
@@ -154,7 +154,7 @@ export default async function VendeursAdminPage({
                   Références à rapprocher avec {v.nom}
                 </div>
                 {s.dernieres.map((d) => (
-                  <div key={d.reference + d.date.toISOString()} className="border-t border-line-3 py-2 text-[12.5px]">
+                  <div key={d.id} className="border-t border-line-3 py-2 text-[12.5px]">
                     <div className="flex justify-between gap-2">
                       <span className="font-extrabold">{d.reference}</span>
                       <span className="tabular-nums text-slate-light">
@@ -168,7 +168,22 @@ export default async function VendeursAdminPage({
                         · {fcfa(d.total)}
                       </span>
                     </div>
-                    <div className="mt-0.5 leading-snug text-slate">{d.detail}</div>
+                    <div className="mt-0.5 flex items-end justify-between gap-2">
+                      <span className="leading-snug text-slate">
+                        {d.detail}
+                        <span className="text-slate-light">
+                          {" · "}
+                          {d.statut === "livree"
+                            ? "livrée"
+                            : d.statut === "prete"
+                              ? "prête"
+                              : d.statut === "non_recue"
+                                ? "pas reçue"
+                                : "en attente"}
+                        </span>
+                      </span>
+                      <SupprimerCommande id={d.id} reference={d.reference} />
+                    </div>
                   </div>
                 ))}
               </>

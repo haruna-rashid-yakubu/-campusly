@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
-import { basculerRupture, basculerVendeurActif, regenererLienVendeur } from "@/lib/actions";
+import { basculerRupture, basculerVendeurActif, regenererLienVendeur, supprimerCommande } from "@/lib/actions";
 
 /*
  * Opening a shop is the one switch here that students see, so it takes the
@@ -47,6 +47,33 @@ export function OuvertureVendeur({ id, nom, actif }: { id: number; nom: string; 
     >
       <Icon name={confirme ? "warn" : "check"} size={17} strokeWidth={2.2} />
       {pending ? "…" : confirme ? "Confirmer — visible par tous les étudiants" : "Ouvrir aux étudiants"}
+    </button>
+  );
+}
+
+/* Two taps, like opening a shop: a deleted order does not come back. */
+export function SupprimerCommande({ id, reference }: { id: number; reference: string }) {
+  const [confirme, setConfirme] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const router = useRouter();
+  const { show } = useToast();
+  return (
+    <button
+      onClick={() =>
+        confirme
+          ? startTransition(async () => {
+              await supprimerCommande(id);
+              show(`${reference} supprimée`, "success");
+              router.refresh();
+            })
+          : setConfirme(true)
+      }
+      disabled={pending}
+      className={`press-scale h-[30px] flex-none rounded-full px-3 text-[12px] font-bold disabled:opacity-60 ${
+        confirme ? "bg-[#fde8e7] text-[#b4231f]" : "border-[1.5px] border-line-4 text-slate"
+      }`}
+    >
+      {pending ? "…" : confirme ? "Confirmer la suppression" : "Supprimer"}
     </button>
   );
 }
