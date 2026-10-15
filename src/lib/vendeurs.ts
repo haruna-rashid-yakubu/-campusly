@@ -265,7 +265,7 @@ export async function cartesALaUne(ouvertes: Vendeur[]): Promise<CarteUne[]> {
           nom: v.nom,
           image: v.uneImage!,
           ligne: v.accroche ?? "",
-          prix: "Livré sur le campus",
+          prix: "Campus et alentours",
           offre: null,
           badge: "Service Campusly",
           bouton: "Réserver",
