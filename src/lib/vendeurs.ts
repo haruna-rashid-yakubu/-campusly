@@ -1,5 +1,7 @@
+import type { CarteUne } from "@/components/AlaUne";
 import { and, asc, desc, eq, gte, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { fcfa } from "@/lib/utils";
 import {
   classes,
   commandeEvenements,
@@ -241,4 +243,50 @@ export function boutiquesRecentes(ouvertes: Vendeur[], jours = 30, max = 2) {
     .filter((v) => v.createdAt.getTime() >= depuis)
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .slice(0, max);
+}
+
+/*
+ * The home screen's big cards: every open shop that has a photo for it, the
+ * newest first. Priced from its own catalogue; the pressing, a Campusly
+ * service with no catalogue, says where it goes instead of a price.
+ */
+export async function cartesALaUne(ouvertes: Vendeur[]): Promise<CarteUne[]> {
+  const avecPhoto = [...ouvertes]
+    .filter((v) => v.uneImage)
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  const plusRecente = boutiquesRecentes(ouvertes, 30, 1)[0]?.id;
+  const f = (n: number) => fcfa(n).replace(" FCFA", " F");
+
+  const cartes = await Promise.all(
+    avecPhoto.map(async (v): Promise<CarteUne | null> => {
+      if (v.categorie === "interne") {
+        return {
+          href: `/${v.slug}`,
+          nom: v.nom,
+          image: v.uneImage!,
+          ligne: v.accroche ?? "",
+          prix: "Livré sur le campus",
+          offre: null,
+          badge: "Service Campusly",
+          bouton: "Réserver",
+        };
+      }
+      const { formules, articles } = await getCatalogue(v.id);
+      if (formules.length === 0) return null;
+      const min = Math.min(...formules.map((x) => x.prix));
+      const unite = v.unite && formules.length === 1 && formules[0].taille === 1;
+      const noms = articles.map((a) => a.nom);
+      return {
+        href: `/commander/${v.slug}`,
+        nom: v.nom,
+        image: v.uneImage!,
+        ligne: noms.length > 3 ? `${noms.slice(0, 3).join(" · ")}…` : noms.join(" · "),
+        prix: unite ? `${f(min)} ${v.unite === "bouteille" ? "la" : "le"} ${v.unite}` : `À partir de ${f(min)}`,
+        offre: v.fraisLivraison === 0 ? "Livraison gratuite" : null,
+        badge: v.id === plusRecente ? "Nouveau sur Campusly" : "Coup de cœur",
+        bouton: "Commander",
+      };
+    })
+  );
+  return cartes.filter((c): c is CarteUne => c !== null);
 }

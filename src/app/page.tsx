@@ -24,7 +24,7 @@ import {
 import { dismissInstallBanner } from "@/lib/actions";
 import { SondageVote } from "@/components/SondageVote";
 import { getMaReponse, getResultats, getSondageOuvert } from "@/lib/sondage";
-import { boutiquesRecentes, getCatalogue, getVendeurs } from "@/lib/vendeurs";
+import { boutiquesRecentes, cartesALaUne, getVendeurs } from "@/lib/vendeurs";
 import { AlaUne } from "@/components/AlaUne";
 import { AccueilServices } from "@/components/AccueilServices";
 import { distanceLabel, fcfa, isWithinLastWeek } from "@/lib/utils";
@@ -55,12 +55,7 @@ export default async function AccueilPage() {
   const firstName = session?.user?.name?.split(" ")[0] ?? null;
   const vendeursOuverts = await getVendeurs();
   const boutiquesAnnoncees = boutiquesRecentes(vendeursOuverts);
-  // The newest shop with a photo for it gets the big card, priced from its own catalogue.
-  const vedette = boutiquesAnnoncees.find((v) => v.uneImage) ?? null;
-  const vedetteCatalogue = vedette ? await getCatalogue(vedette.id) : null;
-  const vedettePrix = vedetteCatalogue?.formules.length
-    ? Math.min(...vedetteCatalogue.formules.map((f) => f.prix))
-    : null;
+  const cartesUne = await cartesALaUne(vendeursOuverts);
 
   // The open poll is answered right here, first thing under the greeting, and
   // stays with its results once answered, so the screen everyone lands on
@@ -184,20 +179,7 @@ export default async function AccueilPage() {
         </div>
       )}
 
-      {vedette && vedette.uneImage && vedetteCatalogue && vedettePrix !== null && (
-        <AlaUne
-          href={`/commander/${vedette.slug}`}
-          nom={vedette.nom}
-          image={vedette.uneImage}
-          ligne={vedetteCatalogue.articles.map((a) => a.nom).join(" · ")}
-          prix={
-            vedette.unite && vedetteCatalogue.formules.length === 1 && vedetteCatalogue.formules[0].taille === 1
-              ? `${fcfa(vedettePrix).replace(" FCFA", " F")} ${vedette.unite === "bouteille" ? "la" : "le"} ${vedette.unite}`
-              : `À partir de ${fcfa(vedettePrix).replace(" FCFA", " F")}`
-          }
-          offre={vedette.fraisLivraison === 0 ? "Livraison gratuite" : null}
-        />
-      )}
+      {cartesUne.length > 0 && <AlaUne cartes={cartesUne} />}
 
       <AccueilServices boutiques={vendeursOuverts.map((v) => ({ nom: v.nom, logo: v.logoCarreUrl }))} />
 
