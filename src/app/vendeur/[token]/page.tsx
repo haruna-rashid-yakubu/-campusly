@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { vendeurs } from "@/db/schema";
 import { LigneCommandeVendeur } from "@/components/commander/LigneCommandeVendeur";
-import { calendrierDe, prochaineLivraison } from "@/lib/livraison";
+import { calendrierDe, prochaineLivraison, sansReponse as estSansReponse } from "@/lib/livraison";
 import { libelleRecompense, regleDe, regleHebdoDe } from "@/lib/fidelite";
 import { getCommandesRecentes, resumerDetail } from "@/lib/vendeurs";
 import { lireMenu } from "@/lib/menu";
@@ -52,10 +52,14 @@ export default async function EspaceVendeurPage({ params }: { params: Promise<{ 
     g.lignes.push(c);
     groupes.set(cle, g);
   }
-  const ordreStatut = (s: string | null) => (s === null || s === "prete" ? 0 : s === "livree" ? 1 : 2);
+  // Untouched for too long for this shop: most likely never sent on WhatsApp.
+  const boutique = { calendrier, restaurant: menu !== null };
+  const sansReponse = (c: (typeof commandes)[number]) => estSansReponse(c, boutique);
+  const ordre = (c: (typeof commandes)[number]) =>
+    sansReponse(c) ? 2 : c.statut === null || c.statut === "prete" ? 0 : c.statut === "livree" ? 1 : 3;
   const liste = [...groupes.values()].sort((a, b) => b.tri - a.tri);
 
-  const aTraiter = commandes.filter((c) => c.statut === null || c.statut === "prete").length;
+  const aTraiter = commandes.filter((c) => (c.statut === null || c.statut === "prete") && !sansReponse(c)).length;
 
   return (
     <div className="min-h-dvh bg-white pb-12">
@@ -93,7 +97,7 @@ export default async function EspaceVendeurPage({ params }: { params: Promise<{ 
             </div>
             <div className="flex flex-col gap-2.5">
               {[...g.lignes]
-                .sort((a, b) => ordreStatut(a.statut) - ordreStatut(b.statut))
+                .sort((a, b) => ordre(a) - ordre(b))
                 .map((c) => (
                   <LigneCommandeVendeur
                     key={c.id}
@@ -113,6 +117,7 @@ export default async function EspaceVendeurPage({ params }: { params: Promise<{ 
                     statut={(c.statut as "prete" | "livree" | "non_recue" | null) ?? null}
                     mode={libelleMode(c.mode)}
                     avecPrete={menu !== null}
+                    sansReponse={sansReponse(c)}
                   />
                 ))}
             </div>

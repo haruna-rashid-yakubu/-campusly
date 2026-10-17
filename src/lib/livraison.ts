@@ -60,3 +60,37 @@ export function calendrierDe(v: {
   if (!v.livraisonJour || !v.limiteJour || v.limiteHeure === null) return null;
   return { livraisonJour: v.livraisonJour, limiteJour: v.limiteJour, limiteHeure: v.limiteHeure };
 }
+
+const HEURE_MS = 3600_000;
+
+/*
+ * When an order nobody has touched stops being "to do" and is shown as
+ * probably never sent: a tap on "Commander" opens WhatsApp, and nothing tells
+ * us the message went. How long to wait depends on the shop — a restaurant
+ * answers within hours, a weekly round only on its day. Nothing is deleted;
+ * the vendor can still mark it if it did arrive.
+ *
+ *   weekly delivery: the end of the day after the delivery day
+ *   restaurant (a menu): 12 hours
+ *   anything else: 24 hours
+ */
+export function finDAttente(
+  creeLe: Date,
+  boutique: { calendrier: Calendrier | null; restaurant: boolean }
+): Date {
+  if (boutique.calendrier) {
+    // The delivery day's midnight on the shifted clock, back to real time, plus two days.
+    const livraison = prochaineLivraison(boutique.calendrier, creeLe).date.getTime();
+    return new Date(livraison + 2 * DAY_MS - HEURE_MS);
+  }
+  return new Date(creeLe.getTime() + (boutique.restaurant ? 12 : 24) * HEURE_MS);
+}
+
+/** An order still unanswered past its wait for this shop. */
+export function sansReponse(
+  commande: { createdAt: Date; statut: string | null },
+  boutique: { calendrier: Calendrier | null; restaurant: boolean },
+  maintenant = new Date()
+) {
+  return commande.statut === null && finDAttente(commande.createdAt, boutique) < maintenant;
+}

@@ -21,6 +21,7 @@ export function LigneCommandeVendeur({
   statut,
   mode = null,
   avecPrete = false,
+  sansReponse = false,
 }: {
   token: string;
   id: number;
@@ -34,6 +35,8 @@ export function LigneCommandeVendeur({
   mode?: string | null;
   // Restaurants tell the student the order is ready; a weekly delivery does not.
   avecPrete?: boolean;
+  // Nobody has touched it for longer than this shop takes: probably never sent.
+  sansReponse?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -49,11 +52,16 @@ export function LigneCommandeVendeur({
       className={`rounded-[18px] border p-3.5 ${
         statut === "livree"
           ? "border-teal-border bg-teal-tint-soft"
-          : statut === "non_recue"
+          : statut === "non_recue" || sansReponse
             ? "border-line bg-surface-3 opacity-70"
             : "border-line-4 bg-white"
       }`}
     >
+      {sansReponse && (
+        <div className="mb-2 text-[12.5px] font-bold text-slate">
+          Pas de réponse : jamais envoyée sur WhatsApp ? Si tu l&rsquo;as reçue, tu peux encore la marquer.
+        </div>
+      )}
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-[17px] font-extrabold tracking-tight">{reference}</span>
         <span className="text-[12.5px] text-slate-light">{quand}</span>
