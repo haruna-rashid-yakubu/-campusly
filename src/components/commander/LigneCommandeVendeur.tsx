@@ -67,20 +67,50 @@ export function LigneCommandeVendeur({
         </div>
       )}
 
-      {avecPrete && (statut === null || statut === "prete") && (
-        <button
-          onClick={() => marquer(statut === "prete" ? null : "prete")}
-          disabled={pending}
-          className={`press-scale mt-3 flex h-[48px] w-full items-center justify-center gap-1.5 rounded-[14px] text-[14.5px] font-bold disabled:opacity-60 ${
-            statut === "prete" ? "border-[1.5px] border-teal text-teal-dark" : "bg-[#f59e0b] text-white"
-          }`}
-        >
-          <Icon name="bell" size={18} strokeWidth={2.2} />
-          {statut === "prete" ? "Prête · étudiant prévenu (annuler)" : "Prête : prévenir l'étudiant"}
-        </button>
-      )}
-
-      {statut === null || statut === "prete" ? (
+      {(statut === null || statut === "prete") && avecPrete ? (
+        /*
+         * A restaurant does both from the same place: "ready" when the plate
+         * is up, "delivered" when it has left the counter. Side by side, so
+         * neither needs looking for; "never came in" is rarer and stays small.
+         */
+        <>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => marquer(statut === "prete" ? null : "prete")}
+              disabled={pending}
+              className={`press-scale flex h-[52px] flex-col items-center justify-center rounded-[14px] font-bold leading-tight disabled:opacity-60 ${
+                statut === "prete" ? "border-[1.5px] border-[#f59e0b] bg-[#fff7e6] text-[#b45309]" : "bg-[#f59e0b] text-white"
+              }`}
+            >
+              <span className="flex items-center gap-1.5 text-[15px]">
+                <Icon name={statut === "prete" ? "check" : "bell"} size={17} strokeWidth={2.3} />
+                {statut === "prete" ? "Client prévenu" : "Prête"}
+              </span>
+              <span className="text-[11px] font-semibold opacity-80">
+                {statut === "prete" ? "toucher pour annuler" : "prévient le client"}
+              </span>
+            </button>
+            <button
+              onClick={() => marquer("livree")}
+              disabled={pending}
+              className="press-scale flex h-[52px] flex-col items-center justify-center rounded-[14px] bg-teal font-bold leading-tight text-white disabled:opacity-60"
+            >
+              <span className="flex items-center gap-1.5 text-[15px]">
+                <Icon name="check" size={17} strokeWidth={2.4} />
+                Livrée
+              </span>
+              <span className="text-[11px] font-semibold opacity-85">compte pour la fidélité</span>
+            </button>
+          </div>
+          <button
+            onClick={() => marquer("non_recue")}
+            disabled={pending}
+            className="mt-2 text-[12.5px] font-bold text-slate-light underline underline-offset-2 disabled:opacity-60"
+          >
+            Commande pas reçue sur WhatsApp
+          </button>
+        </>
+      ) : statut === null || statut === "prete" ? (
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button
             onClick={() => marquer("livree")}
