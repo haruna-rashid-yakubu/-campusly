@@ -24,7 +24,17 @@ export type ItemMenu = {
 // icone: drawn by the section title, and in an item's square while it has no photo.
 export type SectionMenu = { titre: string; icone?: string; items: ItemMenu[] };
 // gamelle: the dishes leave in a box, charged per dish (takeaway, delivery — not eating in).
-export type ModeRemise = { id: string; libelle: string; prix: number; detail?: string; gamelle?: boolean };
+// court and icone name it on the three tiles at the top of the menu; adresse asks where to deliver.
+export type ModeRemise = {
+  id: string;
+  libelle: string;
+  prix: number;
+  detail?: string;
+  gamelle?: boolean;
+  court?: string;
+  icone?: string;
+  adresse?: boolean;
+};
 /*
  * A shop's own colours for its page, so a chicken shop does not wear the
  * donut shop's pink and black: accent for the buttons and what is picked,

@@ -57,6 +57,8 @@ export function CatalogueMenu({
   const gamelles = modeChoisi.gamelle ? plats * menu.gamelle : 0;
   const total = panier.length > 0 ? sousTotal + gamelles + modeChoisi.prix : 0;
   const nbArticles = panier.reduce((n, l) => n + l.quantite, 0);
+  const manqueAdresse = !!modeChoisi.adresse && !precision.trim();
+  const champAdresse = useRef<HTMLInputElement>(null);
 
   const ajouter = (ligne: Omit<LigneMenu, "quantite">) => {
     setPanier((p) => {
@@ -91,7 +93,12 @@ export function CatalogueMenu({
     }
   };
 
-  const commander = () =>
+  const commander = () => {
+    if (manqueAdresse) {
+      show("Indique où te livrer : ta cité et ta chambre", "warn");
+      champAdresse.current?.focus();
+      return;
+    }
     startTransition(async () => {
       let pushEndpoint: string | null = null;
       try {
@@ -107,9 +114,43 @@ export function CatalogueMenu({
       }
       window.location.href = r.url;
     });
+  };
 
   return (
     <div>
+      {/* The three ways to get the food, shown before anything is picked: it decides the price. */}
+      {menu.modes.length > 1 && (
+        <section className="mt-5">
+          <div className="mb-2.5 text-[16.5px] font-extrabold tracking-tight">Comment tu veux ton repas ?</div>
+          <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${menu.modes.length}, minmax(0, 1fr))` }}>
+            {menu.modes.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setMode(m.id)}
+                aria-pressed={mode === m.id}
+                className={`press-scale flex flex-col items-center rounded-[16px] border-[1.5px] px-1.5 pb-2.5 pt-3 text-center ${
+                  mode === m.id ? "border-[var(--v-accent,#14b8ac)] bg-[var(--v-doux,#f4fbfa)]" : "border-line-4 bg-white"
+                }`}
+              >
+                {m.icone && <span className="text-[26px] leading-none">{m.icone}</span>}
+                <span className="mt-1.5 text-[13.5px] font-extrabold leading-tight">{m.court ?? m.libelle}</span>
+                <span className="mt-1 text-[11.5px] font-semibold leading-tight text-slate-light">
+                  {m.prix > 0 ? `+ ${f(m.prix)}` : "Gratuit"}
+                  {m.gamelle && menu.gamelle > 0 && (
+                    <span className="block">+ {f(menu.gamelle)} de gamelle par plat</span>
+                  )}
+                </span>
+              </button>
+            ))}
+          </div>
+          {modeChoisi.detail && (
+            <p className="mt-2 text-[12.5px] leading-snug text-slate">
+              {modeChoisi.icone} {modeChoisi.detail}
+            </p>
+          )}
+        </section>
+      )}
+
       {menu.sections.map((s) => (
         <section key={s.titre}>
           <div className="mb-2.5 mt-6 flex items-center gap-2 text-[16.5px] font-extrabold tracking-tight">
@@ -228,15 +269,24 @@ export function CatalogueMenu({
             </button>
           )}
 
-          <div className="mb-1.5 mt-4 text-[13px] font-bold text-ink-soft">
-            Une précision pour {vendeurNom} ? <span className="font-medium text-slate-light">— facultatif</span>
-          </div>
+          {modeChoisi.adresse ? (
+            <div className="mb-1.5 mt-4 text-[13px] font-bold text-ink-soft">
+              📍 Où te livrer ? <span className="font-medium text-[var(--v-accent,#0a7f77)]">— obligatoire</span>
+            </div>
+          ) : (
+            <div className="mb-1.5 mt-4 text-[13px] font-bold text-ink-soft">
+              Une précision pour {vendeurNom} ? <span className="font-medium text-slate-light">— facultatif</span>
+            </div>
+          )}
           <input
+            ref={champAdresse}
             value={precision}
             onChange={(e) => setPrecision(e.target.value)}
             maxLength={200}
-            placeholder={modeChoisi.prix > 0 ? "Ex. : nom de ta cité, numéro de chambre" : "Ex. : je passe vers 12h30"}
-            className="h-[48px] w-full rounded-[14px] border-[1.5px] border-line-4 px-3.5 text-[14.5px] outline-none focus:border-teal"
+            placeholder={modeChoisi.adresse ? "Ex. : Cité Les Palmiers, chambre 12" : "Ex. : je passe vers 12h30"}
+            className={`h-[48px] w-full rounded-[14px] border-[1.5px] px-3.5 text-[14.5px] outline-none focus:border-teal ${
+              manqueAdresse ? "border-[var(--v-bord,#f0a3bd)]" : "border-line-4"
+            }`}
           />
           <p className="mt-3 text-[12.5px] leading-snug text-slate-light">
             WhatsApp s&rsquo;ouvre avec ta commande déjà écrite. Tu l&rsquo;envoies, et {vendeurNom} te prévient
@@ -256,7 +306,7 @@ export function CatalogueMenu({
                 {nbArticles} article{nbArticles > 1 ? "s" : ""} · {f(total)}
               </span>
               <span className="flex items-center gap-1.5 whitespace-nowrap text-[15.5px] font-extrabold">
-                {pending ? "Ouverture…" : "Commander"}
+                {pending ? "Ouverture…" : manqueAdresse ? "Où te livrer ?" : "Commander"}
                 <Icon name="right" size={17} strokeWidth={2.4} />
               </span>
             </button>

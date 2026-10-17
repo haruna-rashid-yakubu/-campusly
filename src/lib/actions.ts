@@ -1750,6 +1750,10 @@ export async function preparerCommandeMenu(input: {
   const reference = nouvelleReference();
   const nom = session?.user?.name?.trim();
   const precision = input.precision?.trim().slice(0, 200);
+  // A delivery goes nowhere without an address; the page asks for it, this makes sure.
+  if (mode.adresse && !precision) {
+    return { ok: false as const, message: "Indique où te livrer : ta cité et ta chambre, ou l'endroit où tu es." };
+  }
   const message = [
     `Bonjour ${vendeur.nom} 👋 Commande via Campusly ${reference}`,
     "",
@@ -1761,7 +1765,7 @@ export async function preparerCommandeMenu(input: {
     `Remise : ${mode.libelle}`,
     ...(cadeau ? ["", `🎁 Carte fidélité Campusly : ${cadeau}`] : []),
     `Nom : ${nom ?? ""}`,
-    ...(precision ? [`Précision : ${precision}`] : []),
+    ...(precision ? [`${mode.adresse ? "📍 Livrer à" : "Précision"} : ${precision}`] : []),
   ].join("\n");
 
   try {
