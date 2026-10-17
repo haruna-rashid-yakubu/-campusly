@@ -60,18 +60,18 @@ export function CatalogueMenu({
   const manqueAdresse = !!modeChoisi.adresse && !precision.trim();
   const champAdresse = useRef<HTMLInputElement>(null);
 
-  const ajouter = (ligne: Omit<LigneMenu, "quantite">) => {
+  const ajouter = ({ quantite: n, ...ligne }: LigneMenu) => {
     setPanier((p) => {
       const i = p.findIndex((l) => l.item === ligne.item && l.taille === ligne.taille && l.choix === ligne.choix);
       if (i >= 0) {
-        return p.map((l, j) => (j === i ? { ...l, quantite: Math.min(MAX_PAR_LIGNE, l.quantite + 1) } : l));
+        return p.map((l, j) => (j === i ? { ...l, quantite: Math.min(MAX_PAR_LIGNE, l.quantite + n) } : l));
       }
       if (p.length >= MAX_LIGNES) return p;
-      return [...p, { ...ligne, quantite: 1 }];
+      return [...p, { ...ligne, quantite: Math.min(MAX_PAR_LIGNE, n) }];
     });
     const item = items.get(ligne.item);
     const taille = item?.tailles.find((t) => t.id === ligne.taille);
-    if (item && taille) show(`${libelleLigne(item, taille, ligne.choix)} ajouté`);
+    if (item && taille) show(`${n > 1 ? `${n} × ` : ""}${libelleLigne(item, taille, ligne.choix)} ajouté${n > 1 ? "s" : ""}`);
     if (!ajoutNote.current) {
       ajoutNote.current = true;
       void noterEvenementVendeur(vendeurId, "ajout");
@@ -325,11 +325,14 @@ function CarteItem({
 }: {
   item: ItemMenu;
   icone?: string;
-  onAjouter: (l: Omit<LigneMenu, "quantite">) => void;
+  onAjouter: (l: LigneMenu) => void;
 }) {
   const [taille, setTaille] = useState(item.tailles.length === 1 ? item.tailles[0].id : item.tailles[Math.min(1, item.tailles.length - 1)].id);
   const [choix, setChoix] = useState<string | undefined>(undefined);
   const manqueChoix = !!item.choix && !choix;
+  // How many to add at once: two plates for two friends without tapping "Ajouter" twice.
+  const [quantite, setQuantite] = useState(1);
+  const prix = item.tailles.find((t) => t.id === taille)?.prix ?? 0;
 
   return (
     <div className="rounded-[18px] border border-line bg-white p-3">
@@ -383,14 +386,41 @@ function CarteItem({
         </div>
       )}
 
-      <button
-        onClick={() => onAjouter({ item: item.id, taille, choix })}
-        disabled={manqueChoix}
-        className="press-scale mt-3 flex h-[44px] w-full items-center justify-center gap-1.5 rounded-[13px] bg-[var(--v-accent,#0f172a)] text-[14px] font-bold text-white disabled:opacity-40"
-      >
-        <Icon name="plus" size={16} strokeWidth={2.4} />
-        {manqueChoix ? `Choisis ${item.choix!.titre.toLowerCase()}` : "Ajouter"}
-      </button>
+      <div className="mt-3 flex items-center gap-2">
+        <div className="flex h-[44px] flex-none items-center rounded-[13px] border-[1.5px] border-line-4">
+          <button
+            onClick={() => setQuantite((q) => Math.max(1, q - 1))}
+            disabled={quantite <= 1}
+            aria-label="Un de moins"
+            className="grid h-full w-10 place-items-center disabled:opacity-30"
+          >
+            <Icon name="minus" size={15} strokeWidth={2.4} />
+          </button>
+          <span className="w-6 text-center text-[16px] font-extrabold tabular-nums">{quantite}</span>
+          <button
+            onClick={() => setQuantite((q) => Math.min(MAX_PAR_LIGNE, q + 1))}
+            aria-label="Un de plus"
+            className="grid h-full w-10 place-items-center"
+          >
+            <Icon name="plus" size={15} strokeWidth={2.4} />
+          </button>
+        </div>
+        <button
+          onClick={() => {
+            onAjouter({ item: item.id, taille, choix, quantite });
+            setQuantite(1);
+          }}
+          disabled={manqueChoix}
+          className="press-scale flex h-[44px] min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[13px] bg-[var(--v-accent,#0f172a)] px-2 text-[14px] font-bold text-white disabled:opacity-40"
+        >
+          <Icon name="plus" size={16} strokeWidth={2.4} />
+          <span className="truncate">
+            {manqueChoix
+              ? `Choisis ${item.choix!.titre.toLowerCase()}`
+              : `Ajouter${quantite > 1 ? ` ${quantite}` : ""} · ${f(prix * quantite)}`}
+          </span>
+        </button>
+      </div>
     </div>
   );
 }
