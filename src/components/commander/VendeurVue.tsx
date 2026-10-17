@@ -26,7 +26,7 @@ export function VendeurVue({
 }: {
   vendeur: Pick<
     Vendeur,
-    "id" | "nom" | "unite" | "accroche" | "logoUrl" | "logoFond" | "banniere" | "livraisonJour" | "limiteJour" | "limiteHeure" | "livraison" | "fraisLivraison" | "horaires" | "actif" | "videoUrl" | "videoPosterUrl"
+    "id" | "nom" | "unite" | "accroche" | "logoUrl" | "logoFond" | "banniere" | "uneImage" | "livraisonJour" | "limiteJour" | "limiteHeure" | "livraison" | "fraisLivraison" | "horaires" | "actif" | "videoUrl" | "videoPosterUrl"
   >;
   formules: Formule[];
   articles: Article[];
@@ -63,6 +63,7 @@ export function VendeurVue({
             accroche={vendeur.accroche}
             theme={menu.theme}
             fond={vendeur.banniere}
+            photo={vendeur.uneImage}
             icone={menu.sections[0]?.icone}
           />
         ) : (

@@ -2,6 +2,7 @@ import type { CarteUne } from "@/components/AlaUne";
 import { and, asc, desc, eq, gte, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { fcfa } from "@/lib/utils";
+import { lireMenu } from "@/lib/menu";
 import {
   classes,
   commandeEvenements,
@@ -270,6 +271,23 @@ export async function cartesALaUne(ouvertes: Vendeur[]): Promise<CarteUne[]> {
           badge: "Service Campusly",
           bouton: "Réserver",
           affiche: true,
+        };
+      }
+      // A restaurant prices from its menu: its dishes, from the cheapest one.
+      const menu = lireMenu(v.menu);
+      if (menu) {
+        const items = menu.sections.flatMap((x) => x.items);
+        const plats = items.filter((i) => i.plat);
+        const min = Math.min(...(plats.length ? plats : items).flatMap((i) => i.tailles.map((t) => t.prix)));
+        return {
+          href: `/commander/${v.slug}`,
+          nom: v.nom,
+          image: v.uneImage!,
+          ligne: items.slice(0, 3).map((i) => i.nom).join(" · ") + (items.length > 3 ? "…" : ""),
+          prix: `${plats.length ? "Plats dès" : "À partir de"} ${f(min)}`,
+          offre: null,
+          badge: v.id === plusRecente ? "Nouveau sur Campusly" : "Coup de cœur",
+          bouton: "Commander",
         };
       }
       const { formules, articles } = await getCatalogue(v.id);

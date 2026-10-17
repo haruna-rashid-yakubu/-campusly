@@ -7,6 +7,10 @@ import type { Theme } from "@/lib/menu";
  *
  * The drawings are one tile, repeated, drawn in the cream of the text at low
  * strength: texture, not decoration to look at.
+ *
+ * Once the shop has a photo of its own food, the photo is the header: the
+ * drawings make way, and the shop's colours run over it from the side the
+ * text sits on, so the name stays readable on any picture.
  */
 const MOTIF = `url("data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150' fill='none' stroke='#fff3d6' stroke-opacity='.32' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'>
@@ -24,20 +28,26 @@ export function EnteteResto({
   accroche,
   theme,
   fond,
+  photo,
   icone,
 }: {
   nom: string;
   accroche: string | null;
   theme: Theme;
   fond: string | null;
+  photo?: string | null;
   icone?: string;
 }) {
   return (
     <div
       className="relative overflow-hidden rounded-[26px] px-5 pb-5 pt-4 text-white shadow-[0_12px_30px_rgba(196,42,28,.28)]"
-      style={{ background: `${MOTIF}, ${fond ?? theme.accent}` }}
+      style={{
+        background: photo
+          ? `linear-gradient(100deg, ${theme.fonce}f2 0%, ${theme.accent}cc 42%, ${theme.accent}33 75%, transparent 100%), url("${photo}") center/cover`
+          : `${MOTIF}, ${fond ?? theme.accent}`,
+      }}
     >
-      {icone && (
+      {icone && !photo && (
         <span
           aria-hidden="true"
           className="pointer-events-none absolute -bottom-5 -right-5 rotate-[-14deg] text-[110px] leading-none drop-shadow-[0_10px_14px_rgba(80,20,5,.35)]"
