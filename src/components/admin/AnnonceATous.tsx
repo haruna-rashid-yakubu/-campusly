@@ -47,6 +47,14 @@ export function AnnonceATous({
   const [titre, setTitre] = useState(TITRE);
   const [corps, setCorps] = useState(CORPS);
   const [cible, setCible] = useState<string>("/pressing");
+  // "WhatsApp" sends the tap to a conversation with this number, message already typed.
+  const [numero, setNumero] = useState("");
+  const [texteWa, setTexteWa] = useState("");
+  const versWhatsApp = cible === "whatsapp";
+  const numeroValide = numero.replace(/\D/g, "").length >= 8;
+  const lien = versWhatsApp
+    ? `/wa?n=${numero.replace(/\D/g, "")}${texteWa.trim() ? `&t=${encodeURIComponent(texteWa.trim())}` : ""}`
+    : cible;
   const [confirme, setConfirme] = useState(false);
   const [envoye, setEnvoye] = useState<number | null>(null);
   const [pending, startTransition] = useTransition();
@@ -54,7 +62,7 @@ export function AnnonceATous({
 
   const envoyer = () =>
     startTransition(async () => {
-      const r = await annoncerATous(titre, corps, cible);
+      const r = await annoncerATous(titre, corps, lien);
       if (!r.ok) {
         show(r.message, "warn");
         setConfirme(false);
@@ -110,6 +118,7 @@ export function AnnonceATous({
                 ...CIBLES,
                 ...vendeurs.filter((v) => v.actif).map((v) => ({ url: `/commander/${v.slug}`, label: v.nom })),
                 ...(vendeurs.some((v) => v.actif) ? [{ url: "/commander", label: "Commander" }] : []),
+                { url: "whatsapp", label: "WhatsApp" },
               ].map((c) => (
                 <button
                   key={c.url}
@@ -138,9 +147,36 @@ export function AnnonceATous({
                 ))}
             </div>
           </div>
+          {versWhatsApp && (
+            <div className="mt-2.5 rounded-[12px] bg-surface-2 p-3">
+              <div className="text-[12px] font-bold text-slate-light">Numéro WhatsApp qui reçoit</div>
+              <input
+                value={numero}
+                onChange={(e) => {
+                  setNumero(e.target.value);
+                  setConfirme(false);
+                }}
+                inputMode="tel"
+                placeholder="237 6XX XX XX XX"
+                className="mt-1.5 h-[44px] w-full rounded-[12px] border-[1.5px] border-line-4 bg-white px-3 text-[14.5px]"
+              />
+              <div className="mt-2 text-[12px] font-bold text-slate-light">Message déjà écrit pour l&rsquo;étudiant</div>
+              <textarea
+                value={texteWa}
+                onChange={(e) => {
+                  setTexteWa(e.target.value);
+                  setConfirme(false);
+                }}
+                rows={2}
+                placeholder="Bonjour, je veux l'offre vue sur Campusly"
+                className="mt-1.5 w-full rounded-[12px] border-[1.5px] border-line-4 bg-white p-3 text-[14px] leading-snug"
+              />
+              <div className="mt-1 text-[11.5px] text-slate-light">Avec l&rsquo;indicatif : 237 pour le Cameroun.</div>
+            </div>
+          )}
           <button
             onClick={() => (confirme ? envoyer() : setConfirme(true))}
-            disabled={pending || !titre.trim() || !corps.trim()}
+            disabled={pending || !titre.trim() || !corps.trim() || (versWhatsApp && !numeroValide)}
             className={`press-scale mt-2 flex h-[48px] w-full items-center justify-center gap-2 rounded-[14px] text-[14.5px] font-bold disabled:opacity-60 ${
               confirme ? "bg-warn-tint text-warn-ink" : "border-[1.5px] border-line-4 bg-white"
             }`}
