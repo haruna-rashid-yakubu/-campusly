@@ -649,6 +649,9 @@ export const vendeurs = pgTable("vendeur", {
   // A restaurant's menu: sections of items, each with its sizes and prices.
   // Null: the shop sells packs or single items (see lib/catalogue.ts).
   menu: jsonb("menu"),
+  // What a restaurant has run out of today: { jour: "2026-10-17", cles: ["fried-rice", "poulet-pane|Frites de plantain"] }.
+  // Read only for its own day, so it clears by itself overnight.
+  epuises: jsonb("epuises"),
   whatsapp: text("whatsapp").notNull(), // digits only, with country code
   livraison: text("livraison"),
   // Added once per order, not per pack: one trip across campus.

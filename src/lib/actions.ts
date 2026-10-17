@@ -31,7 +31,17 @@ import { getCatalogue, resumerDetail, type LignePanier } from "@/lib/vendeurs";
 import { calendrierDe, prochaineLivraison } from "@/lib/livraison";
 import { carteDepuis, commandesLivrees, palierPourRang, position, regleDe } from "@/lib/fidelite";
 import { MAX_UNITES, venteALUnite } from "@/lib/catalogue";
-import { MAX_LIGNES, MAX_PAR_LIGNE, libelleLigne, lireMenu, trouverItem, type LigneMenu } from "@/lib/menu";
+import {
+  MAX_LIGNES,
+  MAX_PAR_LIGNE,
+  cleEpuise,
+  epuisesDuJour,
+  jourWAT,
+  libelleLigne,
+  lireMenu,
+  trouverItem,
+  type LigneMenu,
+} from "@/lib/menu";
 import { progresHebdo, regleHebdoDe } from "@/lib/fidelite";
 
 import {
@@ -1674,6 +1684,47 @@ export async function supprimerCommande(id: number) {
   revalidatePath("/admin/vendeurs");
 }
 
+/*
+ * From the vendor's own link: "out for today" on a menu item or one of its
+ * choices. The token is the vendor's key, as for marking orders. Only keys
+ * that exist on the menu are kept, and the day is stamped so the list lapses
+ * overnight.
+ */
+export async function basculerEpuise(token: string, cle: string, epuise: boolean) {
+  if (!token) return { ok: false as const };
+  const [vendeur] = await db.select().from(vendeurs).where(eq(vendeurs.tokenEspace, token));
+  const menu = vendeur ? lireMenu(vendeur.menu) : null;
+  if (!vendeur || !menu) return { ok: false as const };
+  const [itemId, option] = cle.split("|");
+  const item = trouverItem(menu, itemId);
+  if (!item || (option !== undefined && !item.choix?.options.includes(option))) return { ok: false as const };
+
+  const cles = new Set(epuisesDuJour(vendeur.epuises));
+  if (epuise) cles.add(cleEpuise(itemId, option));
+  else cles.delete(cleEpuise(itemId, option));
+  await db
+    .update(vendeurs)
+    .set({ epuises: { jour: jourWAT(), cles: [...cles] } })
+    .where(eq(vendeurs.id, vendeur.id));
+  revalidatePath(`/commander/${vendeur.slug}`);
+  revalidatePath(`/vendeur/${token}`);
+  return { ok: true as const };
+}
+
+/* The same for a shop that sells by flavour: its own flavour, until it puts it back. */
+export async function basculerRuptureVendeur(token: string, articleId: number, enRupture: boolean) {
+  if (!token) return { ok: false as const };
+  const [vendeur] = await db.select().from(vendeurs).where(eq(vendeurs.tokenEspace, token));
+  if (!vendeur) return { ok: false as const };
+  await db
+    .update(vendeurArticles)
+    .set({ enRupture })
+    .where(and(eq(vendeurArticles.id, articleId), eq(vendeurArticles.vendeurId, vendeur.id)));
+  revalidatePath(`/commander/${vendeur.slug}`);
+  revalidatePath(`/vendeur/${token}`);
+  return { ok: true as const };
+}
+
 export async function basculerRupture(articleId: number, enRupture: boolean) {
   await requireAdmin();
   await db.update(vendeurArticles).set({ enRupture }).where(eq(vendeurArticles.id, articleId));
@@ -1712,6 +1763,7 @@ export async function preparerCommandeMenu(input: {
 
   const lignes: { formule: string; parfums: Record<string, number>; plat: boolean; quantite: number }[] = [];
   const lignesMessage: string[] = [];
+  const epuises = new Set(epuisesDuJour(vendeur.epuises));
   let sousTotal = 0;
   let plats = 0;
   let nbArticles = 0;
@@ -1728,6 +1780,13 @@ export async function preparerCommandeMenu(input: {
         return { ok: false as const, message: `Choisis : ${item.choix.titre.toLowerCase()} pour ${item.nom}.` };
       }
       choix = l.choix;
+    }
+    // The page greys it out; this is for a basket filled before the vendor said so.
+    if (epuises.has(item.id) || (choix && epuises.has(cleEpuise(item.id, choix)))) {
+      return {
+        ok: false as const,
+        message: `${libelleLigne(item, taille, choix)} est épuisé aujourd'hui. Retire-le de ton panier.`,
+      };
     }
     const montant = taille.prix * l.quantite;
     sousTotal += montant;

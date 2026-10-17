@@ -130,3 +130,31 @@ export function libelleLigne(item: ItemMenu, taille: Taille, choix?: string) {
 export function prixMin(menu: Menu) {
   return Math.min(...menu.sections.flatMap((s) => s.items.flatMap((i) => i.tailles.map((t) => t.prix))));
 }
+
+/*
+ * Run out for the day. A key is an item ("fried-rice") or one choice of it
+ * ("poulet-pane|Frites de plantain"): the plantain can run out while the
+ * potatoes have not. Stored with the day it was set for, in Yaoundé, and
+ * ignored any other day — "fini pour aujourd'hui" needs nobody to undo it.
+ */
+export type Epuises = { jour: string; cles: string[] };
+
+export function jourWAT(maintenant = new Date()) {
+  return new Date(maintenant.getTime() + 3600_000).toISOString().slice(0, 10);
+}
+
+export function cleEpuise(item: string, option?: string) {
+  return option ? `${item}|${option}` : item;
+}
+
+export function epuisesDuJour(brut: unknown, maintenant = new Date()): string[] {
+  const e = brut as Partial<Epuises> | null | undefined;
+  if (!e || e.jour !== jourWAT(maintenant) || !Array.isArray(e.cles)) return [];
+  return e.cles.filter((c): c is string => typeof c === "string");
+}
+
+/** Out today: the item itself, or every one of its choices. */
+export function itemEpuise(item: ItemMenu, epuises: ReadonlySet<string>) {
+  if (epuises.has(item.id)) return true;
+  return !!item.choix && item.choix.options.every((o) => epuises.has(cleEpuise(item.id, o)));
+}

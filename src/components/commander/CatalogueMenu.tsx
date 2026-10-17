@@ -5,7 +5,16 @@ import Image from "next/image";
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
 import { noterEvenementVendeur, preparerCommandeMenu } from "@/lib/actions";
-import { MAX_LIGNES, MAX_PAR_LIGNE, libelleLigne, type ItemMenu, type LigneMenu, type Menu } from "@/lib/menu";
+import {
+  MAX_LIGNES,
+  MAX_PAR_LIGNE,
+  cleEpuise,
+  itemEpuise,
+  libelleLigne,
+  type ItemMenu,
+  type LigneMenu,
+  type Menu,
+} from "@/lib/menu";
 import { enablePush, readPushStatus, type PushStatus } from "@/lib/push-client";
 import { fcfa } from "@/lib/utils";
 
@@ -27,12 +36,16 @@ export function CatalogueMenu({
   vendeurNom,
   menu,
   cadeau = null,
+  epuises = [],
 }: {
   vendeurId: number;
   vendeurNom: string;
   menu: Menu;
   cadeau?: string | null;
+  // Run out today, as the vendor set it from their link.
+  epuises?: string[];
 }) {
+  const horsStock = useMemo(() => new Set(epuises), [epuises]);
   const [panier, setPanier] = useState<LigneMenu[]>([]);
   const [mode, setMode] = useState(menu.modes[0].id);
   const [precision, setPrecision] = useState("");
@@ -161,7 +174,7 @@ export function CatalogueMenu({
           </div>
           <div className="flex flex-col gap-2.5">
             {s.items.map((item) => (
-              <CarteItem key={item.id} item={item} icone={s.icone} onAjouter={ajouter} />
+              <CarteItem key={item.id} item={item} icone={s.icone} epuises={horsStock} onAjouter={ajouter} />
             ))}
           </div>
         </section>
@@ -321,21 +334,24 @@ export function CatalogueMenu({
 function CarteItem({
   item,
   icone,
+  epuises,
   onAjouter,
 }: {
   item: ItemMenu;
   icone?: string;
+  epuises: ReadonlySet<string>;
   onAjouter: (l: LigneMenu) => void;
 }) {
   const [taille, setTaille] = useState(item.tailles.length === 1 ? item.tailles[0].id : item.tailles[Math.min(1, item.tailles.length - 1)].id);
   const [choix, setChoix] = useState<string | undefined>(undefined);
+  const epuise = itemEpuise(item, epuises);
   const manqueChoix = !!item.choix && !choix;
   // How many to add at once: two plates for two friends without tapping "Ajouter" twice.
   const [quantite, setQuantite] = useState(1);
   const prix = item.tailles.find((t) => t.id === taille)?.prix ?? 0;
 
   return (
-    <div className="rounded-[18px] border border-line bg-white p-3">
+    <div className={`rounded-[18px] border border-line bg-white p-3 ${epuise ? "opacity-55" : ""}`}>
       <div className="flex gap-3">
         <div className="relative grid h-[72px] w-[72px] flex-none place-items-center overflow-hidden rounded-[14px] bg-[var(--v-doux,#f1f5f6)]">
           {item.photo ? (
@@ -375,11 +391,13 @@ function CarteItem({
               <button
                 key={o}
                 onClick={() => setChoix(o)}
-                className={`h-[34px] rounded-full px-3 text-[12.5px] font-bold ${
+                disabled={epuises.has(cleEpuise(item.id, o))}
+                className={`h-[34px] rounded-full px-3 text-[12.5px] font-bold disabled:line-through disabled:opacity-45 ${
                   choix === o ? "bg-[var(--v-accent,#14b8ac)] text-white" : "border-[1.5px] border-line-4 text-slate"
                 }`}
               >
                 {o}
+                {epuises.has(cleEpuise(item.id, o)) && <span className="ml-1 no-underline">· épuisé</span>}
               </button>
             ))}
           </div>
@@ -410,12 +428,14 @@ function CarteItem({
             onAjouter({ item: item.id, taille, choix, quantite });
             setQuantite(1);
           }}
-          disabled={manqueChoix}
+          disabled={manqueChoix || epuise}
           className="press-scale flex h-[44px] min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[13px] bg-[var(--v-accent,#0f172a)] px-2 text-[14px] font-bold text-white disabled:opacity-40"
         >
           <Icon name="plus" size={16} strokeWidth={2.4} />
           <span className="truncate">
-            {manqueChoix
+            {epuise
+              ? "Épuisé aujourd'hui"
+              : manqueChoix
               ? `Choisis ${item.choix!.titre.toLowerCase()}`
               : `Ajouter${quantite > 1 ? ` ${quantite}` : ""} · ${f(prix * quantite)}`}
           </span>

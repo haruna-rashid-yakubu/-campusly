@@ -6,8 +6,9 @@ import { vendeurs } from "@/db/schema";
 import { LigneCommandeVendeur } from "@/components/commander/LigneCommandeVendeur";
 import { calendrierDe, prochaineLivraison, sansReponse as estSansReponse } from "@/lib/livraison";
 import { libelleRecompense, regleDe, regleHebdoDe } from "@/lib/fidelite";
-import { getCommandesRecentes, resumerDetail } from "@/lib/vendeurs";
-import { lireMenu } from "@/lib/menu";
+import { getCatalogue, getCommandesRecentes, resumerDetail } from "@/lib/vendeurs";
+import { DisponibiliteVendeur } from "@/components/commander/DisponibiliteVendeur";
+import { cleEpuise, epuisesDuJour, lireMenu } from "@/lib/menu";
 import { fcfa } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -59,6 +60,20 @@ export default async function EspaceVendeurPage({ params }: { params: Promise<{ 
     sansReponse(c) ? 2 : c.statut === null || c.statut === "prete" ? 0 : c.statut === "livree" ? 1 : 3;
   const liste = [...groupes.values()].sort((a, b) => b.tri - a.tri);
 
+  // What can be switched off from here: a restaurant's menu for today, or a shop's flavours.
+  const epuises = new Set(epuisesDuJour(vendeur.epuises));
+  const dispoMenu = menu?.sections.flatMap((s) =>
+    s.items.map((i) => ({
+      cle: i.id,
+      nom: i.nom,
+      epuise: epuises.has(i.id),
+      options: (i.choix?.options ?? []).map((o) => ({ cle: cleEpuise(i.id, o), nom: o, epuise: epuises.has(cleEpuise(i.id, o)) })),
+    }))
+  );
+  const dispoArticles = menu
+    ? undefined
+    : (await getCatalogue(vendeur.id)).articles.map((a) => ({ id: a.id, nom: a.nom, enRupture: a.enRupture }));
+
   const aTraiter = commandes.filter((c) => (c.statut === null || c.statut === "prete") && !sansReponse(c)).length;
 
   return (
@@ -76,6 +91,9 @@ export default async function EspaceVendeurPage({ params }: { params: Promise<{ 
         <div className="mt-3 rounded-[14px] bg-surface-2 px-3.5 py-2.5 text-[12.5px] leading-snug text-slate">
           Garde ce lien pour toi : ajoute cette page à ton écran d&rsquo;accueil pour la retrouver en un tap.
         </div>
+        {vendeur.categorie !== "interne" && (dispoMenu?.length || dispoArticles?.length) ? (
+          <DisponibiliteVendeur token={token} menu={dispoMenu} articles={dispoArticles} />
+        ) : null}
         {aTraiter > 0 && (
           <div className="mt-3 text-[14px] font-extrabold">
             {aTraiter} commande{aTraiter > 1 ? "s" : ""} à traiter

@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { VendeurVue } from "@/components/commander/VendeurVue";
 import { getCatalogue, getVendeurParSlug } from "@/lib/vendeurs";
 import { getCarte, progresHebdo, regleDe, regleHebdoDe } from "@/lib/fidelite";
-import { lireMenu } from "@/lib/menu";
+import { epuisesDuJour, lireMenu } from "@/lib/menu";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +47,7 @@ export default async function VendeurPage({ params }: { params: Promise<{ slug: 
       fidelite={vendeur.fidelite && !regleHebdo ? { carte, regle: regleDe(vendeur) } : null}
       menu={menu}
       hebdo={regleHebdo ? { regle: regleHebdo, progres } : null}
+      epuises={epuisesDuJour(vendeur.epuises)}
     />
   );
 }

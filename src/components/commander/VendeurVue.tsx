@@ -23,6 +23,7 @@ export function VendeurVue({
   fidelite = null,
   menu = null,
   hebdo = null,
+  epuises = [],
 }: {
   vendeur: Pick<
     Vendeur,
@@ -36,6 +37,8 @@ export function VendeurVue({
   menu?: Menu | null;
   // A weekly loyalty card (dishes since Monday); progres null when signed out.
   hebdo?: { regle: RegleHebdo; progres: ProgresHebdo | null } | null;
+  // Menu items and choices run out for today.
+  epuises?: string[];
 }) {
   // Worked out on every request, so the date moves on by itself each week.
   const calendrier = calendrierDe(vendeur);
@@ -165,6 +168,7 @@ export function VendeurVue({
             vendeurNom={vendeur.nom}
             menu={menu}
             cadeau={hebdo?.progres?.cadeauPret ? hebdo.regle.libelle : null}
+            epuises={epuises}
           />
         ) : venteALUnite(formules) ? (
           <CatalogueUnite
