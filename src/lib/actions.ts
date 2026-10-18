@@ -1356,6 +1356,17 @@ export async function annoncerATous(titre: string, corps: string, url?: string) 
 }
 
 /*
+ * The evening reminder, sent again by hand. The cron fires once at 20h; when a
+ * week's slots are filled after that, every promo has been told "pas de cours"
+ * and this is how the right message reaches them the same evening.
+ */
+export async function relancerRappelDuSoir() {
+  await requireAdmin();
+  const { envoyerRappelsDuSoir } = await import("@/lib/rappel");
+  return envoyerRappelsDuSoir();
+}
+
+/*
  * Opens a poll and, unless told not to, tells every subscribed device about
  * it. The push ignores the per-type settings for the same reason the
  * announcement does: it is rare, decided by a person, and about the app as a

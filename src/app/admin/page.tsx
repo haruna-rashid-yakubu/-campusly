@@ -13,6 +13,7 @@ import { TroncCommunForm } from "@/components/admin/TroncCommunForm";
 import { PropositionCard } from "@/components/admin/PropositionCard";
 import { ProgrammeGridForm } from "@/components/admin/ProgrammeGridForm";
 import { AnnonceATous } from "@/components/admin/AnnonceATous";
+import { RelancerRappel } from "@/components/admin/RelancerRappel";
 import { SondageAdmin } from "@/components/admin/SondageAdmin";
 import { getVendeurs } from "@/lib/vendeurs";
 import { estOuvert, getDernierSondage, getResultats, getResultatsParPromo } from "@/lib/sondage";
@@ -129,6 +130,7 @@ export default async function AdminPage({
           ))}
         </div>
         {estAdmin && <AnnonceATous vendeurs={vendeursAnnonce} />}
+        {estAdmin && <RelancerRappel />}
         {estAdmin && <Panneau nom="Sondage" rendu={() => SondageSection()} />}
         {estAdmin && (
           <Link
