@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { classes } from "@/db/schema";
 import { CRENEAUX, heuresDe } from "@/lib/constants";
 import { getProgrammeForWeek } from "@/lib/data";
-import { sendPushToClasse } from "@/lib/push";
+import { sendPushToAdmins, sendPushToClasse } from "@/lib/push";
 import { addDays, jourLabel, jourOf, mondayOf, nowInWAT } from "@/lib/semaine";
 
 /*
@@ -125,30 +125,94 @@ export function messageDuSoir(
   return [...lignes, ...alertes].join("\n");
 }
 
+/*
+ * A week whose photo is up but whose slots were never filled is not a week
+ * without classes. Saying "pas de cours" there sent a whole campus to bed
+ * thinking Monday was free; pointing at the photo is all that can honestly be
+ * said.
+ */
+const SANS_CRENEAUX = "Ton emploi du temps de la semaine est sur Campusly : ouvre-le pour voir ta journée de demain.";
+
 /** Returns how many promos were notified, for the cron's response body. */
 export async function envoyerRappelsDuSoir(now = new Date()) {
   const localNow = nowInWAT(now);
   const demain = addDays(localNow, 1);
   const jour = jourOf(demain);
 
-  // Sunday has no morning and no afternoon block; nothing to announce.
-  if (jour > 6) return { envoyes: 0, raison: "dimanche" as const };
+  // Sunday has no morning and no afternoon block; nothing to announce. The
+  // Saturday run is used instead to warn the admins about next week.
+  if (jour > 6) {
+    await alerterCreneauxVides(now);
+    return { envoyes: 0, raison: "dimanche" as const };
+  }
 
   const semaine = mondayOf(demain);
   const toutes = await db.select().from(classes);
   let envoyes = 0;
+  const vides: string[] = [];
 
   for (const classe of toutes) {
     const programme = await getProgrammeForWeek(classe.id, semaine);
     if (!programme) continue;
 
+    let body: string;
+    if (programme.creneaux.length > 0) {
+      body = messageDuSoir(programme.creneaux, jour, programme.salleDefaut);
+    } else if (programme.photoUrl) {
+      body = SANS_CRENEAUX;
+      vides.push(classe.label);
+    } else {
+      vides.push(classe.label);
+      continue;
+    }
+
     await sendPushToClasse(classe.id, {
       title: `Demain ${jourLabel(jour)} — ${classe.label}`,
-      body: messageDuSoir(programme.creneaux, jour, programme.salleDefaut),
+      body,
       url: "/programme",
     }, "rappel");
     envoyes += 1;
   }
 
-  return { envoyes, raison: null };
+  if (vides.length > 0) {
+    await sendPushToAdmins({
+      title: `⚠️ Rappel sans horaires pour ${vides.length} promo${vides.length > 1 ? "s" : ""}`,
+      body: `Créneaux vides : ${vides.join(", ")}. Remplis-les puis relance le rappel depuis l'Admin.`,
+      url: "/admin",
+    });
+  }
+
+  return { envoyes, vides: vides.length, raison: null };
+}
+
+/*
+ * Saturday evening and Sunday morning, only to the admins: the promos whose
+ * next week has no slots yet, while there is still time to fill them before
+ * the Sunday 20h reminder. Followers are left out — they read another promo's
+ * week, which is listed in their place. A promo with nothing this week and
+ * nothing next week is not news either; only one that had a week and lost it,
+ * or has a photo without slots, is listed.
+ */
+export async function alerterCreneauxVides(now = new Date()) {
+  const localNow = nowInWAT(now);
+  const semaine = mondayOf(addDays(localNow, 2));
+  const cetteSemaine = mondayOf(localNow);
+  const toutes = await db.select().from(classes);
+  const vides: string[] = [];
+
+  for (const classe of toutes) {
+    if (classe.programmeDe !== null) continue;
+    const prochaine = await getProgrammeForWeek(classe.id, semaine);
+    if (prochaine && prochaine.creneaux.length > 0) continue;
+    if (!prochaine && !(await getProgrammeForWeek(classe.id, cetteSemaine))) continue;
+    vides.push(classe.label);
+  }
+
+  if (vides.length === 0) return { vides: 0 };
+  await sendPushToAdmins({
+    title: "📅 Créneaux de la semaine encore vides",
+    body: `${vides.join(", ")}. Le rappel de dimanche 20h partira sans horaires si rien n'est rempli.`,
+    url: "/admin",
+  });
+  return { vides: vides.length };
 }

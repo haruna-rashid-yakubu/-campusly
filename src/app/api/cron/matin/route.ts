@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { envoyerAnnalesProgrammees } from "@/lib/annales";
+import { alerterCreneauxVides } from "@/lib/rappel";
+import { jourOf, nowInWAT } from "@/lib/semaine";
 
 export const dynamic = "force-dynamic";
 
@@ -18,5 +20,7 @@ export async function GET(request: Request) {
   }
 
   const result = await envoyerAnnalesProgrammees();
-  return NextResponse.json({ ok: true, ...result });
+  // Sunday morning: the second warning to the admins, a day after Saturday's.
+  const creneaux = jourOf(nowInWAT()) === 7 ? await alerterCreneauxVides() : null;
+  return NextResponse.json({ ok: true, ...result, creneaux });
 }
