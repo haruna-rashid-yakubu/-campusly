@@ -309,3 +309,27 @@ export async function cartesALaUne(ouvertes: Vendeur[]): Promise<CarteUne[]> {
   );
   return cartes.filter((c): c is CarteUne => c !== null);
 }
+
+/*
+ * Today's orders per shop, Yaoundé time, and how many still wait for the
+ * vendor's tick ("Prête" counts as waiting: the plate is not handed over yet).
+ * What the admin needs before opening anything: is something happening, and
+ * is someone being left without an answer.
+ */
+export async function commandesDuJour(): Promise<Map<number, { total: number; aTraiter: number }>> {
+  const lignes = await db
+    .select({
+      vendeurId: commandeEvenements.vendeurId,
+      total: sql<number>`count(*)::int`,
+      aTraiter: sql<number>`count(*) filter (where ${commandeEvenements.statut} is null or ${commandeEvenements.statut} = 'prete')::int`,
+    })
+    .from(commandeEvenements)
+    .where(
+      and(
+        eq(commandeEvenements.type, "commander"),
+        sql`(${commandeEvenements.createdAt} at time zone 'UTC' at time zone 'Africa/Douala')::date = (now() at time zone 'Africa/Douala')::date`
+      )
+    )
+    .groupBy(commandeEvenements.vendeurId);
+  return new Map(lignes.map((l) => [l.vendeurId, { total: l.total, aTraiter: l.aTraiter }]));
+}

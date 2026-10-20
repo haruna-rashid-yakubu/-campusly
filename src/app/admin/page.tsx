@@ -15,7 +15,7 @@ import { ProgrammeGridForm } from "@/components/admin/ProgrammeGridForm";
 import { AnnonceATous } from "@/components/admin/AnnonceATous";
 import { RelancerRappel } from "@/components/admin/RelancerRappel";
 import { SondageAdmin } from "@/components/admin/SondageAdmin";
-import { getVendeurs } from "@/lib/vendeurs";
+import { commandesDuJour, getVendeurs } from "@/lib/vendeurs";
 import { estOuvert, getDernierSondage, getResultats, getResultatsParPromo } from "@/lib/sondage";
 // Not from the form: it is a client module, and its exports reach the server
 // as opaque references, so calling cellKey() here threw mid-render.
@@ -100,6 +100,9 @@ export default async function AdminPage({
   const vendeursAnnonce = estAdmin
     ? (await getVendeurs({ inclureInactifs: true })).map((v) => ({ nom: v.nom, slug: v.slug, actif: v.actif }))
     : [];
+  const aTraiter = estAdmin
+    ? [...(await commandesDuJour()).values()].reduce((n, j) => n + j.aTraiter, 0)
+    : 0;
 
   return (
     <div className="min-h-dvh">
@@ -113,6 +116,25 @@ export default async function AdminPage({
         }
       />
       <div className="mb-4 px-5">
+        {estAdmin && (
+          <Link
+            href="/admin/vendeurs"
+            className="press-scale mb-3 flex h-[54px] items-center justify-between rounded-[16px] bg-ink px-4 text-[15px] font-extrabold !text-white"
+          >
+            <span className="flex items-center gap-2">
+              <Icon name="bag" size={19} strokeWidth={2} />
+              Vendeurs & commandes
+            </span>
+            <span className="flex items-center gap-1.5">
+              {aTraiter > 0 && (
+                <span className="rounded-full bg-[#f59e0b] px-2.5 py-1 text-[12.5px] font-extrabold text-white">
+                  {aTraiter} à traiter
+                </span>
+              )}
+              <Icon name="right" size={17} />
+            </span>
+          </Link>
+        )}
         <div className="flex gap-1.5 rounded-2xl bg-surface-2 p-1">
           {onglets.map((t) => (
             <Link
@@ -132,18 +154,6 @@ export default async function AdminPage({
         {estAdmin && <AnnonceATous vendeurs={vendeursAnnonce} />}
         {estAdmin && <RelancerRappel />}
         {estAdmin && <Panneau nom="Sondage" rendu={() => SondageSection()} />}
-        {estAdmin && (
-          <Link
-            href="/admin/vendeurs"
-            className="press-scale mt-4 flex h-[50px] items-center justify-between rounded-[16px] border-[1.5px] border-line-4 bg-white px-4 text-[14.5px] font-bold"
-          >
-            <span className="flex items-center gap-2">
-              <Icon name="bag" size={18} strokeWidth={1.9} />
-              Vendeurs et commandes
-            </span>
-            <Icon name="right" size={17} className="text-slate-light" />
-          </Link>
-        )}
       </div>
 
       <div className="px-5 pb-12">
