@@ -26,6 +26,7 @@ import { SondageVote } from "@/components/SondageVote";
 import { getMaReponse, getResultats, getSondageOuvert } from "@/lib/sondage";
 import { boutiquesRecentes, cartesALaUne, getVendeurs } from "@/lib/vendeurs";
 import { AlaUne } from "@/components/AlaUne";
+import { cartesEvenements, rubanDuJour } from "@/lib/evenements";
 import { AccueilServices } from "@/components/AccueilServices";
 import { distanceLabel, fcfa, isWithinLastWeek } from "@/lib/utils";
 
@@ -56,7 +57,9 @@ export default async function AccueilPage() {
   const vendeursOuverts = await getVendeurs();
   const boutiquesAnnoncees = boutiquesRecentes(vendeursOuverts);
   // The pressing is a Campusly service, not a shop in the list, but it has its own card here.
-  const cartesUne = await cartesALaUne(await getVendeurs({ inclureInternes: true }));
+  // A campus event of the day goes first: it is gone tomorrow, the shops are not.
+  const cartesUne = [...cartesEvenements(), ...(await cartesALaUne(await getVendeurs({ inclureInternes: true })))];
+  const ruban = rubanDuJour();
 
   // The open poll is answered right here, first thing under the greeting, and
   // stays with its results once answered, so the screen everyone lands on
@@ -180,6 +183,14 @@ export default async function AccueilPage() {
         </div>
       )}
 
+      {ruban && (
+        <div
+          className="mx-5 mt-5 rounded-[14px] px-4 py-2.5 text-center text-[13.5px] font-extrabold text-white"
+          style={{ background: ruban.couleur }}
+        >
+          {ruban.texte}
+        </div>
+      )}
       {cartesUne.length > 0 && <AlaUne cartes={cartesUne} />}
 
       <AccueilServices boutiques={vendeursOuverts.map((v) => ({ nom: v.nom, logo: v.logoCarreUrl }))} />

@@ -1,0 +1,61 @@
+import type { CarteUne } from "@/components/AlaUne";
+import { jourWAT } from "@/lib/menu";
+
+/*
+ * Campus events relayed on the home screen, written here by hand while there
+ * are few of them. Each one shows in "À la une" from `depuis` to the end of its
+ * day, Yaoundé time, then disappears on its own: an event announced after it
+ * happened is worse than one never announced.
+ */
+type Evenement = {
+  nom: string;
+  ligne: string;
+  image: string; // 16:9 crop for the carousel
+  affiche: string; // the full poster, opened on a tap
+  jour: string; // "2026-10-21"
+  jourLabel: string; // "mercredi 21 octobre"
+  depuis: string;
+  detail: string;
+  // The day's colour on the home screen, with the line shown above the carousel.
+  ruban?: { couleur: string; texte: string };
+};
+
+const EVENEMENTS: Evenement[] = [
+  {
+    nom: "Pink October",
+    ligne: "Club Mode × JML",
+    image: "/evenements/pink-october-une.jpg",
+    affiche: "/evenements/pink-october.jpg",
+    jour: "2026-10-21",
+    jourLabel: "mercredi 21 octobre",
+    depuis: "2026-10-20",
+    detail: "Contre le cancer du sein",
+    ruban: { couleur: "#e8457c", texte: "🎀 Aujourd'hui, on vient en rose" },
+  },
+];
+
+function enCours(maintenant: Date) {
+  const jour = jourWAT(maintenant);
+  return EVENEMENTS.filter((e) => e.depuis <= jour && jour <= e.jour);
+}
+
+export function cartesEvenements(maintenant = new Date()): CarteUne[] {
+  const jour = jourWAT(maintenant);
+  return enCours(maintenant).map((e) => ({
+    href: e.affiche,
+    nom: e.nom,
+    image: e.image,
+    ligne: e.ligne,
+    prix: e.detail,
+    offre: null,
+    badge: e.jour === jour ? "Aujourd'hui" : e.jourLabel,
+    bouton: "L'affiche",
+    affiche: true,
+  }));
+}
+
+/* The event whose day it is, if it gives the home screen a colour. */
+export function rubanDuJour(maintenant = new Date()) {
+  const jour = jourWAT(maintenant);
+  return EVENEMENTS.find((e) => e.jour === jour && e.ruban)?.ruban ?? null;
+}
