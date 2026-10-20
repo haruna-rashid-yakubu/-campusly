@@ -101,7 +101,7 @@ export function ClasseSwitcher({
                 key={nom}
                 onClick={() => select(seul)}
                 className="flex min-h-[54px] w-full items-center border-0 border-b border-line-3 bg-transparent px-1 text-[15.5px] active:bg-surface-2"
-                style={{ fontWeight: value === seul ? 800 : 600, color: value === seul ? "#0A7F77" : "#0F172A" }}
+                style={{ fontWeight: value === seul ? 800 : 600, color: value === seul ? "var(--color-teal-dark)" : "#0F172A" }}
               >
                 <span className="flex-1 text-left">{seul}</span>
                 {value === seul && <Icon name="check" size={19} strokeWidth={2.4} />}
@@ -115,7 +115,7 @@ export function ClasseSwitcher({
                 onClick={() => setDeplie(ouvert ? null : nom)}
                 aria-expanded={ouvert}
                 className="flex min-h-[54px] w-full items-center bg-transparent px-1 text-[15.5px] active:bg-surface-2"
-                style={{ fontWeight: actif ? 800 : 600, color: actif ? "#0A7F77" : "#0F172A" }}
+                style={{ fontWeight: actif ? 800 : 600, color: actif ? "var(--color-teal-dark)" : "#0F172A" }}
               >
                 <span className="flex-1 text-left">{nom}</span>
                 <span className="mr-1 text-[12.5px] font-semibold text-slate-light">
@@ -138,7 +138,7 @@ export function ClasseSwitcher({
                       className="flex min-h-[48px] w-full items-center rounded-[12px] bg-transparent pl-4 pr-1 text-[15px] active:bg-surface-2"
                       style={{
                         fontWeight: value === label ? 800 : 500,
-                        color: value === label ? "#0A7F77" : "#0F172A",
+                        color: value === label ? "var(--color-teal-dark)" : "#0F172A",
                       }}
                     >
                       <span className="flex-1 text-left">{niveauDeClasse(label)}</span>

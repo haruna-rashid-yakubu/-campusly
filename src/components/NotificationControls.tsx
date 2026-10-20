@@ -173,7 +173,7 @@ export function NotificationControls() {
               <span
                 aria-hidden
                 className="mt-0.5 flex h-[26px] w-[44px] flex-none items-center rounded-full p-[3px] transition-colors"
-                style={{ backgroundColor: prefs[row.key] ? "#14B8AC" : "#E2E8F0" }}
+                style={{ backgroundColor: prefs[row.key] ? "var(--color-teal)" : "#E2E8F0" }}
               >
                 <span
                   className="h-5 w-5 rounded-full bg-white transition-transform"

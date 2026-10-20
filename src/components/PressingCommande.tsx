@@ -110,8 +110,8 @@ export function PressingCommande({ nom }: { nom?: string | null }) {
             aria-hidden
             className="mt-[1px] grid h-[22px] w-[22px] flex-none place-items-center rounded-[7px] border-[1.5px] transition-colors"
             style={{
-              borderColor: accepte ? "#14B8AC" : "#CBD5E1",
-              backgroundColor: accepte ? "#14B8AC" : "transparent",
+              borderColor: accepte ? "var(--color-teal)" : "#CBD5E1",
+              backgroundColor: accepte ? "var(--color-teal)" : "transparent",
               color: "#fff",
             }}
           >
@@ -130,7 +130,7 @@ export function PressingCommande({ nom }: { nom?: string | null }) {
           className="press-scale mt-3.5 flex h-[54px] w-full items-center justify-center gap-2.5 rounded-2xl text-[15.5px] font-bold transition-colors"
           style={
             actif
-              ? { backgroundColor: "#14B8AC", color: "#fff" }
+              ? { backgroundColor: "var(--color-teal)", color: "#fff" }
               : { backgroundColor: "#E2E8F0", color: "#94A3B8" }
           }
         >

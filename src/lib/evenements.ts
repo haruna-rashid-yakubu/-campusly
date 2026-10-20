@@ -86,3 +86,16 @@ export function decorDuJour(maintenant = new Date()) {
   const jour = jourWAT(maintenant);
   return SAISONS.find((s) => s.debut <= jour && jour <= s.fin)?.decor ?? null;
 }
+
+/*
+ * Days the whole app changes colour. Read in the browser, not on the server,
+ * so that a page built ahead of time still turns on the right day: the script
+ * below runs before the first paint and only sets an attribute on <html>.
+ */
+const COULEURS_DU_JOUR: Record<string, { nom: string; barre: string }> = {
+  "2026-10-21": { nom: "rose", barre: "#e8457c" },
+};
+
+export function scriptCouleurDuJour() {
+  return `(function(){try{var c=${JSON.stringify(COULEURS_DU_JOUR)}[new Date(Date.now()+36e5).toISOString().slice(0,10)];if(!c)return;document.documentElement.setAttribute("data-couleur",c.nom);document.addEventListener("DOMContentLoaded",function(){var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",c.barre)})}catch(e){}})()`;
+}

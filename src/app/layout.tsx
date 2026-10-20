@@ -1,3 +1,4 @@
+import { scriptCouleurDuJour } from "@/lib/evenements";
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -76,8 +77,9 @@ export const viewport: Viewport = {
 // database round-trip before the first byte.
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${manrope.variable} h-full`}>
+    <html lang="fr" className={`${manrope.variable} h-full`} suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: scriptCouleurDuJour() }} />
         <AppleSplashLinks />
       </head>
       <body className="h-full font-sans antialiased">

@@ -102,7 +102,7 @@ export function SheetOption({
     <button
       onClick={onClick}
       className="flex min-h-[54px] w-full items-center border-0 border-b border-line-3 bg-transparent px-1 text-[15.5px] active:bg-surface-2"
-      style={{ fontWeight: selected ? 800 : 500, color: selected ? "#0A7F77" : "#0F172A" }}
+      style={{ fontWeight: selected ? 800 : 500, color: selected ? "var(--color-teal-dark)" : "#0F172A" }}
     >
       <span className="flex-1 text-left">{label}</span>
       {selected && <Icon name="check" size={19} strokeWidth={2.4} />}

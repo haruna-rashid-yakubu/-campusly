@@ -159,3 +159,17 @@
 .anim-toast {
   animation: cy-toast 0.2s ease;
 }
+
+/*
+ * A day's colour: the whole app takes it for one day, set on <html> by the
+ * script in the layout before the first paint, and gives it back the next.
+ */
+html[data-couleur="rose"] {
+  --color-teal: #e8457c;
+  --color-teal-press: #d6386d;
+  --color-teal-dark: #b8325f;
+  --color-teal-active: #a12a53;
+  --color-teal-tint: #fde7ef;
+  --color-teal-tint-soft: #fff4f8;
+  --color-teal-border: #f8c6d8;
+}
