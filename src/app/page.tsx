@@ -26,7 +26,8 @@ import { SondageVote } from "@/components/SondageVote";
 import { getMaReponse, getResultats, getSondageOuvert } from "@/lib/sondage";
 import { boutiquesRecentes, cartesALaUne, getVendeurs } from "@/lib/vendeurs";
 import { AlaUne } from "@/components/AlaUne";
-import { cartesEvenements, rubanDuJour } from "@/lib/evenements";
+import { cartesEvenements, decorDuJour, rubanDuJour } from "@/lib/evenements";
+import { DecorSaison } from "@/components/DecorSaison";
 import { AccueilServices } from "@/components/AccueilServices";
 import { distanceLabel, fcfa, isWithinLastWeek } from "@/lib/utils";
 
@@ -60,6 +61,7 @@ export default async function AccueilPage() {
   // A campus event of the day goes first: it is gone tomorrow, the shops are not.
   const cartesUne = [...cartesEvenements(), ...(await cartesALaUne(await getVendeurs({ inclureInternes: true })))];
   const ruban = rubanDuJour();
+  const decor = decorDuJour();
 
   // The open poll is answered right here, first thing under the greeting, and
   // stays with its results once answered, so the screen everyone lands on
@@ -71,7 +73,8 @@ export default async function AccueilPage() {
 
 
   return (
-    <div className="min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
+    <div className="relative isolate min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
+      {decor && <DecorSaison decor={decor} />}
       <div className="px-5" style={{ paddingTop: "calc(20px + var(--safe-top))" }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">

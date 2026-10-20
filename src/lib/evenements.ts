@@ -1,4 +1,5 @@
 import type { CarteUne } from "@/components/AlaUne";
+import type { Decor } from "@/components/DecorSaison";
 import { jourWAT } from "@/lib/menu";
 
 /*
@@ -58,4 +59,22 @@ export function cartesEvenements(maintenant = new Date()): CarteUne[] {
 export function rubanDuJour(maintenant = new Date()) {
   const jour = jourWAT(maintenant);
   return EVENEMENTS.find((e) => e.jour === jour && e.ruban)?.ruban ?? null;
+}
+
+/*
+ * Seasons that dress the top of the home screen, between two days inclusive.
+ * Kept to moments the campus marks itself, and never more than a wash and a
+ * few motifs: the programme and the orders must read exactly as on any day.
+ */
+const SAISONS: { debut: string; fin: string; decor: Decor }[] = [
+  {
+    debut: "2026-10-20",
+    fin: "2026-10-31",
+    decor: { motif: "ruban", couleur: "#e8457c", fond: "linear-gradient(180deg, #fde4ee 0%, #fff4f8 60%, rgba(255,255,255,0) 100%)" },
+  },
+];
+
+export function decorDuJour(maintenant = new Date()) {
+  const jour = jourWAT(maintenant);
+  return SAISONS.find((s) => s.debut <= jour && jour <= s.fin)?.decor ?? null;
 }
