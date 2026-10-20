@@ -9,6 +9,7 @@ import { jourWAT } from "@/lib/menu";
  * happened is worse than one never announced.
  */
 type Evenement = {
+  id: string; // its page, /evenement/<id>
   nom: string;
   ligne: string;
   image: string; // 16:9 crop for the carousel
@@ -23,6 +24,7 @@ type Evenement = {
 
 const EVENEMENTS: Evenement[] = [
   {
+    id: "pink-october",
     nom: "Pink October",
     ligne: "Club Mode × JML",
     image: "/evenements/pink-october-une.jpg",
@@ -35,6 +37,10 @@ const EVENEMENTS: Evenement[] = [
   },
 ];
 
+export function getEvenement(id: string) {
+  return EVENEMENTS.find((e) => e.id === id) ?? null;
+}
+
 function enCours(maintenant: Date) {
   const jour = jourWAT(maintenant);
   return EVENEMENTS.filter((e) => e.depuis <= jour && jour <= e.jour);
@@ -43,7 +49,9 @@ function enCours(maintenant: Date) {
 export function cartesEvenements(maintenant = new Date()): CarteUne[] {
   const jour = jourWAT(maintenant);
   return enCours(maintenant).map((e) => ({
-    href: e.affiche,
+    // The poster opens in the app's own viewer, with a way back: opened as a
+    // bare image, an installed app has no back button to leave it.
+    href: `/evenement/${e.id}`,
     nom: e.nom,
     image: e.image,
     ligne: e.ligne,
