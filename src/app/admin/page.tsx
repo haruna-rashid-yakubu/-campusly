@@ -14,6 +14,7 @@ import { PropositionCard } from "@/components/admin/PropositionCard";
 import { ProgrammeGridForm } from "@/components/admin/ProgrammeGridForm";
 import { AnnonceATous } from "@/components/admin/AnnonceATous";
 import { RelancerRappel } from "@/components/admin/RelancerRappel";
+import { EnvoyerAnnales } from "@/components/admin/EnvoyerAnnales";
 import { SondageAdmin } from "@/components/admin/SondageAdmin";
 import { commandesDuJour, getVendeurs } from "@/lib/vendeurs";
 import { estOuvert, getDernierSondage, getResultats, getResultatsParPromo } from "@/lib/sondage";
@@ -153,6 +154,7 @@ export default async function AdminPage({
         </div>
         {estAdmin && <AnnonceATous vendeurs={vendeursAnnonce} />}
         {estAdmin && <RelancerRappel />}
+        {estAdmin && <EnvoyerAnnales />}
         {estAdmin && <Panneau nom="Sondage" rendu={() => SondageSection()} />}
       </div>
 

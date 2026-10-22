@@ -1365,6 +1365,16 @@ export async function annoncerATous(titre: string, corps: string, url?: string) 
 }
 
 /*
+ * The past-paper alerts held for the morning, sent now from the admin screen
+ * instead of waiting for the 8h run.
+ */
+export async function envoyerAnnalesEnAttente() {
+  await requireAdmin();
+  const { envoyerAnnalesProgrammees } = await import("@/lib/annales");
+  return envoyerAnnalesProgrammees(new Date(), { sansAttendre: true });
+}
+
+/*
  * The evening reminder, sent again by hand. The cron fires once at 20h; when a
  * week's slots are filled after that, every promo has been told "pas de cours"
  * and this is how the right message reaches them the same evening.

@@ -51,11 +51,16 @@ export async function notifierAnnales(filiere: string, niveau: string, depuis: D
  * by Vercel cannot send it twice; an alert lost to a failure in between is
  * the lesser harm.
  */
-export async function envoyerAnnalesProgrammees(maintenant = new Date()) {
+export async function envoyerAnnalesProgrammees(maintenant = new Date(), { sansAttendre = false } = {}) {
+  // `sansAttendre`: the admin's button, which sends what is held now rather than at its hour.
   const dues = await db
     .select()
     .from(notificationsAnnales)
-    .where(and(isNull(notificationsAnnales.envoyeeLe), lte(notificationsAnnales.envoyerApres, maintenant)));
+    .where(
+      sansAttendre
+        ? isNull(notificationsAnnales.envoyeeLe)
+        : and(isNull(notificationsAnnales.envoyeeLe), lte(notificationsAnnales.envoyerApres, maintenant))
+    );
 
   const envoyees = [];
   for (const n of dues) {
