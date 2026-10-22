@@ -43,6 +43,7 @@ export function InstallTabs({
   const steps =
     tab === "Autre" ? (surIPhone ? IPHONE_STEPS : ANDROID_STEPS) : tab === "Android" ? ANDROID_STEPS : IPHONE_STEPS;
   const navigateur = surIPhone ? "Safari" : "Chrome";
+  const video = (tab === "Autre" ? surIPhone : tab === "iPhone") ? "iphone" : "android";
 
   return (
     <div className="px-5 pb-12 pt-2">
@@ -88,9 +89,23 @@ export function InstallTabs({
             {tab === "Android" ? "On a détecté un téléphone Android" : "On a détecté iPhone · Safari"}
           </div>
           {tab === "Android" && <InstallButton />}
-          <div className="mb-3 mt-6 text-base font-extrabold">À la main, en 3 étapes</div>
+          <div className="mb-3 mt-6 text-base font-extrabold">En vidéo, 35 secondes</div>
         </>
       )}
+
+      {/* The same steps filmed on a phone: most students who could not
+          install had read the three lines below and still not found the
+          button. Seeing it found settles it. */}
+      <video
+        key={video}
+        src={`/installer/tuto-${video}.mp4`}
+        poster={`/installer/tuto-${video}.jpg`}
+        controls
+        playsInline
+        preload="none"
+        className="mx-auto mb-2 block aspect-[9/16] w-[64%] rounded-[20px] border border-line bg-surface-2 object-cover"
+      />
+      {tab !== "Autre" && <div className="mb-3 mt-6 text-base font-extrabold">Ou à la main, en 3 étapes</div>}
 
       {steps.map((s) => (
         <div key={s.n} className="mb-3 flex gap-3.5 rounded-[20px] border border-line p-3.5">
@@ -112,6 +127,17 @@ export function InstallTabs({
           </div>
         </div>
       ))}
+
+      <div className="mt-6 rounded-[20px] border-[1.5px] border-teal bg-teal-tint-soft p-4">
+        <div className="flex items-center gap-2 text-base font-extrabold">
+          <Icon name="bell" size={19} />
+          Puis active les notifications
+        </div>
+        <p className="mt-1.5 text-[14px] leading-relaxed text-slate">
+          Ouvre Campusly depuis l&rsquo;icône sur ton écran d&rsquo;accueil, touche la cloche en haut à droite,
+          puis « Activer » et « Autoriser ». Chaque soir à 20h, tu reçois ton programme du lendemain.
+        </p>
+      </div>
     </div>
   );
 }
