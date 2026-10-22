@@ -690,6 +690,18 @@ async function JournalNotifications() {
             {e.atteints > 1 ? "s" : ""}
             {e.vises !== e.atteints ? ` sur ${e.vises} visé${e.vises > 1 ? "s" : ""}` : ""}
           </div>
+          {e.ouverts !== null && e.atteints > 0 && (
+            <div className="mt-0.5 text-[12.5px] tabular-nums text-slate">
+              <b className="text-ink">{e.ouverts}</b> l&rsquo;ont ouverte
+              {" "}({Math.round((e.ouverts / e.atteints) * 100)} %)
+              {e.type === "tous" && (
+                <>
+                  {" · "}
+                  <b className="text-ink">{e.commandesDansLHeure}</b> commande{e.commandesDansLHeure > 1 ? "s" : ""} dans l&rsquo;heure
+                </>
+              )}
+            </div>
+          )}
         </div>
       ))}
     </div>

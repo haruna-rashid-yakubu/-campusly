@@ -24,6 +24,7 @@ import {
   subjectTypeEnum,
   users,
   visites,
+  notificationClics,
 } from "@/db/schema";
 import { deleteFile, uploadFile } from "@/lib/blob";
 import { estOuvert, getSondage, getSondageOuvert } from "@/lib/sondage";
@@ -173,7 +174,7 @@ export async function setClasse(label: string) {
  * Failure here must never reach the reader. Counting is the least important
  * thing happening on the page.
  */
-export async function enregistrerVisite(standalone = false) {
+export async function enregistrerVisite(standalone = false, notif: string | null = null) {
   try {
     const store = await cookies();
     const existant = store.get(DEVICE_COOKIE)?.value;
@@ -190,6 +191,7 @@ export async function enregistrerVisite(standalone = false) {
     const label = store.get(CLASSE_COOKIE)?.value;
     const classe = label ? await getClasseByLabel(label) : undefined;
 
+    const bit = 1 << nowInWAT().getUTCHours();
     await db
       .insert(visites)
       .values({
@@ -198,6 +200,7 @@ export async function enregistrerVisite(standalone = false) {
         jour: startOfDay(nowInWAT()),
         premiereVisite: !existant,
         standalone,
+        heures: bit,
       })
       .onConflictDoUpdate({
         target: [visites.deviceId, visites.jour],
@@ -209,8 +212,14 @@ export async function enregistrerVisite(standalone = false) {
           // browser tab has still installed the app.
           standalone: sql`${visites.standalone} or ${standalone}`,
           vuA: new Date(),
+          heures: sql`${visites.heures} | ${bit}`,
         },
       });
+
+    // Opened by tapping a notification: counted once per phone and per send.
+    if (notif && /^[a-z0-9]{6,32}$/.test(notif)) {
+      await db.insert(notificationClics).values({ cle: notif, deviceId }).onConflictDoNothing();
+    }
   } catch {
     // Never let the counter break the page it is counting.
   }

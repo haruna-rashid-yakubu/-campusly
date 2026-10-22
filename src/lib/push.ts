@@ -53,6 +53,12 @@ async function sendToSubscription(
   }
 }
 
+function avecCle(url: string, cle: string) {
+  const [chemin, ancre] = url.split("#");
+  const lien = `${chemin}${chemin.includes("?") ? "&" : "?"}notif=${cle}`;
+  return ancre !== undefined ? `${lien}#${ancre}` : lien;
+}
+
 /*
  * Sends, counts, and writes down what happened.
  *
@@ -67,7 +73,11 @@ async function diffuser(
   type: TypeEnvoi,
   classeId: number | null = null
 ) {
-  const resultats = await Promise.all(subs.map((s) => sendToSubscription(s, payload)));
+  // A short key in the link the notification opens, so a tap on it can be
+  // counted against this send when the app opens.
+  const cle = crypto.randomUUID().replace(/-/g, "").slice(0, 10);
+  const marque = { ...payload, url: avecCle(payload.url ?? "/", cle) };
+  const resultats = await Promise.all(subs.map((s) => sendToSubscription(s, marque)));
   const atteints = resultats.filter(Boolean).length;
   try {
     await db.insert(notificationEnvois).values({
@@ -77,6 +87,7 @@ async function diffuser(
       corps: payload.body,
       atteints,
       vises: subs.length,
+      cle,
     });
   } catch {
     // The message is out; losing its line in the log is the lesser failure.

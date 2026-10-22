@@ -355,6 +355,13 @@ export const visites = pgTable(
      */
     standalone: boolean("standalone").notNull().default(false),
     vuA: timestamp("vu_a", { mode: "date" }).notNull().defaultNow(),
+    /*
+     * The hours of the day the app was opened, Yaoundé time, one bit per
+     * hour (bit 8 = 8h–9h). Kept because vu_a only remembers the last
+     * opening: a student who opens at 7h and again at 20h would otherwise
+     * count for 20h alone, and the best hour for a notification is read here.
+     */
+    heures: integer("heures").notNull().default(0),
   },
   (t) => [unique("visite_device_jour").on(t.deviceId, t.jour)]
 );
@@ -516,8 +523,25 @@ export const notificationEnvois = pgTable("notification_envoi", {
   // Devices the push service accepted, and devices it was offered to.
   atteints: integer("atteints").notNull().default(0),
   vises: integer("vises").notNull().default(0),
+  // Carried in the notification's link (?notif=…), so a tap can be traced back to this send.
+  cle: text("cle"),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
+
+/*
+ * One phone that opened the app by tapping a notification. Once per phone and
+ * per notification: tapping it twice is still one person who came.
+ */
+export const notificationClics = pgTable(
+  "notification_clic",
+  {
+    id: serial("id").primaryKey(),
+    cle: text("cle").notNull(),
+    deviceId: text("device_id").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [unique("notification_clic_unique").on(t.cle, t.deviceId)]
+);
 
 export const notificationEnvoisRelations = relations(notificationEnvois, ({ one }) => ({
   classe: one(classes, { fields: [notificationEnvois.classeId], references: [classes.id] }),

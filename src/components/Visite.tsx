@@ -28,7 +28,9 @@ function depuisEcranDAccueil() {
  */
 export function Visite() {
   useEffect(() => {
-    void enregistrerVisite(depuisEcranDAccueil());
+    // A notification's link carries ?notif=…: the tap that opened the app is counted against it.
+    const notif = new URLSearchParams(window.location.search).get("notif");
+    void enregistrerVisite(depuisEcranDAccueil(), notif);
   }, []);
   return null;
 }

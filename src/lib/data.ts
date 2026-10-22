@@ -700,6 +700,9 @@ export async function getJournalNotifications(limite = 40) {
       atteints: notificationEnvois.atteints,
       vises: notificationEnvois.vises,
       createdAt: notificationEnvois.createdAt,
+      // Null for sends made before taps were counted: "not measured", not zero.
+      ouverts: sql<number | null>`case when ${notificationEnvois.cle} is null then null else (select count(*)::int from notification_clic c where c.cle = ${notificationEnvois.cle}) end`,
+      commandesDansLHeure: sql<number>`(select count(*)::int from commande_evenement e where e.type = 'commander' and e.created_at >= ${notificationEnvois.createdAt} and e.created_at < ${notificationEnvois.createdAt} + interval '1 hour')`,
     })
     .from(notificationEnvois)
     .leftJoin(classes, eq(classes.id, notificationEnvois.classeId))
