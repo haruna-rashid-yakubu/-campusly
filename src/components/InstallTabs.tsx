@@ -89,7 +89,7 @@ export function InstallTabs({
             {tab === "Android" ? "On a détecté un téléphone Android" : "On a détecté iPhone · Safari"}
           </div>
           {tab === "Android" && <InstallButton />}
-          <div className="mb-3 mt-6 text-base font-extrabold">En vidéo, 35 secondes</div>
+          <div className="mb-3 mt-6 text-base font-extrabold">En vidéo, 1 minute</div>
         </>
       )}
 
