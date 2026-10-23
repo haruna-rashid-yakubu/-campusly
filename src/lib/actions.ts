@@ -54,7 +54,7 @@ import {
   getTroncCommun,
   getClassesQuiVoient,
 } from "@/lib/data";
-import { fromISODate, mondayOf, nowInWAT, startOfDay, weekRangeLabel } from "@/lib/semaine";
+import { addDays, fromISODate, mondayOf, nowInWAT, startOfDay, weekRangeLabel } from "@/lib/semaine";
 import { BANNER_COOKIE, CLASSE_COOKIE, DEVICE_COOKIE, momentDuSlot } from "@/lib/constants";
 import {
   sendPushToAdmins,
@@ -1362,6 +1362,30 @@ export async function annoncerATous(titre: string, corps: string, url?: string) 
 
   const appareils = await sendPushToAll({ title: t, body: c, url: url?.trim() || "/" });
   return { ok: true as const, appareils };
+}
+
+/*
+ * "Programme de la semaine" for every promo whose coming week is online, for
+ * weeks filed without the admin form, which is what normally sends it. The
+ * coming week is the current one until Thursday and the next one from Friday,
+ * when timetables are posted. Promos that follow another's week are told too.
+ */
+export async function annoncerProgrammesSemaine() {
+  await requireAdmin();
+  const semaine = mondayOf(addDays(nowInWAT(), 3));
+  const toutes = await db.select().from(classes);
+  const annoncees: string[] = [];
+  for (const classe of toutes) {
+    const programme = await getProgrammeForWeek(classe.id, semaine);
+    if (!programme || programme.creneaux.length === 0) continue;
+    await sendPushToClasse(classe.id, {
+      title: `Programme de la semaine — ${classe.label}`,
+      body: programme.weekLabel,
+      url: "/programme",
+    }, "programme");
+    annoncees.push(classe.label);
+  }
+  return { annoncees };
 }
 
 /*
