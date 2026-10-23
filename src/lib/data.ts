@@ -561,6 +561,9 @@ export async function getAudience() {
     installes_sept_jours: number;
     fideles: number;
     ouvertures_sept_jours: number;
+    installes_total: number;
+    abonnes: number;
+    comptes: number;
   }>(sql`
     select
       count(distinct device_id)::int as total,
@@ -575,7 +578,12 @@ export async function getAudience() {
       -- whether the app stuck, as opposed to whether a link got clicked.
       (select count(*)::int from (
          select device_id from visite group by device_id having count(distinct jour) > 1
-       ) as revenus)::int as fideles
+       ) as revenus)::int as fideles,
+      -- Opened from the home screen at least once, ever: the closest thing
+      -- to a download count an app without a store can have.
+      count(distinct device_id) filter (where standalone)::int as installes_total,
+      (select count(*)::int from push_subscription) as abonnes,
+      (select count(*)::int from "user") as comptes
     from visite
   `);
 
@@ -605,6 +613,9 @@ export async function getAudience() {
       installes_sept_jours: 0,
       fideles: 0,
       ouvertures_sept_jours: 0,
+      installes_total: 0,
+      abonnes: 0,
+      comptes: 0,
     }),
     parJour: parJourResult.rows,
     parClasse: parClasseResult.rows,

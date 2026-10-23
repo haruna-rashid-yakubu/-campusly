@@ -725,11 +725,14 @@ async function AudienceTab() {
       <JournalNotifications />
 
       <div className="grid grid-cols-2 gap-2.5">
-        <Chiffre valeur={a.aujourdhui} legende="Appareils aujourd'hui" />
-        <Chiffre valeur={a.sept_jours} legende="Appareils ces 7 jours" />
-        <Chiffre valeur={a.total} legende="Appareils depuis le début" />
+        <Chiffre valeur={a.total} legende="Ont déjà ouvert Campusly" />
+        <Chiffre valeur={a.sept_jours} legende="Utilisent Campusly cette semaine" />
+        <Chiffre valeur={a.installes_total} legende="Ont installé l'appli sur l'écran d'accueil" />
+        <Chiffre valeur={a.installes_sept_jours} legende="Installés et actifs cette semaine" />
+        <Chiffre valeur={a.abonnes} legende="Reçoivent les notifications" />
+        <Chiffre valeur={a.comptes} legende="Connectés avec un compte Google" />
+        <Chiffre valeur={a.aujourdhui} legende="Ont ouvert Campusly aujourd'hui" />
         <Chiffre valeur={a.fideles} legende="Revenus un autre jour" />
-        <Chiffre valeur={a.installes_sept_jours} legende="Ouvrent depuis l'écran d'accueil" />
       </div>
 
       <p className="mt-3 text-[12.5px] leading-snug text-slate-light">
