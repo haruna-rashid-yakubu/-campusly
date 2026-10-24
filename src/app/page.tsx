@@ -26,7 +26,7 @@ import { SondageVote } from "@/components/SondageVote";
 import { getMaReponse, getResultats, getSondageOuvert } from "@/lib/sondage";
 import { boutiquesRecentes, cartesALaUne, getVendeurs } from "@/lib/vendeurs";
 import { AlaUne } from "@/components/AlaUne";
-import { cartesEvenements, decorDuJour, rubanDuJour } from "@/lib/evenements";
+import { cartesAnnonces, cartesEvenements, decorDuJour, rubanDuJour } from "@/lib/evenements";
 import { DecorSaison } from "@/components/DecorSaison";
 import { AccueilServices } from "@/components/AccueilServices";
 import { distanceLabel, fcfa, isWithinLastWeek } from "@/lib/utils";
@@ -59,7 +59,7 @@ export default async function AccueilPage() {
   const boutiquesAnnoncees = boutiquesRecentes(vendeursOuverts);
   // The pressing is a Campusly service, not a shop in the list, but it has its own card here.
   // A campus event of the day goes first: it is gone tomorrow, the shops are not.
-  const cartesUne = [...cartesEvenements(), ...(await cartesALaUne(await getVendeurs({ inclureInternes: true })))];
+  const cartesUne = [...cartesEvenements(), ...cartesAnnonces(), ...(await cartesALaUne(await getVendeurs({ inclureInternes: true })))];
   const ruban = rubanDuJour();
   const decor = decorDuJour();
 

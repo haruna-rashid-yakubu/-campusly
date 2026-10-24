@@ -27,6 +27,11 @@ export type CarteUne = {
   affiche?: boolean;
 };
 
+// /wa is a redirect to WhatsApp, not a page: the router must not try to load it.
+function Lien(props: { href: string; className: string; children: React.ReactNode }) {
+  return props.href.startsWith("/wa") ? <a {...props} /> : <Link {...props} />;
+}
+
 const INTERVALLE_MS = 3000;
 const PAUSE_APRES_TOUCHER_MS = 12000;
 
@@ -68,7 +73,7 @@ export function AlaUne({ cartes }: { cartes: CarteUne[] }) {
       >
         {cartes.map((c, i) => (
           <div key={c.href} className="w-full flex-none snap-center px-5">
-            <Link
+            <Lien
               href={c.href}
               className="press-scale relative block overflow-hidden rounded-[24px] bg-ink !text-white shadow-[0_10px_28px_rgba(15,23,42,.22)]"
             >
@@ -105,7 +110,7 @@ export function AlaUne({ cartes }: { cartes: CarteUne[] }) {
                   <Icon name="right" size={15} strokeWidth={2.6} />
                 </span>
               </div>
-            </Link>
+            </Lien>
           </div>
         ))}
       </div>

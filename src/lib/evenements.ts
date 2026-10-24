@@ -63,6 +63,51 @@ export function cartesEvenements(maintenant = new Date()): CarteUne[] {
   }));
 }
 
+/*
+ * Small ads from people on campus — a phone for sale, a room to let — shown
+ * in "À la une" for a few days. The card opens the seller's WhatsApp with a
+ * first message typed, through /wa, which also counts the taps under `cle`.
+ */
+type Annonce = {
+  cle: string; // counted in notification_clic, like a notification
+  nom: string;
+  ligne: string;
+  prix: string;
+  image: string; // 16:9
+  whatsapp: string;
+  message: string;
+  depuis: string;
+  jusqua: string;
+};
+
+const ANNONCES: Annonce[] = [
+  {
+    cle: "uneiphone16",
+    nom: "iPhone 16 Pro Max",
+    ligne: "256 Go · batterie 89 % · Face ID OK",
+    prix: "400 000 F",
+    image: "/annonces/iphone-16-pro-max.jpg",
+    whatsapp: "237680826106",
+    message: "Bonjour, je suis intéressé par la vente de ton iPhone 16 Pro Max.",
+    depuis: "2026-10-24",
+    jusqua: "2026-10-27",
+  },
+];
+
+export function cartesAnnonces(maintenant = new Date()): CarteUne[] {
+  const jour = jourWAT(maintenant);
+  return ANNONCES.filter((a) => a.depuis <= jour && jour <= a.jusqua).map((a) => ({
+    href: `/wa?n=${a.whatsapp}&t=${encodeURIComponent(a.message)}&notif=${a.cle}`,
+    nom: a.nom,
+    image: a.image,
+    ligne: a.ligne,
+    prix: a.prix,
+    offre: null,
+    badge: "À vendre",
+    bouton: "WhatsApp",
+  }));
+}
+
 /* The event whose day it is, if it gives the home screen a colour. */
 export function rubanDuJour(maintenant = new Date()) {
   const jour = jourWAT(maintenant);
