@@ -64,6 +64,7 @@ import {
   sendPushToEmail,
   sendPushToEndpoint,
   sendPushToUser,
+  isExpoToken,
 } from "@/lib/push";
 
 async function requireUser() {
@@ -1884,7 +1885,8 @@ export async function preparerCommandeMenu(input: {
   try {
     const { deviceId, classeId } = await appareilCourant();
     const pushEndpoint =
-      typeof input.pushEndpoint === "string" && input.pushEndpoint.startsWith("https://")
+      typeof input.pushEndpoint === "string" &&
+      (input.pushEndpoint.startsWith("https://") || isExpoToken(input.pushEndpoint))
         ? input.pushEndpoint.slice(0, 1000)
         : null;
     await db.insert(commandeEvenements).values({
