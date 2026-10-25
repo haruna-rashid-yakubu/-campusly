@@ -33,11 +33,53 @@ type PushPayload = { title: string; body: string; url?: string };
 
 type TypeEnvoi = (typeof notificationTypeEnum)[number];
 
+/*
+ * The native app's devices live in the same table as the browsers, with the
+ * Expo push token as their endpoint. Every "who gets this" query above is then
+ * shared as is — promo, preferences, admins, délégués — and only the last hop
+ * differs.
+ */
+export function isExpoToken(endpoint: string) {
+  return /^Expo(nent)?PushToken\[.+\]$/.test(endpoint);
+}
+
+async function sendToExpo(token: string, payload: PushPayload) {
+  try {
+    const res = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(process.env.EXPO_ACCESS_TOKEN
+          ? { Authorization: `Bearer ${process.env.EXPO_ACCESS_TOKEN}` }
+          : {}),
+      },
+      body: JSON.stringify({
+        to: token,
+        title: payload.title,
+        body: payload.body,
+        sound: "default",
+        data: { url: payload.url },
+      }),
+    });
+    if (!res.ok) return false;
+    const { data } = (await res.json()) as {
+      data?: { status: "ok" | "error"; details?: { error?: string } };
+    };
+    if (data?.details?.error === "DeviceNotRegistered") {
+      await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, token));
+    }
+    return data?.status === "ok";
+  } catch {
+    return false;
+  }
+}
+
 /** True when the push service took the message. Never throws. */
 async function sendToSubscription(
   sub: { endpoint: string; p256dh: string; auth: string },
   payload: PushPayload
 ) {
+  if (isExpoToken(sub.endpoint)) return sendToExpo(sub.endpoint, payload);
   try {
     await webpush.sendNotification(
       { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
