@@ -1,0 +1,11 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { getUserSubmissions } from "@/lib/data";
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
+  return NextResponse.json(await getUserSubmissions(session.user.id));
+}
