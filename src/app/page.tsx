@@ -6,8 +6,7 @@ import { Icon } from "@/components/icons";
 import { ClasseSwitcher } from "@/components/ClasseSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ShareSheet } from "@/components/ShareSheet";
-import { InstallNudge } from "@/components/InstallNudge";
-import { NotifNudge } from "@/components/NotifNudge";
+import { InvitationAccueil } from "@/components/InvitationAccueil";
 import { OuvrirDansSafari } from "@/components/OuvrirDansSafari";
 import { SignInButton } from "@/components/SignInButton";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -19,9 +18,7 @@ import {
   getPreferredClasse,
   getRecentCite,
   getRecentSubjects,
-  isBannerDismissed,
 } from "@/lib/data";
-import { dismissInstallBanner } from "@/lib/actions";
 import { SondageVote } from "@/components/SondageVote";
 import { getMaReponse, getResultats, getSondageOuvert } from "@/lib/sondage";
 import { boutiquesRecentes, cartesALaUne, getVendeurs } from "@/lib/vendeurs";
@@ -37,10 +34,9 @@ export const dynamic = "force-dynamic";
 
 export default async function AccueilPage() {
   const session = await auth();
-  const [classe, classesRows, bannerDismissed, recentSubjects, recentCite] = await Promise.all([
+  const [classe, classesRows, recentSubjects, recentCite] = await Promise.all([
     getPreferredClasse(),
     getClasses(),
-    isBannerDismissed(),
     getRecentSubjects(1),
     getRecentCite(),
   ]);
@@ -151,45 +147,6 @@ export default async function AccueilPage() {
           </span>
           <Icon name="right" size={18} className="flex-none text-slate-light" />
         </Link>
-      )}
-
-      {!bannerDismissed && (
-        <div className="anim-fade mx-5 mt-5 rounded-[20px] border border-teal-border bg-teal-tint p-4">
-          <div className="flex items-start gap-3">
-            <span className="block h-10 w-10 flex-none">
-              <Logo size={40} />
-            </span>
-            <div className="flex-1 pr-1.5">
-              <div className="text-[15.5px] font-extrabold">Installe Campusly</div>
-              <div className="mt-0.5 text-[13.5px] leading-relaxed text-teal-active">
-                Sur ton écran d&rsquo;accueil : plus rapide, moins de data.
-              </div>
-            </div>
-            <form action={dismissInstallBanner}>
-              <button
-                type="submit"
-                className="press-scale grid h-8 w-8 flex-none place-items-center text-teal-dark"
-                aria-label="Fermer"
-              >
-                <Icon name="x" size={20} strokeWidth={2} />
-              </button>
-            </form>
-          </div>
-          <div className="mt-3.5 flex gap-2.5">
-            <Link
-              href="/installer"
-              className="press-scale flex h-[46px] flex-1 items-center justify-center rounded-[13px] bg-teal text-[14.5px] font-bold text-white active:bg-teal-press"
-            >
-              Installer
-            </Link>
-            <Link
-              href="/installer"
-              className="press-scale flex h-[46px] items-center px-3.5 text-[14px] font-bold text-teal-dark"
-            >
-              Comment faire ?
-            </Link>
-          </div>
-        </div>
       )}
 
       {ruban && (
@@ -308,18 +265,8 @@ export default async function AccueilPage() {
       <div className="px-5 pb-7 pt-5">
         {/* After the screen has done its job, never before it. */}
         <OuvrirDansSafari />
-        {/* The offer was only on the timetable and on a sent paper, so the
-            screen every opening lands on never made it. Of 537 devices this
-            week, 163 put Campusly on their home screen and 126 can be
-            reached -- the gap is mostly people who were never asked. It sits
-            under the week rather than above it, for the same reason as
-            everywhere else: the thing it offers has to be on screen first. */}
-        <NotifNudge
-          compact
-          titre="Ton programme de demain, chaque soir"
-          detail="À 20h, tes cours du lendemain avec les salles. Et un mot quand de nouvelles épreuves arrivent."
-        />
-        <InstallNudge />
+        {/* One request at a time, the most useful first (see InvitationAccueil). */}
+        <InvitationAccueil connecte={!!session?.user} />
 
         <ShareSheet>
           <button className="press-scale flex h-[52px] w-full items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-teal bg-white text-[15px] font-bold text-teal-dark active:bg-teal-tint-soft">

@@ -11,14 +11,18 @@ import { googleSignIn } from "@/lib/actions";
  * signing in is offered here and demanded only where it is genuinely needed —
  * proposing a paper, or messaging a cité.
  */
-export function SignInButton() {
+export function SignInButton({
+  className = "text-[13px] font-bold text-teal-dark underline-offset-2 active:underline disabled:opacity-60",
+}: {
+  className?: string;
+}) {
   const [pending, startTransition] = useTransition();
 
   return (
     <button
       disabled={pending}
       onClick={() => startTransition(() => googleSignIn())}
-      className="text-[13px] font-bold text-teal-dark underline-offset-2 active:underline disabled:opacity-60"
+      className={className}
     >
       Se connecter
     </button>
