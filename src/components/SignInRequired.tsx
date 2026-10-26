@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { BackHeader } from "@/components/BackHeader";
 import { Icon } from "@/components/icons";
+import { GoogleLogo } from "@/components/GoogleLogo";
 import { googleSignIn } from "@/lib/actions";
 
 export function SignInRequired({ backHref, title }: { backHref: string; title?: string }) {
@@ -25,7 +26,7 @@ export function SignInRequired({ backHref, title }: { backHref: string; title?: 
           onClick={() => startTransition(() => googleSignIn())}
           className="press-scale mx-auto mt-6 flex h-[54px] w-full max-w-xs items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-line-4 bg-white text-[15.5px] font-bold disabled:opacity-60 active:bg-surface-3"
         >
-          <span className="text-[19px] font-extrabold">G</span>
+          <GoogleLogo size={20} />
           Continuer avec Google
         </button>
       </div>

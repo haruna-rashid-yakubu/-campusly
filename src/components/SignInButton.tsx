@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { GoogleLogo, GoogleLogoPastille } from "@/components/GoogleLogo";
 import { googleSignIn } from "@/lib/actions";
 
 /*
@@ -12,8 +13,9 @@ import { googleSignIn } from "@/lib/actions";
  * proposing a paper, or messaging a cité.
  */
 export function SignInButton({
-  className = "text-[13px] font-bold text-teal-dark underline-offset-2 active:underline disabled:opacity-60",
+  className,
 }: {
+  // Given for a full-size button (the G then sits in a white disc); omitted for the small text link.
   className?: string;
 }) {
   const [pending, startTransition] = useTransition();
@@ -22,9 +24,22 @@ export function SignInButton({
     <button
       disabled={pending}
       onClick={() => startTransition(() => googleSignIn())}
-      className={className}
+      className={
+        className ??
+        "inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-dark underline-offset-2 active:underline disabled:opacity-60"
+      }
     >
-      Se connecter
+      {className ? (
+        <span className="flex items-center gap-2.5">
+          <GoogleLogoPastille />
+          Se connecter avec Google
+        </span>
+      ) : (
+        <>
+          <GoogleLogo size={15} />
+          Se connecter
+        </>
+      )}
     </button>
   );
 }
