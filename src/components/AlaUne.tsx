@@ -103,7 +103,7 @@ export function AlaUne({ cartes }: { cartes: CarteUne[] }) {
                 <div className="min-w-0">
                   {c.affiche && <div className="truncate text-[12px] font-bold uppercase tracking-wide text-[#5eead4]">{c.badge}</div>}
                   <div className="truncate text-[15px] font-extrabold">{c.prix}</div>
-                  {c.offre && <div className="mt-0.5 truncate text-[12.5px] font-semibold text-[#5eead4]">🚚 {c.offre}</div>}
+                  {c.offre && <div className="mt-0.5 flex items-center gap-1 truncate text-[12.5px] font-semibold text-[#5eead4]"><Icon name="truck" size={14} strokeWidth={2} className="flex-none" />{c.offre}</div>}
                 </div>
                 <span className="flex flex-none items-center gap-1 rounded-full bg-white px-4 py-2.5 text-[14px] font-extrabold text-ink">
                   {c.bouton}

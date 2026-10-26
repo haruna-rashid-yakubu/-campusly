@@ -75,7 +75,9 @@ export function SujetsFilterBar({
           </button>
         )}
       </div>
-      <div className="no-scrollbar -mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-0.5">
+      {/* The fade at the right edge says the row goes on: "Type d'épreuve" was cut off with no hint. */}
+      <div className="relative -mx-5 mt-3">
+      <div className="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-0.5">
         {Object.entries(facets)
           // A facet with no values (no paper carries an enseignant yet) would
           // render a chip that opens an empty picker.
@@ -110,6 +112,8 @@ export function SujetsFilterBar({
               />
             );
           })}
+      </div>
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent" />
       </div>
     </>
   );

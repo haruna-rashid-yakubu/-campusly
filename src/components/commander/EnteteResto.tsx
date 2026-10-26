@@ -1,4 +1,5 @@
 import type { Theme } from "@/lib/menu";
+import { IconeEmoji, TexteIcone } from "@/components/TexteIcone";
 
 /*
  * A restaurant's header: its name large on its own colours, over small line
@@ -52,12 +53,12 @@ export function EnteteResto({
           aria-hidden="true"
           className="pointer-events-none absolute -bottom-5 -right-5 rotate-[-14deg] text-[110px] leading-none drop-shadow-[0_10px_14px_rgba(80,20,5,.35)]"
         >
-          {icone}
+          <IconeEmoji emoji={icone} size={110} />
         </span>
       )}
       {theme.accroche && (
         <span className="inline-flex h-7 items-center rounded-full bg-white/22 px-3 text-[12.5px] font-extrabold backdrop-blur-sm">
-          {theme.accroche}
+          <TexteIcone texte={theme.accroche} size={14} />
         </span>
       )}
       <div className="mt-2.5 text-[44px] font-extrabold leading-[.95] tracking-tight [text-shadow:0_3px_0_rgba(110,20,5,.35)]">
@@ -74,7 +75,7 @@ export function EnteteResto({
               className="inline-flex h-8 items-center rounded-full bg-white px-3 text-[12.5px] font-extrabold"
               style={{ color: theme.fonce }}
             >
-              {b}
+              <TexteIcone texte={b} size={15} />
             </span>
           ))}
         </div>

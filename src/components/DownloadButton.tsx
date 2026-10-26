@@ -26,10 +26,13 @@ export function DownloadButton({
   fileUrl,
   onRecord,
   label = "Télécharger",
+  compact = false,
 }: {
   fileUrl: string | null;
   onRecord?: () => Promise<void>;
   label?: string;
+  // Icon only, for a list row: the same download and the same share gate.
+  compact?: boolean;
 }) {
   const { show } = useToast();
   const [, startTransition] = useTransition();
@@ -83,13 +86,23 @@ export function DownloadButton({
 
   return (
     <>
-      <button
-        onClick={handleClick}
-        className="press-scale flex h-[54px] flex-1 items-center justify-center gap-2 rounded-2xl bg-teal text-[15.5px] font-bold text-white active:bg-teal-press"
-      >
-        <Icon name="down" size={19} strokeWidth={1.9} />
-        {label}
-      </button>
+      {compact ? (
+        <button
+          onClick={handleClick}
+          aria-label={label}
+          className="press-scale grid h-11 w-11 flex-none place-items-center rounded-[13px] bg-teal-tint text-teal-dark active:bg-teal-border"
+        >
+          <Icon name="down" size={19} strokeWidth={1.9} />
+        </button>
+      ) : (
+        <button
+          onClick={handleClick}
+          className="press-scale flex h-[54px] flex-1 items-center justify-center gap-2 rounded-2xl bg-teal text-[15.5px] font-bold text-white active:bg-teal-press"
+        >
+          <Icon name="down" size={19} strokeWidth={1.9} />
+          {label}
+        </button>
+      )}
 
       <Sheet
         open={gateOpen}

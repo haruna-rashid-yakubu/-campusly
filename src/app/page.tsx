@@ -29,6 +29,7 @@ import { MaJournee } from "@/components/MaJournee";
 import { getJourneeEtudiant } from "@/lib/journee";
 import { AccueilServices } from "@/components/AccueilServices";
 import { distanceLabel, fcfa, isWithinLastWeek } from "@/lib/utils";
+import { TexteIcone } from "@/components/TexteIcone";
 
 export const dynamic = "force-dynamic";
 
@@ -154,7 +155,7 @@ export default async function AccueilPage() {
           className="mx-5 mt-5 rounded-[14px] px-4 py-2.5 text-center text-[13.5px] font-extrabold text-white"
           style={{ background: ruban.couleur }}
         >
-          {ruban.texte}
+          <TexteIcone texte={ruban.texte} size={16} />
         </div>
       )}
       {cartesUne.length > 0 && <AlaUne cartes={cartesUne} />}

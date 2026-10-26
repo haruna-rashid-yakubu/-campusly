@@ -4,6 +4,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { Badge } from "@/components/EmptyState";
 import { Icon } from "@/components/icons";
+import { PucePanier } from "@/components/commander/PucePanier";
 import { getVendeurs } from "@/lib/vendeurs";
 
 export const dynamic = "force-dynamic";
@@ -61,10 +62,12 @@ export default async function CommanderPage() {
                   />
                 ) : (
                   <span
-                    className="grid h-[64px] w-[64px] flex-none place-items-center rounded-[16px] text-[30px]"
+                    className="grid h-[64px] w-[64px] flex-none place-items-center rounded-[16px] text-[#c2185b]"
                     style={{ background: "repeating-linear-gradient(135deg, #f7b6c9 0 9px, #fff4f7 9px 18px)" }}
                   >
-                    🍩
+                    <span className="grid h-10 w-10 place-items-center rounded-full bg-white">
+                      <Icon name="donut" size={24} strokeWidth={1.9} />
+                    </span>
                   </span>
                 )}
                 <span className="min-w-0 flex-1">
@@ -75,6 +78,7 @@ export default async function CommanderPage() {
                   {v.accroche && (
                     <span className="mt-0.5 block text-[13px] leading-snug text-slate-light">{v.accroche}</span>
                   )}
+                  <PucePanier vendeurId={v.id} />
                 </span>
                 <Icon name="right" size={18} className="flex-none text-slate-light" />
               </Link>

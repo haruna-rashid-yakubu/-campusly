@@ -3,7 +3,8 @@
 import { useEffect, useState, useTransition } from "react";
 import Image from "next/image";
 import { noterVuePressing, preparerPressing } from "@/lib/actions";
-import { Icon } from "@/components/icons";
+import { Icon, type IconName } from "@/components/icons";
+import { separerEmoji } from "@/lib/emoji";
 import {
   PRESSING_CONDITIONS,
   PRESSING_RESUME,
@@ -93,9 +94,21 @@ export function PressingCommande({ nom }: { nom?: string | null }) {
           <div className="anim-fade mt-1 max-h-[46vh] overflow-y-auto rounded-[16px] bg-surface-2 p-3.5">
             {/* Shown exactly as written: these are the terms someone is about
                 to accept, not a summary of them. */}
-            <p className="whitespace-pre-line text-[13.5px] leading-relaxed text-slate">
-              {PRESSING_CONDITIONS}
-            </p>
+            <div className="text-[13.5px] leading-relaxed text-slate">
+              {/* A line opening on an emoji is a section heading: drawn with its icon. */}
+              {PRESSING_CONDITIONS.split("\n").map((ligne, i) => {
+                const { icone, texte } = separerEmoji(ligne);
+                if (!ligne.trim()) return <div key={i} className="h-2" />;
+                return icone || texte !== ligne ? (
+                  <div key={i} className="mt-2 flex items-center gap-1.5 font-extrabold text-ink first:mt-0">
+                    {icone && <Icon name={icone as IconName} size={15} strokeWidth={2} className="flex-none text-teal-dark" />}
+                    {texte}
+                  </div>
+                ) : (
+                  <p key={i}>{ligne}</p>
+                );
+              })}
+            </div>
           </div>
         )}
 

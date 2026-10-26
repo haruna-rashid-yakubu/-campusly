@@ -2,6 +2,7 @@ import Image from "next/image";
 import { BackHeader } from "@/components/BackHeader";
 import { Catalogue } from "@/components/commander/Catalogue";
 import { VideoVendeur } from "@/components/commander/VideoVendeur";
+import { ConfirmationCommande } from "@/components/commander/ConfirmationCommande";
 import { Icon } from "@/components/icons";
 import type { Article, Formule, Vendeur } from "@/lib/vendeurs";
 import { fcfa } from "@/lib/utils";
@@ -114,19 +115,14 @@ export function VendeurVue({
         </div>
         )}
 
-        {/* Muted, so it can play without sound in a lecture hall. */}
-        {vendeur.videoUrl && (
-          <VideoVendeur src={vendeur.videoUrl} poster={vendeur.videoPosterUrl ?? undefined} />
-        )}
-
         {livraison && (
           <div
             className={`mt-3 rounded-[16px] px-4 py-3 ${
               livraison.cetteSemaine ? "bg-teal-tint-soft text-teal-active" : "bg-warn-tint text-warn-ink"
             }`}
           >
-            <div className="text-[14.5px] font-extrabold">
-              🚚 {livraison.cetteSemaine ? "Livré" : "Livraison"} le {livraison.label}
+            <div className="flex items-center gap-1.5 text-[14.5px] font-extrabold">
+              <Icon name="truck" size={17} strokeWidth={1.9} /> {livraison.cetteSemaine ? "Livré" : "Livraison"} le {livraison.label}
             </div>
             <div className="mt-0.5 text-[12.5px] leading-snug">
               {livraison.cetteSemaine
@@ -135,24 +131,6 @@ export function VendeurVue({
                   : `Commande avant ${livraison.limiteLabel} pour cette livraison.`
                 : `Les commandes pour ce vendredi sont closes depuis ${livraison.limiteLabel}. Ta commande part pour la semaine prochaine.`}
             </div>
-          </div>
-        )}
-
-        {(vendeur.livraison || vendeur.horaires) && (
-          <div className="mt-3 flex flex-col gap-1.5 text-[13px] text-slate">
-            {vendeur.horaires && (
-              <div className="flex items-center gap-2">
-                <Icon name="cal" size={16} className="text-[var(--v-accent,#0a7f77)]" />
-                {vendeur.horaires}
-              </div>
-            )}
-            {vendeur.livraison && (
-              <div className="flex items-center gap-2">
-                <Icon name="pin" size={16} className="text-[var(--v-accent,#0a7f77)]" />
-                {vendeur.livraison}
-                {vendeur.fraisLivraison > 0 && ` · ${fcfa(vendeur.fraisLivraison)}`}
-              </div>
-            )}
           </div>
         )}
 
@@ -214,7 +192,35 @@ export function VendeurVue({
             }))}
           />
         )}
+
+        {/* Practical details after the menu: the dishes are what the page is for. */}
+        <div className="mt-8">
+        {(vendeur.livraison || vendeur.horaires) && (
+          <div className="flex flex-col gap-1.5 text-[13px] text-slate">
+            {vendeur.horaires && (
+              <div className="flex items-center gap-2">
+                <Icon name="cal" size={16} className="text-[var(--v-accent,#0a7f77)]" />
+                {vendeur.horaires}
+              </div>
+            )}
+            {vendeur.livraison && (
+              <div className="flex items-center gap-2">
+                <Icon name="pin" size={16} className="text-[var(--v-accent,#0a7f77)]" />
+                {vendeur.livraison}
+                {vendeur.fraisLivraison > 0 && ` · ${fcfa(vendeur.fraisLivraison)}`}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Muted, so it can play without sound in a lecture hall. */}
+        {vendeur.videoUrl && (
+          <VideoVendeur src={vendeur.videoUrl} poster={vendeur.videoPosterUrl ?? undefined} />
+        )}
+
+        </div>
       </div>
+      <ConfirmationCommande vendeurId={vendeur.id} />
     </div>
   );
 }

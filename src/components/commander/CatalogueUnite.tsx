@@ -7,6 +7,9 @@ import { useToast } from "@/components/Toast";
 import { noterEvenementVendeur, preparerCommande } from "@/lib/actions";
 import { MAX_UNITES } from "@/lib/catalogue";
 import { fcfa } from "@/lib/utils";
+import { memoriserCommande, usePanierSauve } from "@/lib/panier-client";
+
+const compterUnites = (q: Record<number, number>) => Object.values(q).reduce((a, b) => a + b, 0);
 
 type Article = {
   id: number;
@@ -44,7 +47,16 @@ export function CatalogueUnite({
   articles: Article[];
 }) {
   const unites = (n: number) => `${unite}${n > 1 ? "s" : ""}`;
-  const [quantites, setQuantites] = useState<Record<number, number>>({});
+  // Kept on the phone per shop, without what has run out since.
+  const [quantites, setQuantites] = usePanierSauve<Record<number, number>>(
+    vendeurId,
+    {},
+    (q) =>
+      Object.fromEntries(
+        Object.entries(q).filter(([id, n]) => n > 0 && articles.some((a) => a.id === Number(id) && !a.enRupture))
+      ),
+    compterUnites
+  );
   const [precision, setPrecision] = useState("");
   const [pending, startTransition] = useTransition();
   const { show } = useToast();
@@ -77,6 +89,17 @@ export function CatalogueUnite({
         show(r.message, "warn");
         return;
       }
+      memoriserCommande({
+        vendeurId,
+        vendeurNom,
+        reference: r.reference,
+        url: r.url,
+        total,
+        lignes: Object.entries(quantites)
+          .filter(([, n]) => n > 0)
+          .map(([id, n]) => `${n} × ${articles.find((a) => a.id === Number(id))?.nom ?? "?"}`),
+      });
+      setQuantites({});
       window.location.href = r.url;
     });
 
@@ -161,7 +184,7 @@ export function CatalogueUnite({
 
           {cadeau && (
             <div className="mt-2.5 rounded-[14px] bg-[#fde7ef] px-3.5 py-2.5 text-[13.5px] font-extrabold text-[#c2185b]">
-              🎁 Carte fidélité : {cadeau} avec cette commande
+              <Icon name="gift" size={15} strokeWidth={2} className="mr-1.5 inline-block align-[-2px]" />Carte fidélité : {cadeau} avec cette commande
             </div>
           )}
           {sansCompte && (

@@ -4,6 +4,7 @@ import { useOptimistic, useTransition } from "react";
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
 import { repondreSondage } from "@/lib/actions";
+import { TexteIcone } from "@/components/TexteIcone";
 
 /*
  * The answers are the buttons. Before a vote they are plain choices, because
@@ -78,7 +79,7 @@ export function SondageVote({
                 />
               )}
               <span className="relative flex items-center gap-3 px-4 py-3">
-                <span className="min-w-0 flex-1 text-[15.5px] font-bold leading-snug">{label}</span>
+                <TexteIcone texte={label} size={17} className="min-w-0 flex-1 text-[15.5px] font-bold leading-snug" />
                 {choisi && (
                   <span className="flex-none text-teal-dark">
                     <Icon name="check" size={18} strokeWidth={2.6} />

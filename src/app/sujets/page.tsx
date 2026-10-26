@@ -4,14 +4,16 @@ import { auth } from "@/auth";
 import { Icon } from "@/components/icons";
 import { Badge, EmptyState } from "@/components/EmptyState";
 import { SujetsFilterBar } from "@/components/SujetsFilterBar";
+import { DownloadButton } from "@/components/DownloadButton";
+import { incrementSubjectDownload } from "@/lib/actions";
 import { NotifNudge } from "@/components/NotifNudge";
 import {
   getPreferredClasse,
   getSubjectFacets,
-  getSubjects,
+  getSubjectsPage,
   getUserSubmissions,
 } from "@/lib/data";
-import { filiereDeClasse } from "@/lib/utils";
+import { filiereDeClasse, niveauDeClasse } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Anciens sujets d'examens",
@@ -21,6 +23,8 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = "force-dynamic";
+
+const PAGE = 20;
 
 export default async function SujetsPage({
   searchParams,
@@ -32,6 +36,7 @@ export default async function SujetsPage({
     annee?: string;
     type?: string;
     enseignant?: string;
+    n?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -47,8 +52,13 @@ export default async function SujetsPage({
   const filiereDefaut = filiereDeClasse(classe);
   const filiere = params.filiere === "toutes" ? undefined : params.filiere || filiereDefaut;
 
-  const [subjects, submissions, facets] = await Promise.all([
-    getSubjects({ ...params, filiere }),
+  // Twenty at a time; "Voir plus" asks for twenty more by raising ?n=.
+  const { n, ...filtres } = params;
+  const affiches = Math.min(Math.max(Number(n) || PAGE, PAGE), 500);
+  // The student's own year first, unless the list is already narrowed to one year.
+  const niveauPrefere = params.niveau ? undefined : niveauDeClasse(classe) || undefined;
+  const [{ subjects, total }, submissions, facets] = await Promise.all([
+    getSubjectsPage({ ...filtres, filiere }, { limit: affiches, niveauPrefere }),
     session?.user ? getUserSubmissions(session.user.id) : Promise.resolve([]),
     getSubjectFacets(),
   ]);
@@ -116,29 +126,32 @@ export default async function SujetsPage({
           </EmptyState>
         ) : (
           <>
-            <div className="py-1.5 text-[13px] text-slate-light">
-              {subjects.length} sujet{subjects.length > 1 ? "s" : ""} · du plus récent
+            <div className="py-1.5 text-[13px] text-slate">
+              {total} sujet{total > 1 ? "s" : ""} ·{" "}
+              {niveauPrefere ? `${niveauPrefere} d'abord, du plus récent` : "du plus récent"}
             </div>
             {subjects.map((s) => (
-              <Link
+              // The card opens the paper; the download button beside it downloads it,
+              // as its icon says. They are siblings: a button cannot sit inside a link.
+              <div
                 key={s.id}
-                href={`/sujets/${s.id}`}
-                prefetch={false}
-                className="press-scale mb-3 block rounded-[20px] border border-line bg-white p-3.5 active:bg-surface-3"
+                className="mb-3 flex items-start gap-3 rounded-[20px] border border-line bg-white p-3.5"
               >
-                <div className="flex items-start gap-3">
+                <Link
+                  href={`/sujets/${s.id}`}
+                  prefetch={false}
+                  className="press-scale flex min-w-0 flex-1 items-start gap-3 active:opacity-80"
+                >
                   <span className="grid h-[58px] w-12 flex-none place-items-center rounded-[10px] bg-surface text-teal-dark">
                     <Icon name="doc" size={22} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="text-[15.5px] font-extrabold leading-tight">{s.matiere}</div>
-                    <div className="mt-0.5 text-[12.5px] text-slate-light">
+                    <div className="mt-0.5 text-[13px] text-slate">
                       {s.filiere} · {s.niveau} · {s.annee}
                     </div>
                     {s.enseignant && (
-                      <div className="mt-0.5 truncate text-[12.5px] text-slate-light">
-                        {s.enseignant}
-                      </div>
+                      <div className="mt-0.5 truncate text-[13px] text-slate">{s.enseignant}</div>
                     )}
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <Badge tone="neutral">{s.type}</Badge>
@@ -147,12 +160,25 @@ export default async function SujetsPage({
                       </Badge>
                     </div>
                   </div>
-                  <span className="grid h-11 w-11 flex-none place-items-center rounded-[13px] bg-teal-tint text-teal-dark">
-                    <Icon name="down" size={19} strokeWidth={1.9} />
-                  </span>
-                </div>
-              </Link>
+                </Link>
+                <DownloadButton
+                  compact
+                  label={`Télécharger ${s.matiere}`}
+                  fileUrl={s.fileUrl}
+                  onRecord={incrementSubjectDownload.bind(null, s.id)}
+                />
+              </div>
             ))}
+
+            {subjects.length < total && (
+              <Link
+                href={`/sujets?${new URLSearchParams({ ...(Object.fromEntries(Object.entries(filtres).filter(([, v]) => v)) as Record<string, string>), n: String(affiches + PAGE) })}`}
+                scroll={false}
+                className="press-scale mb-4 flex h-[50px] w-full items-center justify-center rounded-2xl border-[1.5px] border-line-4 bg-white text-[14.5px] font-bold text-teal-dark active:bg-surface-2"
+              >
+                Voir plus · {total - subjects.length} restant{total - subjects.length > 1 ? "s" : ""}
+              </Link>
+            )}
 
             {/* Below the list rather than above it: someone who has just
                 scrolled a drawer of past papers knows what being told about a

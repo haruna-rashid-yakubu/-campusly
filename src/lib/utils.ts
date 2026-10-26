@@ -29,3 +29,8 @@ export function isWithinLastWeek(date: Date): boolean {
 export function filiereDeClasse(classe: string) {
   return classe.split("·")[0]?.trim() ?? "";
 }
+
+/** "LEG · L2" -> "L2". */
+export function niveauDeClasse(classe: string) {
+  return classe.split("·")[1]?.trim() ?? "";
+}

@@ -17,6 +17,10 @@ import {
 } from "@/lib/menu";
 import { enablePush, readPushStatus, type PushStatus } from "@/lib/push-client";
 import { fcfa } from "@/lib/utils";
+import { memoriserCommande, usePanierSauve } from "@/lib/panier-client";
+
+const compterMenu = (s: { lignes: { quantite: number }[] }) => s.lignes.reduce((n, l) => n + l.quantite, 0);
+import { IconeEmoji } from "@/components/TexteIcone";
 
 const f = (n: number) => fcfa(n).replace(" FCFA", " F");
 
@@ -46,8 +50,32 @@ export function CatalogueMenu({
   epuises?: string[];
 }) {
   const horsStock = useMemo(() => new Set(epuises), [epuises]);
-  const [panier, setPanier] = useState<LigneMenu[]>([]);
-  const [mode, setMode] = useState(menu.modes[0].id);
+  // The basket and the way the meal is handed over, kept on the phone per
+  // shop, without what is no longer on the menu or has run out today.
+  const [sauve, setSauve] = usePanierSauve<{ lignes: LigneMenu[]; mode: string }>(
+    vendeurId,
+    { lignes: [], mode: menu.modes[0].id },
+    (s) => {
+      const item = (id: string) => menu.sections.flatMap((x) => x.items).find((i) => i.id === id);
+      return {
+        mode: menu.modes.some((m) => m.id === s.mode) ? s.mode : menu.modes[0].id,
+        lignes: s.lignes.filter((l) => {
+          const it = item(l.item);
+          return (
+            !!it &&
+            !itemEpuise(it, horsStock) &&
+            it.tailles.some((t) => t.id === l.taille) &&
+            (!l.choix || !horsStock.has(cleEpuise(it.id, l.choix)))
+          );
+        }),
+      };
+    },
+    compterMenu
+  );
+  const panier = sauve.lignes;
+  const mode = sauve.mode;
+  const setPanier = (maj: (p: LigneMenu[]) => LigneMenu[]) => setSauve((s) => ({ ...s, lignes: maj(s.lignes) }));
+  const setMode = (m: string) => setSauve((s) => ({ ...s, mode: m }));
   const [precision, setPrecision] = useState("");
   // Read on first render: the prompt only shows once something is in the
   // basket, which never happens on the server, so the two never disagree.
@@ -125,6 +153,19 @@ export function CatalogueMenu({
         show(r.message, "warn");
         return;
       }
+      memoriserCommande({
+        vendeurId,
+        vendeurNom,
+        reference: r.reference,
+        url: r.url,
+        total,
+        lignes: panier.map((l) => {
+          const item = items.get(l.item);
+          const taille = item?.tailles.find((t) => t.id === l.taille);
+          return `${l.quantite} × ${item && taille ? libelleLigne(item, taille, l.choix) : l.item}`;
+        }),
+      });
+      setPanier(() => []);
       window.location.href = r.url;
     });
   };
@@ -145,7 +186,7 @@ export function CatalogueMenu({
                   mode === m.id ? "border-[var(--v-accent,#14b8ac)] bg-[var(--v-doux,#f4fbfa)]" : "border-line-4 bg-white"
                 }`}
               >
-                {m.icone && <span className="text-[26px] leading-none">{m.icone}</span>}
+                {m.icone && <IconeEmoji emoji={m.icone} size={26} />}
                 <span className="mt-1.5 text-[13.5px] font-extrabold leading-tight">{m.court ?? m.libelle}</span>
                 <span className="mt-1 text-[11.5px] font-semibold leading-tight text-slate-light">
                   {m.prix > 0 ? `+ ${f(m.prix)}` : "Gratuit"}
@@ -158,7 +199,7 @@ export function CatalogueMenu({
           </div>
           {modeChoisi.detail && (
             <p className="mt-2 text-[12.5px] leading-snug text-slate">
-              {modeChoisi.icone} {modeChoisi.detail}
+              {modeChoisi.detail}
             </p>
           )}
         </section>
@@ -168,7 +209,7 @@ export function CatalogueMenu({
         <section key={s.titre}>
           <div className="mb-2.5 mt-6 flex items-center gap-2 text-[16.5px] font-extrabold tracking-tight">
             {s.icone && (
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--v-doux,#f4fbfa)] text-[17px]">{s.icone}</span>
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--v-doux,#f4fbfa)] text-[var(--v-accent,#0a7f77)]"><IconeEmoji emoji={s.icone} size={17} /></span>
             )}
             {s.titre}
           </div>
@@ -266,7 +307,7 @@ export function CatalogueMenu({
 
           {cadeau && (
             <div className="mt-2.5 rounded-[14px] bg-[var(--v-doux,#fde7ef)] px-3.5 py-2.5 text-[13.5px] font-extrabold text-[var(--v-fonce,#c2185b)]">
-              🎁 Carte fidélité : {cadeau} avec cette commande
+              <Icon name="gift" size={15} strokeWidth={2} className="mr-1.5 inline-block align-[-2px]" />Carte fidélité : {cadeau} avec cette commande
             </div>
           )}
 
@@ -284,7 +325,7 @@ export function CatalogueMenu({
 
           {modeChoisi.adresse ? (
             <div className="mb-1.5 mt-4 text-[13px] font-bold text-ink-soft">
-              📍 Où te livrer ? <span className="font-medium text-[var(--v-accent,#0a7f77)]">— obligatoire</span>
+              <Icon name="pin" size={15} strokeWidth={2} className="mr-1 inline-block align-[-2px]" />Où te livrer ? <span className="font-medium text-[var(--v-accent,#0a7f77)]">— obligatoire</span>
             </div>
           ) : (
             <div className="mb-1.5 mt-4 text-[13px] font-bold text-ink-soft">
@@ -357,7 +398,7 @@ function CarteItem({
           {item.photo ? (
             <Image src={item.photo} alt={item.nom} fill sizes="72px" className="object-cover" />
           ) : (
-            icone && <span className="text-[34px]">{icone}</span>
+            icone && <span className="text-[var(--v-accent,#0a7f77)]"><IconeEmoji emoji={icone} size={34} /></span>
           )}
         </div>
         <div className="min-w-0 flex-1">

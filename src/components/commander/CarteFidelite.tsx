@@ -1,13 +1,15 @@
-import { SignInButton } from "@/components/SignInButton";
+import { FideliteInvite } from "@/components/commander/FideliteInvite";
 import { carteVide, resumeRegle, type Carte, type Regle } from "@/lib/fidelite";
+import { Icon } from "@/components/icons";
+import { IconeEmoji } from "@/components/TexteIcone";
 
 /*
  * The shop's boxes, the gifts drawn on the ones that carry them, the done
  * ones filled. Below, the one sentence that matters: what the next order
  * brings, or how far the next gift is.
  *
- * Signed out, the same card is shown empty with the reason to sign in — the
- * card is tied to the account so that it survives a new phone.
+ * Signed out it is a single line (FideliteInvite): the card is tied to the
+ * account so that it survives a new phone.
  */
 export function CarteFidelite({
   carte,
@@ -18,8 +20,8 @@ export function CarteFidelite({
   regle: Regle;
   vendeurNom: string;
 }) {
-  const vide = carte === null;
-  const cases = carte?.cases ?? carteVide(regle);
+  if (carte === null) return <FideliteInvite texte={`Carte fidélité : ${resumeRegle(regle)}. Connecte-toi pour cumuler`} />;
+  const cases = carte.cases ?? carteVide(regle);
 
   return (
     <div className="mt-3 rounded-[18px] border-[1.5px] border-[#f7b6c9] bg-[#fff6f9] p-3.5">
@@ -44,18 +46,13 @@ export function CarteFidelite({
             }`}
             title={c.cadeau?.libelle}
           >
-            {c.faite ? "✓" : (c.cadeau?.icone ?? "")}
+            {c.faite ? <Icon name="check" size={15} strokeWidth={2.4} /> : c.cadeau ? <IconeEmoji emoji={c.cadeau.icone} fallback="gift" size={15} /> : null}
           </div>
         ))}
       </div>
       <div className="mt-2.5 text-[12.5px] leading-snug text-ink-soft">
-        {vide ? (
-          <>
-            {resumeRegle(regle)}.{" "}
-            <span className="font-bold">Connecte-toi pour cumuler tes commandes</span> <SignInButton />
-          </>
-        ) : carte.prochaine ? (
-          <span className="font-extrabold text-[#c2185b]">🎁 Ta prochaine commande : {carte.prochaine.libelle} !</span>
+        {carte.prochaine ? (
+          <span className="inline-flex items-center gap-1.5 font-extrabold text-[#c2185b]"><Icon name="gift" size={15} strokeWidth={2} />Ta prochaine commande : {carte.prochaine.libelle} !</span>
         ) : (
           <>
             Encore <b>{carte.prochainCadeau.dans}</b> commande{carte.prochainCadeau.dans > 1 ? "s" : ""} avant{" "}

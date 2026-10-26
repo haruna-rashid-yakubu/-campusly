@@ -6,6 +6,9 @@ import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
 import { noterEvenementVendeur, preparerCommande } from "@/lib/actions";
 import { fcfa } from "@/lib/utils";
+import { memoriserCommande, usePanierSauve } from "@/lib/panier-client";
+
+const compterPacks = (lignes: { parfums: Record<number, number> }[]) => lignes.length;
 
 type Formule = {
   id: number;
@@ -62,7 +65,18 @@ export function Catalogue({
   const unites = (n: number) => `${unite}${n > 1 ? "s" : ""}`;
   const [formuleId, setFormuleId] = useState<number | null>(null);
   const [compo, setCompo] = useState<Record<number, number>>({});
-  const [panier, setPanier] = useState<Ligne[]>([]);
+  // Kept on the phone per shop: dropping out to check something no longer empties it.
+  const [panier, setPanier] = usePanierSauve<Ligne[]>(
+    vendeurId,
+    [],
+    (lignes) =>
+      lignes.filter(
+        (l) =>
+          formules.some((f) => f.id === l.formuleId) &&
+          Object.entries(l.parfums).every(([id, q]) => q === 0 || articles.some((a) => a.id === Number(id) && !a.enRupture))
+      ),
+    compterPacks
+  );
   const [precision, setPrecision] = useState("");
   const [pending, startTransition] = useTransition();
   const { show } = useToast();
@@ -123,6 +137,22 @@ export function Catalogue({
         show(r.message, "warn");
         return;
       }
+      memoriserCommande({
+        vendeurId,
+        vendeurNom,
+        reference: r.reference,
+        url: r.url,
+        total,
+        lignes: panier.map((l) => {
+          const f = formules.find((x) => x.id === l.formuleId);
+          const contenu = Object.entries(l.parfums)
+            .filter(([, q]) => q > 0)
+            .map(([id, q]) => `${q} ${nomArticle(Number(id))}`)
+            .join(", ");
+          return `${f?.nom ?? "Pack"} : ${contenu}`;
+        }),
+      });
+      setPanier([]);
       window.location.href = r.url;
     });
 
@@ -302,7 +332,7 @@ export function Catalogue({
 
         {panier.length > 0 && cadeau && (
           <div className="mt-2.5 rounded-[14px] bg-[#fde7ef] px-3.5 py-2.5 text-[13.5px] font-extrabold text-[#c2185b]">
-            🎁 Carte fidélité : {cadeau} avec cette commande
+            <Icon name="gift" size={15} strokeWidth={2} className="mr-1.5 inline-block align-[-2px]" />Carte fidélité : {cadeau} avec cette commande
           </div>
         )}
         {panier.length > 0 && sansCompte && (

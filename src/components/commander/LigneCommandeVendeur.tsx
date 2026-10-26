@@ -70,8 +70,8 @@ export function LigneCommandeVendeur({
       {total && <div className="mt-1 text-[13.5px] font-bold">{total}</div>}
       {mode && <div className="mt-1 text-[13px] font-bold text-teal-dark">{mode}</div>}
       {cadeau && (
-        <div className="mt-2 inline-block rounded-full bg-[#fde7ef] px-2.5 py-1 text-[12.5px] font-extrabold text-[#c2185b]">
-          🎁 Fidélité : {cadeau}
+        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#fde7ef] px-2.5 py-1 text-[12.5px] font-extrabold text-[#c2185b]">
+          <Icon name="gift" size={14} strokeWidth={2} /> Fidélité : {cadeau}
         </div>
       )}
 
@@ -139,8 +139,8 @@ export function LigneCommandeVendeur({
         </div>
       ) : (
         <div className="mt-2.5 flex items-center justify-between">
-          <span className={`text-[13px] font-extrabold ${statut === "livree" ? "text-teal-dark" : "text-slate-light"}`}>
-            {statut === "livree" ? "✓ Livrée" : "Pas reçue sur WhatsApp"}
+          <span className={`inline-flex items-center gap-1 text-[13px] font-extrabold ${statut === "livree" ? "text-teal-dark" : "text-slate-light"}`}>
+            {statut === "livree" ? <><Icon name="check" size={15} strokeWidth={2.4} />Livrée</> : "Pas reçue sur WhatsApp"}
           </span>
           <button
             onClick={() => marquer(null)}

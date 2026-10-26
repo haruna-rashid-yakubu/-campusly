@@ -92,7 +92,7 @@ export async function getPartagesEpreuve() {
     .orderBy(partagesEpreuve.niveau, partagesEpreuve.groupe, partagesEpreuve.filiere);
 }
 
-export async function getSubjects(filters: SubjectFilters = {}) {
+async function conditionsSujets(filters: SubjectFilters) {
   const conditions = [];
   // Students look for a course *or* a lecturer in the same box ("Noumo",
   // "macro"), so one query has to match both columns. Combined with the
@@ -108,12 +108,36 @@ export async function getSubjects(filters: SubjectFilters = {}) {
   if (filters.niveau) conditions.push(eq(subjects.niveau, filters.niveau));
   if (filters.annee) conditions.push(eq(subjects.annee, filters.annee));
   if (filters.type) conditions.push(eq(subjects.type, filters.type as (typeof subjects.type.enumValues)[number]));
+  return conditions.length ? and(...conditions) : undefined;
+}
 
+export async function getSubjects(filters: SubjectFilters = {}) {
   return db
     .select()
     .from(subjects)
-    .where(conditions.length ? and(...conditions) : undefined)
+    .where(await conditionsSujets(filters))
     .orderBy(desc(subjects.createdAt));
+}
+
+/*
+ * One page of the list, the student's own year first: an L2 student was
+ * opening the list on a screenful of L1 papers. Within each group, newest
+ * first. The total counts every match, so "N sujets" stays true however far
+ * the list has been scrolled.
+ */
+export async function getSubjectsPage(
+  filters: SubjectFilters,
+  { limit = 20, offset = 0, niveauPrefere }: { limit?: number; offset?: number; niveauPrefere?: string }
+) {
+  const where = await conditionsSujets(filters);
+  const ordre = niveauPrefere
+    ? [sql`case when ${subjects.niveau} = ${niveauPrefere} then 0 else 1 end`, desc(subjects.createdAt)]
+    : [desc(subjects.createdAt)];
+  const [rows, [{ total }]] = await Promise.all([
+    db.select().from(subjects).where(where).orderBy(...ordre).limit(limit).offset(offset),
+    db.select({ total: sql<number>`count(*)::int` }).from(subjects).where(where),
+  ]);
+  return { subjects: rows, total };
 }
 
 // Filter options are derived from what's actually in the table — a hardcoded
