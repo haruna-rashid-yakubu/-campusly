@@ -7,6 +7,7 @@ import {
   getRecentSubjects,
 } from "@/lib/data";
 import { getJourneeEtudiant } from "@/lib/journee";
+import { getProfilCourant } from "@/lib/actions";
 import { cartesAnnonces, cartesEvenements, decorDuJour, rubanDuJour } from "@/lib/evenements";
 import { getMaReponse, getResultats, getSondageOuvert } from "@/lib/sondage";
 import { boutiquesRecentes, cartesALaUne, getVendeurs } from "@/lib/vendeurs";
@@ -17,12 +18,13 @@ export const dynamic = "force-dynamic";
 // What the home screen shows, in one round trip.
 export async function GET() {
   const classe = await getPreferredClasse();
-  const [classeRow, recentSubjects, recentCite, vendeurs, sondage] = await Promise.all([
+  const [classeRow, recentSubjects, recentCite, vendeurs, sondage, profil] = await Promise.all([
     getClasseByLabel(classe),
     getRecentSubjects(),
     getRecentCite(),
     getVendeurs({ inclureInternes: true }),
     getSondageOuvert(),
+    getProfilCourant(),
   ]);
   // The shops a student can open, without Campusly's own services (the pressing).
   const ouvertes = vendeurs.filter((v) => v.categorie !== "interne");
@@ -35,6 +37,7 @@ export async function GET() {
 
   return NextResponse.json({
     classe,
+    profil,
     programme,
     // Today's or the next school day's classes, as on the web's Home.
     journee,

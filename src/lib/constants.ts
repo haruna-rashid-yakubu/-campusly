@@ -10,6 +10,8 @@ export const BANNER_COOKIE = "campusly_banner_dismissed";
 // Identifies a browser, nothing more. httpOnly so no script can read it, and
 // it holds a random id with nothing derived from the person behind it.
 export const DEVICE_COOKIE = "campusly_device";
+// Set once the welcome flow has been answered or skipped on this device.
+export const ONBOARDING_COOKIE = "campusly_onboarding";
 
 export const SUBJECT_FILTER_LABELS: Record<string, string> = {
   filiere: "Filière",

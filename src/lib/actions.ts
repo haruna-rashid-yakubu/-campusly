@@ -55,7 +55,8 @@ import {
   getClassesQuiVoient,
 } from "@/lib/data";
 import { addDays, fromISODate, mondayOf, nowInWAT, startOfDay, weekRangeLabel } from "@/lib/semaine";
-import { BANNER_COOKIE, CLASSE_COOKIE, DEVICE_COOKIE, momentDuSlot } from "@/lib/constants";
+import { BANNER_COOKIE, CLASSE_COOKIE, DEVICE_COOKIE, ONBOARDING_COOKIE, momentDuSlot } from "@/lib/constants";
+import { ecrireProfil, lireProfil } from "@/lib/profil";
 import {
   sendPushToAdmins,
   sendPushToAll,
@@ -224,6 +225,27 @@ export async function enregistrerVisite(standalone = false, notif: string | null
   } catch {
     // Never let the counter break the page it is counting.
   }
+}
+
+/*
+ * The onboarding's answers, or the profile page's. Saved for this device and,
+ * when signed in, on the account. Returns what is now known.
+ */
+export async function enregistrerProfil(entree: { prenom?: string; nom?: string; telephone?: string }) {
+  const [session, { deviceId, classeId }] = await Promise.all([auth(), appareilCourant()]);
+  return ecrireProfil(deviceId, session?.user?.id ?? null, classeId, entree);
+}
+
+export async function getProfilCourant() {
+  const session = await auth();
+  const store = await cookies();
+  return lireProfil(store.get(DEVICE_COOKIE)?.value ?? null, session?.user?.id ?? null);
+}
+
+// The welcome flow is not shown again on this device, answered or skipped.
+export async function terminerOnboarding() {
+  const store = await cookies();
+  store.set(ONBOARDING_COOKIE, "1", { path: "/", maxAge: 60 * 60 * 24 * 365 * 2 });
 }
 
 export async function dismissInstallBanner() {
@@ -1665,7 +1687,9 @@ export async function preparerCommande(input: {
   const recompense = palier?.cle ?? null;
 
   const reference = nouvelleReference();
-  const nom = session?.user?.name?.trim();
+  // The name the student gave at onboarding, else Google's; the WhatsApp so the vendor can call back.
+  const profil = await getProfilCourant();
+  const nom = [profil.prenom, profil.nom].filter(Boolean).join(" ") || session?.user?.name?.trim();
   const precision = input.precision?.trim().slice(0, 200);
 
   const message = [
@@ -1688,6 +1712,7 @@ export async function preparerCommande(input: {
         ]
       : []),
     `Nom : ${nom ?? ""}`,
+    ...(profil.telephone ? [`WhatsApp : +${profil.telephone}`] : []),
     ...(precision ? [`Précision : ${precision}`] : []),
   ].join("\n");
 
@@ -1862,7 +1887,9 @@ export async function preparerCommandeMenu(input: {
   const cadeau = hebdo && progres?.cadeauPret ? hebdo.libelle : null;
 
   const reference = nouvelleReference();
-  const nom = session?.user?.name?.trim();
+  // The name the student gave at onboarding, else Google's; the WhatsApp so the vendor can call back.
+  const profil = await getProfilCourant();
+  const nom = [profil.prenom, profil.nom].filter(Boolean).join(" ") || session?.user?.name?.trim();
   const precision = input.precision?.trim().slice(0, 200);
   // A delivery goes nowhere without an address; the page asks for it, this makes sure.
   if (mode.adresse && !precision) {
@@ -1879,6 +1906,7 @@ export async function preparerCommandeMenu(input: {
     `Remise : ${mode.libelle}`,
     ...(cadeau ? ["", `🎁 Carte fidélité Campusly : ${cadeau}`] : []),
     `Nom : ${nom ?? ""}`,
+    ...(profil.telephone ? [`WhatsApp : +${profil.telephone}`] : []),
     ...(precision ? [`${mode.adresse ? "📍 Livrer à" : "Précision"} : ${precision}`] : []),
   ].join("\n");
 

@@ -1,4 +1,7 @@
 import NextAuth from "next-auth";
+import { cookies } from "next/headers";
+import { DEVICE_COOKIE } from "@/lib/constants";
+import { rattacherProfil } from "@/lib/profil";
 import Google from "next-auth/providers/google";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { eq } from "drizzle-orm";
@@ -47,6 +50,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   events: {
+    // What this browser was told at onboarding fills the account's blanks.
+    async signIn({ user }) {
+      try {
+        const deviceId = (await cookies()).get(DEVICE_COOKIE)?.value;
+        if (deviceId && user.id) await rattacherProfil(deviceId, user.id);
+      } catch {
+        // Signing in must never fail over a profile.
+      }
+    },
     async createUser({ user }) {
       if (user.id && user.email && adminEmails.includes(user.email.toLowerCase())) {
         await db.update(users).set({ role: "admin" }).where(eq(users.id, user.id));

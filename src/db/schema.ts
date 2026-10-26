@@ -32,6 +32,12 @@ export const users = pgTable("user", {
   // server cannot read when it wakes up at 20h to send tomorrow's schedule —
   // it would see nothing but anonymous rows.
   classeId: integer("classe_id").references(() => classes.id, { onDelete: "set null" }),
+  // Asked at onboarding, so the app knows who it talks to before any Google
+  // sign-in; `name` stays whatever Google says.
+  prenom: text("prenom"),
+  nom: text("nom"),
+  // Digits only, with the country code: "237690000000".
+  telephone: text("telephone"),
 });
 
 export const accounts = pgTable(
@@ -814,4 +820,21 @@ export const notificationsAnnales = pgTable("notification_annales", {
   envoyerApres: timestamp("envoyer_apres", { mode: "date" }).notNull(),
   envoyeeLe: timestamp("envoyee_le", { mode: "date" }),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+/*
+ * Who is behind a device, asked on first opening: name and WhatsApp, as well
+ * as the promo already on the device. Kept per device because most students
+ * never sign in — an account would leave them out — and copied onto the
+ * account the day they do, after which the account is what counts.
+ */
+export const profils = pgTable("profil", {
+  deviceId: text("device_id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+  classeId: integer("classe_id").references(() => classes.id, { onDelete: "set null" }),
+  prenom: text("prenom"),
+  nom: text("nom"),
+  telephone: text("telephone"),
+  creeLe: timestamp("cree_le", { mode: "date" }).notNull().defaultNow(),
+  majLe: timestamp("maj_le", { mode: "date" }).notNull().defaultNow(),
 });
