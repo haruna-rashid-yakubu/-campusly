@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
@@ -130,12 +131,13 @@ export default async function SujetsPage({
               {total} sujet{total > 1 ? "s" : ""} ·{" "}
               {niveauPrefere ? `${niveauPrefere} d'abord, du plus récent` : "du plus récent"}
             </div>
-            {subjects.map((s) => (
+            {subjects.map((s, i) => (
               // The card opens the paper; the download button beside it downloads it,
               // as its icon says. They are siblings: a button cannot sit inside a link.
               <div
                 key={s.id}
-                className="mb-3 flex items-start gap-3 rounded-[20px] border border-line bg-white p-3.5"
+                style={{ "--i": i } as CSSProperties}
+                className="anim-fade mb-3 flex items-start gap-3 rounded-[20px] border border-line bg-white p-3.5"
               >
                 <Link
                   href={`/sujets/${s.id}`}

@@ -119,7 +119,7 @@ export function AlaUne({ cartes }: { cartes: CarteUne[] }) {
           {cartes.map((c, i) => (
             <span
               key={c.href}
-              className={`h-1.5 rounded-full transition-all ${i === active ? "w-5 bg-ink" : "w-1.5 bg-line-4"}`}
+              className={`h-1.5 rounded-full transition-all duration-[var(--duree-entree)] ease-[var(--courbe)] ${i === active ? "w-5 bg-ink" : "w-1.5 bg-line-4"}`}
             />
           ))}
         </div>

@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
 import type { Journee } from "@/lib/journee";
@@ -36,14 +37,18 @@ export function MaJournee({ journee, classe }: { journee: Journee; classe: strin
           Voir la semaine
         </Link>
       </div>
-      {journee.cours.map((c) => (
-        <div key={c.heures + c.matiere} className="flex gap-3 border-t border-line-3 px-4 py-3 first:border-t-0">
+      {journee.cours.map((c, i) => (
+        <div
+          key={c.heures + c.matiere}
+          style={{ "--i": i } as CSSProperties}
+          className="anim-fade flex gap-3 border-t border-line-3 px-4 py-3 first:border-t-0">
           <div className="w-[64px] flex-none pt-0.5 text-[13px] font-bold text-slate">{c.heures}</div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="text-[15.5px] font-extrabold leading-snug">{c.matiere}</span>
               {c.enCours && (
-                <span className="rounded-full bg-teal-tint px-2 py-0.5 text-[11.5px] font-extrabold text-teal-active">
+                <span className="flex items-center gap-1.5 rounded-full bg-teal-tint px-2 py-0.5 text-[11.5px] font-extrabold text-teal-active">
+                  <span className="anim-pulse block h-1.5 w-1.5 rounded-full bg-teal" aria-hidden />
                   En cours
                 </span>
               )}

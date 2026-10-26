@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
@@ -61,12 +62,13 @@ export default async function LogementsPage({
           </EmptyState>
         ) : (
           <>
-            {cites.map((c) => (
+            {cites.map((c, i) => (
               <Link
                 key={c.id}
                 href={`/logements/${c.id}`}
                 prefetch={false}
-                className="press-scale mb-3.5 block overflow-hidden rounded-[22px] border border-line bg-white"
+                style={{ "--i": i } as CSSProperties}
+                className="anim-fade press-scale mb-3.5 block overflow-hidden rounded-[22px] border border-line bg-white"
               >
                 <div className="relative grid h-[154px] place-items-center bg-line-3 text-[12.5px] font-semibold text-slate-light">
                   {c.photos[0] ? (

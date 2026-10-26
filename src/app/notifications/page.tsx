@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
@@ -36,11 +37,12 @@ export default async function NotificationsPage() {
         {feed.length === 0 ? (
           <EmptyState icon="bell" title="Rien pour l'instant" body="Tu seras prévenu ici dès qu'un programme ou un sujet est publié." />
         ) : (
-          feed.map((item) => (
+          feed.map((item, i) => (
             <Link
               key={item.id}
               href={item.href}
-              className="flex items-center gap-3 border-b border-line-3 py-3.5 active:opacity-60"
+              style={{ "--i": i } as CSSProperties}
+              className="anim-fade flex items-center gap-3 border-b border-line-3 py-3.5 active:opacity-60"
             >
               <span className="grid h-[46px] w-[46px] flex-none place-items-center rounded-[14px] bg-surface text-teal-dark">
                 <Icon name={item.icon} size={20} />

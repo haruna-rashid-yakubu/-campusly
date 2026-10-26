@@ -106,10 +106,17 @@ export function Bienvenue({
       <div className="mx-auto w-full max-w-[460px] px-6">
         <div className="mb-6 flex gap-1.5" aria-hidden>
           {etapes.map((e, i) => (
-            <span key={e} className={`h-1.5 flex-1 rounded-full ${i <= rang ? "bg-teal" : "bg-line-3"}`} />
+            <span key={e} className="h-1.5 flex-1 overflow-hidden rounded-full bg-line-3">
+              <span
+                className="block h-full rounded-full bg-teal transition-[width] duration-[var(--duree-entree)] ease-[var(--courbe)]"
+                style={{ width: i <= rang ? "100%" : "0%" }}
+              />
+            </span>
           ))}
         </div>
 
+        {/* Each step slides in from the right, keyed so it replays on every change. */}
+        <div key={etape} className="anim-push">
         {etape === "classe" && <ChoixClasseListe classes={classes} onChoisi={() => setEtape("nom")} />}
 
         {etape === "nom" && (
@@ -242,6 +249,7 @@ export function Bienvenue({
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

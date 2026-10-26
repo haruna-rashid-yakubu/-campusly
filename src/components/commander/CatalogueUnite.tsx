@@ -144,7 +144,7 @@ export function CatalogueUnite({
                   >
                     <Icon name="minus" size={16} strokeWidth={2.4} />
                   </button>
-                  <span className="w-6 text-center text-[16px] font-extrabold tabular-nums">{q}</span>
+                  <span key={q} className="anim-pop w-6 text-center text-[16px] font-extrabold tabular-nums">{q}</span>
                   <button
                     onClick={() => changer(a.id, 1)}
                     aria-label={`Un ${a.nom} de plus`}
@@ -209,7 +209,7 @@ export function CatalogueUnite({
           </p>
 
           <div
-            className="fixed inset-x-0 z-20 mx-auto max-w-[480px] px-5"
+            className="anim-up fixed inset-x-0 z-20 mx-auto max-w-[480px] px-5"
             style={{ bottom: "calc(76px + var(--safe-bottom) + 10px)" }}
           >
             <button

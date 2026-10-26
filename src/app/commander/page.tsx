@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -46,11 +47,12 @@ export default async function CommanderPage() {
             {titres && (
               <div className="mt-2 text-base font-extrabold">{CATEGORIES[categorie] ?? categorie}</div>
             )}
-            {liste.map((v) => (
+            {liste.map((v, i) => (
               <Link
                 key={v.id}
                 href={`/commander/${v.slug}`}
-                className="press-scale flex items-center gap-3.5 overflow-hidden rounded-[22px] border border-line bg-white p-3 active:bg-surface-3"
+                style={{ "--i": i } as CSSProperties}
+                className="anim-fade press-scale flex items-center gap-3.5 overflow-hidden rounded-[22px] border border-line bg-white p-3 active:bg-surface-3"
               >
                 {v.logoCarreUrl ? (
                   <Image

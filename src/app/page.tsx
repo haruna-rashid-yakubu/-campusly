@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/auth";
@@ -76,7 +77,7 @@ export default async function AccueilPage() {
 
 
   return (
-    <div className="relative isolate min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
+    <div className="relative isolate min-h-dvh pb-[calc(112px+var(--safe-bottom))]">
       {decor && <DecorSaison decor={decor} />}
       <div className="px-5" style={{ paddingTop: "calc(20px + var(--safe-top))" }}>
         <div className="flex items-center justify-between">
@@ -176,7 +177,7 @@ export default async function AccueilPage() {
 
       <div className="flex items-baseline justify-between px-5 pb-1.5 pt-6">
         <div className="text-lg font-extrabold tracking-tight">Nouveautés</div>
-        <Link href="/sujets" className="text-[13.5px] font-bold text-teal-dark">
+        <Link href="/notifications" className="text-[13.5px] font-bold text-teal-dark">
           Tout voir
         </Link>
       </div>
@@ -185,11 +186,12 @@ export default async function AccueilPage() {
             latest paper comes back when there is none to announce, and the
             latest residence when only one shop is. */}
         {boutiquesAnnoncees.length > 0 ? (
-          boutiquesAnnoncees.map((vendeurAnnonce) => (
+          boutiquesAnnoncees.map((vendeurAnnonce, i) => (
             <Link
               key={vendeurAnnonce.slug}
               href={`/commander/${vendeurAnnonce.slug}`}
-              className="flex items-center gap-3 border-t border-line-3 py-3 active:opacity-60"
+              style={{ "--i": i } as CSSProperties}
+              className="anim-fade flex items-center gap-3 border-t border-line-3 py-3 active:opacity-60"
             >
               {vendeurAnnonce.logoCarreUrl ? (
                 <Image
@@ -221,7 +223,7 @@ export default async function AccueilPage() {
         ) : recentSubjects[0] && (
           <Link
             href={`/sujets/${recentSubjects[0].id}`}
-            className="flex items-center gap-3 border-t border-line-3 py-3 active:opacity-60"
+            className="anim-fade flex items-center gap-3 border-t border-line-3 py-3 active:opacity-60"
           >
             <span className="grid h-[46px] w-[46px] flex-none place-items-center rounded-[14px] bg-surface text-teal-dark">
               <Icon name="doc" size={20} />
@@ -241,7 +243,8 @@ export default async function AccueilPage() {
         {recentCite && boutiquesAnnoncees.length < 2 && (
           <Link
             href={`/logements/${recentCite.id}`}
-            className="flex items-center gap-3 border-t border-line-3 py-3 active:opacity-60"
+            style={{ "--i": 2 } as CSSProperties}
+            className="anim-fade flex items-center gap-3 border-t border-line-3 py-3 active:opacity-60"
           >
             <span className="grid h-[46px] w-[46px] flex-none place-items-center rounded-[14px] bg-surface text-teal-dark">
               <Icon name="bed" size={20} />
@@ -259,7 +262,8 @@ export default async function AccueilPage() {
         {programmeRecent && (
           <Link
             href="/programme"
-            className="flex items-center gap-3 border-t border-b border-line-3 py-3 active:opacity-60"
+            style={{ "--i": 3 } as CSSProperties}
+            className="anim-fade flex items-center gap-3 border-t border-b border-line-3 py-3 active:opacity-60"
           >
             <span className="grid h-[46px] w-[46px] flex-none place-items-center rounded-[14px] bg-surface text-teal-dark">
               <Icon name="cal" size={20} />

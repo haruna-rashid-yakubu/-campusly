@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -128,18 +129,21 @@ export function AccueilServices({
       )}
 
       <div className={`grid gap-3 ${commander ? "mt-3 grid-cols-3" : "grid-cols-2"}`}>
-        {tuiles.map((t) => (
+        {tuiles.map((t, i) => (
           <Link
             key={t.href}
             href={t.href}
-            className={`press-scale relative flex flex-col items-start justify-between rounded-[20px] border p-3 text-ink active:opacity-80 ${
+            className={`anim-fade press-scale relative flex flex-col items-start justify-between rounded-[20px] border p-3 text-ink active:opacity-80 ${
               commander ? "min-h-[112px]" : "min-h-[104px] p-3.5"
             }`}
-            style={{
-              background: `linear-gradient(165deg, ${t.fond} 0%, #ffffff 95%)`,
-              borderColor: `${t.teinte}1f`,
-              boxShadow: `0 6px 16px ${t.teinte}14`,
-            }}
+            style={
+              {
+                "--i": i,
+                background: `linear-gradient(165deg, ${t.fond} 0%, #ffffff 95%)`,
+                borderColor: `${t.teinte}1f`,
+                boxShadow: `0 6px 16px ${t.teinte}14`,
+              } as CSSProperties
+            }
           >
             <span
               className="block overflow-hidden rounded-[14px]"

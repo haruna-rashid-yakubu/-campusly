@@ -72,7 +72,7 @@ export function SondageVote({
               {montrerResultats && (
                 <span
                   aria-hidden
-                  className={`absolute inset-y-0 left-0 transition-[width] duration-500 ${
+                  className={`anim-fill absolute inset-y-0 left-0 transition-[width] duration-500 ${
                     choisi ? "bg-teal-tint" : "bg-surface-2"
                   }`}
                   style={{ width: `${pct}%` }}

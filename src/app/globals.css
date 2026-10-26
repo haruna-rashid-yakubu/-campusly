@@ -89,11 +89,33 @@
   height: 0;
 }
 
+:root {
+  /* One motion language, shared with the app (src/lib/mouvement.ts). */
+  --duree-toucher: 120ms;
+  --duree-court: 200ms;
+  --duree-entree: 320ms;
+  --courbe: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 .press-scale {
-  transition: transform 0.12s ease;
+  transition:
+    transform var(--duree-toucher) var(--courbe),
+    background-color var(--duree-court) var(--courbe),
+    color var(--duree-court) var(--courbe),
+    border-color var(--duree-court) var(--courbe),
+    box-shadow var(--duree-court) var(--courbe);
 }
 .press-scale:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
+}
+/* A small lift under the mouse, only where there is a mouse. */
+@media (hover: hover) {
+  .press-scale:hover {
+    transform: translateY(-1px);
+  }
+  .press-scale:active {
+    transform: scale(0.97);
+  }
 }
 
 @keyframes cy-fade {
@@ -144,8 +166,63 @@
   }
 }
 
+@keyframes cy-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* A number that changed (basket counters): a short bump. */
+@keyframes cy-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+/* A result bar filling from nothing to its value (poll). */
+@keyframes cy-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes cy-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}
+
+/* Lists come in one after the other (style="--i: n"), the first eight only. */
 .anim-fade {
-  animation: cy-fade 0.2s ease;
+  animation: cy-rise var(--duree-entree) var(--courbe) both;
+  animation-delay: calc(min(var(--i, 0), 8) * 40ms);
+}
+.anim-pop {
+  animation: cy-pop 260ms var(--courbe);
+}
+.anim-fill {
+  transform-origin: left;
+  animation: cy-fill 600ms var(--courbe) both;
+}
+.anim-pulse {
+  animation: cy-pulse 1.6s ease-in-out infinite;
 }
 .anim-push {
   animation: cy-push 0.22s ease;
@@ -172,4 +249,27 @@ html[data-couleur="rose"] {
   --color-teal-tint: #fde7ef;
   --color-teal-tint-soft: #fff4f8;
   --color-teal-border: #f8c6d8;
+}
+
+/* Reduced motion: nothing slides, scales or pulses; fades stay. */
+@media (prefers-reduced-motion: reduce) {
+  .anim-fade,
+  .anim-push,
+  .anim-up,
+  .anim-toast {
+    animation: cy-fade var(--duree-court) linear both;
+  }
+  .anim-pop,
+  .anim-fill,
+  .anim-pulse {
+    animation: none;
+  }
+  .press-scale,
+  .press-scale:hover,
+  .press-scale:active {
+    transform: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }

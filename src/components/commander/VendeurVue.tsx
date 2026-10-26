@@ -13,6 +13,7 @@ import { CatalogueUnite } from "@/components/commander/CatalogueUnite";
 import { CatalogueMenu } from "@/components/commander/CatalogueMenu";
 import { CarteHebdo } from "@/components/commander/CarteHebdo";
 import { EnteteResto } from "@/components/commander/EnteteResto";
+import { LogoQuandDefile } from "@/components/commander/LogoQuandDefile";
 import { variablesTheme, type Menu } from "@/lib/menu";
 import type { ProgresHebdo, RegleHebdo } from "@/lib/fidelite";
 import { venteALUnite } from "@/lib/catalogue";
@@ -28,7 +29,7 @@ export function VendeurVue({
 }: {
   vendeur: Pick<
     Vendeur,
-    "id" | "nom" | "unite" | "accroche" | "logoUrl" | "logoFond" | "banniere" | "uneImage" | "livraisonJour" | "limiteJour" | "limiteHeure" | "livraison" | "fraisLivraison" | "horaires" | "actif" | "videoUrl" | "videoPosterUrl"
+    "id" | "nom" | "unite" | "accroche" | "logoUrl" | "logoCarreUrl" | "logoFond" | "banniere" | "uneImage" | "livraisonJour" | "limiteJour" | "limiteHeure" | "livraison" | "fraisLivraison" | "horaires" | "actif" | "videoUrl" | "videoPosterUrl"
   >;
   formules: Formule[];
   articles: Article[];
@@ -52,9 +53,18 @@ export function VendeurVue({
 
   return (
     <div className="min-h-dvh pb-[calc(170px+var(--safe-bottom))]" style={variablesTheme(menu?.theme)}>
-      <BackHeader title={vendeur.nom} fallbackHref="/commander" />
+      <BackHeader
+        title={vendeur.nom}
+        fallbackHref="/commander"
+        right={<LogoQuandDefile cible="entete-boutique" logo={vendeur.logoCarreUrl} nom={vendeur.nom} />}
+      />
 
       <div className="px-5">
+        {/* Watched by LogoQuandDefile, at about the height of the shop's header:
+            once it leaves the screen, the logo joins the sticky bar. */}
+        <div className="relative" aria-hidden>
+          <div id="entete-boutique" className="absolute top-[240px] h-px w-px" />
+        </div>
         {!vendeur.actif && (
           <div className="mb-3 rounded-[14px] bg-warn-tint px-3.5 py-2.5 text-[13px] font-bold text-warn-ink">
             Aperçu équipe : les étudiants ne voient pas encore cette page.

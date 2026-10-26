@@ -241,7 +241,7 @@ export function CatalogueMenu({
                   >
                     <Icon name="minus" size={15} strokeWidth={2.4} />
                   </button>
-                  <span className="w-5 text-center text-[15px] font-extrabold tabular-nums">{l.quantite}</span>
+                  <span key={l.quantite} className="anim-pop w-5 text-center text-[15px] font-extrabold tabular-nums">{l.quantite}</span>
                   <button
                     onClick={() => changer(i, 1)}
                     aria-label="Un de plus"
@@ -348,7 +348,7 @@ export function CatalogueMenu({
           </p>
 
           <div
-            className="fixed inset-x-0 z-20 mx-auto max-w-[480px] px-5"
+            className="anim-up fixed inset-x-0 z-20 mx-auto max-w-[480px] px-5"
             style={{ bottom: "calc(76px + var(--safe-bottom) + 10px)" }}
           >
             <button
