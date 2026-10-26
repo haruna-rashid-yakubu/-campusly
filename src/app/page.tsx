@@ -28,6 +28,8 @@ import { boutiquesRecentes, cartesALaUne, getVendeurs } from "@/lib/vendeurs";
 import { AlaUne } from "@/components/AlaUne";
 import { cartesAnnonces, cartesEvenements, decorDuJour, rubanDuJour } from "@/lib/evenements";
 import { DecorSaison } from "@/components/DecorSaison";
+import { MaJournee } from "@/components/MaJournee";
+import { getJourneeEtudiant } from "@/lib/journee";
 import { AccueilServices } from "@/components/AccueilServices";
 import { distanceLabel, fcfa, isWithinLastWeek } from "@/lib/utils";
 
@@ -51,7 +53,9 @@ export default async function AccueilPage() {
     .join(" et ");
 
   const selectedClasse = await getClasseByLabel(classe);
-  const latestProgramme = selectedClasse ? await getLatestProgramme(selectedClasse.id) : null;
+  const [latestProgramme, journee] = selectedClasse
+    ? await Promise.all([getLatestProgramme(selectedClasse.id), getJourneeEtudiant(selectedClasse.id)])
+    : [null, null];
   const programmeRecent = latestProgramme && isWithinLastWeek(latestProgramme.publishedAt);
 
   const firstName = session?.user?.name?.split(" ")[0] ?? null;
@@ -106,6 +110,8 @@ export default async function AccueilPage() {
           <ClasseSwitcher value={classe} classes={classesRows.map((c) => c.label)} />
         </div>
       </div>
+
+      <MaJournee journee={journee} classe={classe} />
 
       {sondage && sondageResultats && (
         <section className="anim-fade mx-5 mt-5 rounded-[20px] border-[1.5px] border-teal-border bg-teal-tint-soft p-4">

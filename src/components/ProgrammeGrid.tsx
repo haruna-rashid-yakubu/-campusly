@@ -1,5 +1,6 @@
 import { Icon } from "@/components/icons";
 import { CRENEAUX, heuresDe, JOURS } from "@/lib/constants";
+import { DefilerVersAujourdhui } from "@/components/DefilerVersAujourdhui";
 
 type Creneau = {
   jour: number;
@@ -61,34 +62,47 @@ function decouper(creneaux: Creneau[], jour: number): Segment[] {
 export function ProgrammeGrid({
   creneaux,
   salleDefaut,
+  aujourdhui = null,
 }: {
   creneaux: Creneau[];
   salleDefaut: string | null;
+  // 1 = lundi … 6 = samedi when the week on screen is this week: that day is marked.
+  aujourdhui?: number | null;
 }) {
   return (
     <div>
+      {aujourdhui && <DefilerVersAujourdhui />}
       {JOURS.map((label, i) => {
         const jour = i + 1;
+        const estAujourdhui = jour === aujourdhui;
         return (
-          <div key={label} className="mb-3 overflow-hidden rounded-[20px] border border-line">
-            <div className="bg-surface px-4 py-2 text-[13.5px] font-extrabold">{label}</div>
+          <div
+            key={label}
+            id={estAujourdhui ? "aujourdhui" : undefined}
+            className={`mb-3 scroll-mt-40 overflow-hidden rounded-[20px] border ${estAujourdhui ? "border-[1.5px] border-teal" : "border-line"}`}
+          >
+            <div
+              className={`flex items-center justify-between px-4 py-2 text-[13.5px] font-extrabold ${estAujourdhui ? "bg-teal-tint text-teal-active" : "bg-surface"}`}
+            >
+              {label}
+              {estAujourdhui && <span className="text-[12px] uppercase tracking-wide">Aujourd&rsquo;hui</span>}
+            </div>
             {decouper(creneaux, jour).map((seg) =>
               seg.type === "libre" ? (
-                <div key={`l${seg.debut}`} className="border-t border-line-3 px-4 py-3">
-                  <div className="text-[12px] font-bold uppercase tracking-wide text-slate-light">
-                    {heuresDe(seg.debut, seg.fin)}
-                  </div>
-                  <div className="mt-1 text-[14.5px] font-bold text-slate-light">Pas de cours</div>
+                // A free stretch is said, but quietly: one line, not a block.
+                <div key={`l${seg.debut}`} className="flex gap-2 border-t border-line-3 px-4 py-2 text-[13px] text-slate">
+                  <span className="font-bold">{heuresDe(seg.debut, seg.fin)}</span>
+                  <span>Pas de cours</span>
                 </div>
               ) : (
                 <div key={`c${seg.creneau.debut}`} className="border-t border-line-3 px-4 py-3">
-                  <div className="text-[12px] font-bold uppercase tracking-wide text-slate-light">
+                  <div className="text-[13px] font-bold text-slate">
                     {heuresDe(seg.creneau.debut, seg.creneau.fin)}
                   </div>
                   <div className="mt-1 text-[15.5px] font-extrabold leading-snug">
                     {seg.creneau.matiere}
                   </div>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12.5px] text-slate-light">
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-slate">
                     {seg.creneau.enseignant && <span>{seg.creneau.enseignant}</span>}
                     <span className="font-semibold text-ink-soft">
                       {seg.creneau.salle ?? salleDefaut ?? ""}

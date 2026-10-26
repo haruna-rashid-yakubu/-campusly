@@ -6,6 +6,7 @@ import {
   getRecentCite,
   getRecentSubjects,
 } from "@/lib/data";
+import { getJourneeEtudiant } from "@/lib/journee";
 import { cartesAnnonces, cartesEvenements, decorDuJour, rubanDuJour } from "@/lib/evenements";
 import { getMaReponse, getResultats, getSondageOuvert } from "@/lib/sondage";
 import { boutiquesRecentes, cartesALaUne, getVendeurs } from "@/lib/vendeurs";
@@ -25,8 +26,9 @@ export async function GET() {
   ]);
   // The shops a student can open, without Campusly's own services (the pressing).
   const ouvertes = vendeurs.filter((v) => v.categorie !== "interne");
-  const [programme, cartesVendeurs, sondageDetail] = await Promise.all([
+  const [programme, journee, cartesVendeurs, sondageDetail] = await Promise.all([
     classeRow ? getLatestProgramme(classeRow.id) : null,
+    classeRow ? getJourneeEtudiant(classeRow.id) : null,
     cartesALaUne(vendeurs),
     sondage ? Promise.all([getResultats(sondage), getMaReponse(sondage.id)]) : null,
   ]);
@@ -34,6 +36,8 @@ export async function GET() {
   return NextResponse.json({
     classe,
     programme,
+    // Today's or the next school day's classes, as on the web's Home.
+    journee,
     cartesUne: [...cartesEvenements(), ...cartesAnnonces(), ...cartesVendeurs],
     ruban: rubanDuJour(),
     decor: decorDuJour(),

@@ -8,6 +8,7 @@ import { DownloadButton } from "@/components/DownloadButton";
 import { ProgrammeGrid } from "@/components/ProgrammeGrid";
 import { NotifNudge } from "@/components/NotifNudge";
 import { Icon } from "@/components/icons";
+import { jourOf, mondayOf, nowInWAT, startOfDay } from "@/lib/semaine";
 import {
   getClasseByLabel,
   getClasses,
@@ -23,6 +24,13 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = "force-dynamic";
+
+// The day to mark, only when the sheet on screen is this week's.
+function jourCourant(semaine: Date) {
+  const maintenant = nowInWAT();
+  const jour = jourOf(maintenant);
+  return mondayOf(maintenant).getTime() === startOfDay(semaine).getTime() && jour <= 6 ? jour : null;
+}
 
 export default async function ProgrammePage() {
   const [classe, classesRows] = await Promise.all([getPreferredClasse(), getClasses()]);
@@ -53,33 +61,47 @@ export default async function ProgrammePage() {
 
       {programme ? (
         <>
-          {/* The photograph leads. It is the document students recognise from
-              the noticeboard, so seeing it first is what tells them this is
-              their week; the grid underneath is what they then read. */}
+          {/* The student's days lead, with today marked; the photograph of the
+              board stays one tap away, as the document to check against. */}
           <div className="px-5 pt-3">
             {programme.photoUrl && (
-              <Link
-                href="/programme/plein"
-                className="press-scale relative mb-4 block h-[360px] overflow-hidden rounded-[20px] bg-line-3"
-              >
-                <Image
-                  src={programme.photoUrl}
-                  alt="Programme de la semaine"
-                  fill
-                  priority
-                  className="object-cover"
-                />
-                <span className="absolute bottom-3 right-3 flex h-10 items-center gap-1.5 rounded-[13px] bg-ink/80 px-3.5 text-[12.5px] font-bold text-white">
-                  <Icon name="full" size={18} strokeWidth={2} />
-                  Plein écran
-                </span>
-              </Link>
+              <div className="mb-4 flex items-center gap-3 rounded-[20px] border border-line p-2.5">
+                <Link
+                  href="/programme/plein"
+                  className="press-scale relative block h-[64px] w-[64px] flex-none overflow-hidden rounded-[14px] bg-line-3"
+                  aria-label="Voir la photo du tableau en plein écran"
+                >
+                  <Image src={programme.photoUrl} alt="" fill sizes="64px" className="object-cover" />
+                </Link>
+                <Link href="/programme/plein" className="min-w-0 flex-1">
+                  <span className="block text-[14.5px] font-extrabold">Photo du tableau</span>
+                  <span className="mt-0.5 flex items-center gap-1 text-[13px] font-bold text-teal-dark">
+                    <Icon name="full" size={15} strokeWidth={2} />
+                    Plein écran
+                  </span>
+                </Link>
+                <ShareSheet>
+                  <button
+                    className="press-scale grid h-11 w-11 flex-none place-items-center rounded-[13px] border-[1.5px] border-line-4 bg-white active:bg-teal-tint-soft"
+                    aria-label="Partager"
+                  >
+                    <Icon name="share" size={18} strokeWidth={1.9} />
+                  </button>
+                </ShareSheet>
+              </div>
             )}
 
             <ProgrammeGrid
               creneaux={programme.creneaux}
               salleDefaut={programme.salleDefaut}
+              aujourdhui={jourCourant(programme.semaine)}
             />
+
+            {programme.photoUrl && (
+              <div className="mb-4 flex">
+                <DownloadButton fileUrl={programme.photoUrl} label="Télécharger la photo" />
+              </div>
+            )}
 
             {/* Offered here because the week it is about is on screen: there
                 is nothing to explain. */}
@@ -105,17 +127,6 @@ export default async function ProgrammePage() {
             </Link>
           </div>
 
-          <div className="fixed inset-x-0 z-[4] flex gap-2.5 bg-white px-5 pb-[18px] pt-4" style={{ bottom: "calc(76px + var(--safe-bottom))" }}>
-            <DownloadButton fileUrl={programme.photoUrl} />
-            <ShareSheet>
-              <button
-                className="press-scale grid h-[54px] w-[54px] flex-none place-items-center rounded-2xl border-[1.5px] border-line-4 bg-white active:bg-teal-tint-soft"
-                aria-label="Partager"
-              >
-                <Icon name="share" size={19} strokeWidth={1.9} />
-              </button>
-            </ShareSheet>
-          </div>
         </>
       ) : (
         <div className="anim-fade px-8 pt-16 text-center">
