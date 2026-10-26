@@ -8,7 +8,8 @@ import {
 } from "@/lib/data";
 import { cartesAnnonces, cartesEvenements, decorDuJour, rubanDuJour } from "@/lib/evenements";
 import { getMaReponse, getResultats, getSondageOuvert } from "@/lib/sondage";
-import { cartesALaUne, getVendeurs } from "@/lib/vendeurs";
+import { boutiquesRecentes, cartesALaUne, getVendeurs } from "@/lib/vendeurs";
+import { vendeurPublic } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,8 @@ export async function GET() {
     getVendeurs({ inclureInternes: true }),
     getSondageOuvert(),
   ]);
+  // The shops a student can open, without Campusly's own services (the pressing).
+  const ouvertes = vendeurs.filter((v) => v.categorie !== "interne");
   const [programme, cartesVendeurs, sondageDetail] = await Promise.all([
     classeRow ? getLatestProgramme(classeRow.id) : null,
     cartesALaUne(vendeurs),
@@ -39,5 +42,8 @@ export async function GET() {
       : null,
     recentSubjects,
     recentCite,
+    vendeurs: ouvertes.map(vendeurPublic),
+    // "Nouveautés" leads with shops opened in the last month, as on the web.
+    boutiquesRecentes: boutiquesRecentes(ouvertes).map(vendeurPublic),
   });
 }
