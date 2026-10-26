@@ -7,9 +7,9 @@ import { ClasseSwitcher } from "@/components/ClasseSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ShareSheet } from "@/components/ShareSheet";
 import { InvitationAccueil } from "@/components/InvitationAccueil";
+import { getProfilCourant } from "@/lib/actions";
 import { OuvrirDansSafari } from "@/components/OuvrirDansSafari";
 import { SignInButton } from "@/components/SignInButton";
-import { SignOutButton } from "@/components/SignOutButton";
 import {
   getClasseByLabel,
   getClasseLabels,
@@ -55,7 +55,9 @@ export default async function AccueilPage() {
     : [null, null];
   const programmeRecent = latestProgramme && isWithinLastWeek(latestProgramme.publishedAt);
 
-  const firstName = session?.user?.name?.split(" ")[0] ?? null;
+  // The name given at onboarding first, then Google's.
+  const profil = await getProfilCourant();
+  const firstName = profil.prenom ?? session?.user?.name?.split(" ")[0] ?? null;
   const vendeursOuverts = await getVendeurs();
   const boutiquesAnnoncees = boutiquesRecentes(vendeursOuverts);
   // The pressing is a Campusly service, not a shop in the list, but it has its own card here.
@@ -102,7 +104,17 @@ export default async function AccueilPage() {
             <div className="text-[26px] font-extrabold leading-tight tracking-tight">
               {firstName ? `Salut ${firstName},` : "Salut,"}
             </div>
-            {session?.user ? <SignOutButton /> : <SignInButton />}
+            {session?.user || profil.prenom ? (
+              <Link
+                href="/profil"
+                aria-label="Mon profil"
+                className="press-scale grid h-11 w-11 flex-none place-items-center rounded-full bg-teal-tint text-[17px] font-extrabold text-teal-dark"
+              >
+                {(firstName ?? "?").charAt(0).toUpperCase()}
+              </Link>
+            ) : (
+              <SignInButton />
+            )}
           </div>
           <ClasseSwitcher value={classe} classes={classesRows.map((c) => c.label)} />
         </div>
@@ -267,7 +279,7 @@ export default async function AccueilPage() {
         {/* After the screen has done its job, never before it. */}
         <OuvrirDansSafari />
         {/* One request at a time, the most useful first (see InvitationAccueil). */}
-        <InvitationAccueil connecte={!!session?.user} />
+        <InvitationAccueil connecte={!!session?.user} profilIncomplet={!profil.prenom || !profil.telephone} />
 
         <ShareSheet>
           <button className="press-scale flex h-[52px] w-full items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-teal bg-white text-[15px] font-bold text-teal-dark active:bg-teal-tint-soft">

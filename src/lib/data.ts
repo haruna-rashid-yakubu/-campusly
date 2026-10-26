@@ -625,6 +625,20 @@ export async function getAudience() {
     group by c.label order by appareils desc
   `);
 
+  // Who the devices are, from the onboarding: names and WhatsApp given, by promo.
+  const profilsResult = await db.execute<{ profils: number; avec_whatsapp: number }>(sql`
+    select count(*) filter (where prenom is not null)::int as profils,
+           count(*) filter (where telephone is not null)::int as avec_whatsapp
+    from profil
+  `);
+  const profilsParClasseResult = await db.execute<{ classe: string; profils: number; avec_whatsapp: number }>(sql`
+    select coalesce(c.label, 'Promo non choisie') as classe,
+           count(*) filter (where p.prenom is not null)::int as profils,
+           count(*) filter (where p.telephone is not null)::int as avec_whatsapp
+    from profil p left join classe c on c.id = p.classe_id
+    group by c.label order by profils desc
+  `);
+
   // The neon-http driver hands back { rows }, not an array.
   const [totaux] = totauxResult.rows;
 
@@ -643,6 +657,9 @@ export async function getAudience() {
     }),
     parJour: parJourResult.rows,
     parClasse: parClasseResult.rows,
+    profils: profilsResult.rows[0]?.profils ?? 0,
+    avecWhatsapp: profilsResult.rows[0]?.avec_whatsapp ?? 0,
+    profilsParClasse: profilsParClasseResult.rows,
   };
 }
 

@@ -1,23 +1,38 @@
 import { cookies } from "next/headers";
-import { ChoixClasseRequis } from "@/components/ChoixClasseRequis";
+import { auth } from "@/auth";
+import { Bienvenue } from "@/components/Bienvenue";
 import { getClasses } from "@/lib/data";
-import { CLASSE_COOKIE } from "@/lib/constants";
+import { getProfilCourant } from "@/lib/actions";
+import { CLASSE_COOKIE, ONBOARDING_COOKIE } from "@/lib/constants";
 
 /*
- * Decides server-side whether the promo question still has to be asked, so a
- * device that has already answered never renders the screen at all — not even
- * for the frame it would take a client check to read the cookie.
+ * Decides server-side whether the welcome flow still has to be shown, so a
+ * device that has answered never renders it at all.
  *
- * The cookie is read raw rather than through getPreferredClasse(), because
- * that one answers with the default promo when nothing is set, which is
- * precisely the state this screen exists to end.
+ * Without a promo it starts from the promo question, which cannot be skipped.
+ * A device that chose its promo before the flow existed gets the name and
+ * WhatsApp steps once, unless it already gave a first name. The cookies are
+ * read first: a device that has finished pays for no query.
+ *
+ * The class cookie is read raw rather than through getPreferredClasse(),
+ * because that one answers with the default promo when nothing is set.
  */
 export async function ChoixClasseGate() {
   const store = await cookies();
-  if (store.get(CLASSE_COOKIE)?.value) return null;
+  const aClasse = !!store.get(CLASSE_COOKIE)?.value;
+  if (aClasse && store.get(ONBOARDING_COOKIE)?.value) return null;
 
-  // Only visitors who have not chosen pay for this query, and only until they
-  // do. The shell deliberately avoids per-request work otherwise.
-  const classes = await getClasses();
-  return <ChoixClasseRequis classes={classes.map((c) => c.label)} />;
+  const [classes, session, profil] = await Promise.all([getClasses(), auth(), getProfilCourant()]);
+  if (aClasse && profil.prenom) return null;
+
+  const [prenomGoogle, ...reste] = (session?.user?.name ?? "").trim().split(/\s+/);
+  return (
+    <Bienvenue
+      classes={classes.map((c) => c.label)}
+      depart={aClasse ? "nom" : "classe"}
+      prenomGoogle={profil.prenom ?? (prenomGoogle || null)}
+      nomGoogle={profil.nom ?? (reste.join(" ") || null)}
+      connecte={!!session?.user}
+    />
+  );
 }

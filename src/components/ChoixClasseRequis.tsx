@@ -31,9 +31,18 @@ function niveauDeClasse(label: string) {
  * The page underneath is still rendered and still in the HTML, which keeps
  * shared links and crawlers seeing real content rather than this.
  */
-export function ChoixClasseRequis({ classes }: { classes: string[] }) {
-  const pathname = usePathname();
-  const router = useRouter();
+/*
+ * Whether the welcome screen may cover this page at all (see below).
+ */
+export function peutCouvrir(pathname: string) {
+  return hasTabBar(pathname) && !estUnLienPartage(pathname) && !neDependPasDeLaPromo(pathname);
+}
+
+/*
+ * The promo question itself: logo, title, filières and niveaux. Used as the
+ * first step of the welcome flow; `onChoisi` runs once the promo is saved.
+ */
+export function ChoixClasseListe({ classes, onChoisi }: { classes: string[]; onChoisi: () => void }) {
   const [enCours, startTransition] = useTransition();
   const [deplie, setDeplie] = useState<string | null>(null);
   const [choisi, setChoisi] = useState<string | null>(null);
@@ -47,35 +56,6 @@ export function ChoixClasseRequis({ classes }: { classes: string[] }) {
     return [...groupes.entries()].map(([nom, labels]) => ({ nom, labels }));
   }, [classes]);
 
-  /*
-   * Admin, the install guide and the fullscreen viewers are not the main app
-   * surface, and someone sent straight to one of them has a reason to be
-   * there that a promo question would only get in the way of.
-   *
-   * A link to one precise paper or cité is let through for the same reason,
-   * and it is the one that matters most: those links are how the app spreads.
-   * Someone opens "here is last year's stats paper" from a group chat, and a
-   * wall before the paper is a wall at the exact moment they wanted it. They
-   * get what they came for; the question waits until they look around, which
-   * is when it starts being worth answering.
-   */
-  const affiche =
-    hasTabBar(pathname) &&
-    !estUnLienPartage(pathname) &&
-    !neDependPasDeLaPromo(pathname) &&
-    classes.length > 0;
-
-  useEffect(() => {
-    if (!affiche) return;
-    const precedent = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = precedent;
-    };
-  }, [affiche]);
-
-  if (!affiche) return null;
-
   const select = (label: string) => {
     setChoisi(label);
     startTransition(async () => {
@@ -83,27 +63,12 @@ export function ChoixClasseRequis({ classes }: { classes: string[] }) {
       // Switched notifications on before getting here — a device coming from
       // the install guide can have — and the stamp is still empty.
       await resyncPush();
-      router.refresh();
+      onChoisi();
     });
   };
 
-  /*
-   * z-25 sits above the tab bar and the offline toast but below the offline
-   * overlay: choosing a promo posts to the server, so being told the
-   * connection is gone has to win over being asked.
-   */
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="choix-classe-titre"
-      className="anim-fade fixed inset-0 z-[25] overflow-y-auto bg-white"
-      style={{
-        paddingTop: "calc(32px + var(--safe-top))",
-        paddingBottom: "calc(28px + var(--safe-bottom))",
-      }}
-    >
-      <div className="mx-auto w-full max-w-[460px] px-6">
+    <>
         <span className="mx-auto block w-fit">
           <Logo size={60} />
         </span>
@@ -187,6 +152,39 @@ export function ChoixClasseRequis({ classes }: { classes: string[] }) {
         <p className="mt-6 text-center text-[12.5px] leading-snug text-slate-light">
           Tu pourras en changer à tout moment depuis l&rsquo;écran Programme.
         </p>
+    </>
+  );
+}
+
+export function ChoixClasseRequis({ classes }: { classes: string[] }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const affiche = peutCouvrir(pathname) && classes.length > 0;
+
+  useEffect(() => {
+    if (!affiche) return;
+    const precedent = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = precedent;
+    };
+  }, [affiche]);
+
+  if (!affiche) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="choix-classe-titre"
+      className="anim-fade fixed inset-0 z-[25] overflow-y-auto bg-white"
+      style={{
+        paddingTop: "calc(32px + var(--safe-top))",
+        paddingBottom: "calc(28px + var(--safe-bottom))",
+      }}
+    >
+      <div className="mx-auto w-full max-w-[460px] px-6">
+        <ChoixClasseListe classes={classes} onChoisi={() => router.refresh()} />
       </div>
     </div>
   );

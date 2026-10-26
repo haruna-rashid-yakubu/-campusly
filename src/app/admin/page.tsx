@@ -733,6 +733,8 @@ async function AudienceTab() {
         <Chiffre valeur={a.comptes} legende="Connectés avec un compte Google" />
         <Chiffre valeur={a.aujourdhui} legende="Ont ouvert Campusly aujourd'hui" />
         <Chiffre valeur={a.fideles} legende="Revenus un autre jour" />
+        <Chiffre valeur={a.profils} legende="Ont donné leur prénom" />
+        <Chiffre valeur={a.avecWhatsapp} legende="Ont donné leur WhatsApp" />
       </div>
 
       <p className="mt-3 text-[12.5px] leading-snug text-slate-light">
@@ -805,6 +807,21 @@ async function AudienceTab() {
           >
             <span className="text-[14.5px] font-semibold">{c.classe}</span>
             <span className="text-[14.5px] font-extrabold tabular-nums">{c.appareils}</span>
+          </div>
+        ))
+      )}
+
+      <div className="mb-1 mt-7 text-base font-extrabold tracking-tight">Profils par promo</div>
+      {a.profilsParClasse.length === 0 ? (
+        <p className="mt-2 text-[14px] text-slate-light">Personne n&rsquo;a encore rempli son profil.</p>
+      ) : (
+        a.profilsParClasse.map((c) => (
+          <div key={c.classe} className="flex items-center justify-between border-t border-line-3 py-3">
+            <span className="text-[14.5px] font-semibold">{c.classe}</span>
+            <span className="text-[13.5px] tabular-nums text-slate">
+              <span className="text-[14.5px] font-extrabold text-ink">{c.profils}</span> prénoms ·{" "}
+              {c.avec_whatsapp} WhatsApp
+            </span>
           </div>
         ))
       )}

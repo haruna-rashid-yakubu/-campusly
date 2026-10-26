@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { InstallNudge } from "@/components/InstallNudge";
 import { NotifNudge } from "@/components/NotifNudge";
@@ -10,9 +11,10 @@ import { readPushStatus } from "@/lib/push-client";
 const NOTIF_DISMISSED = "campusly:nudge-dismissed";
 const INSTALL_DISMISSED = "campusly:install-dismissed";
 const SIGNIN_DISMISSED = "campusly:signin-dismissed";
+const PROFIL_DISMISSED = "campusly:profil-dismissed";
 const SEMAINE = 7 * 24 * 60 * 60 * 1000;
 
-type Choix = "notif" | "install" | "connexion" | null;
+type Choix = "notif" | "install" | "profil" | "connexion" | null;
 
 function recent(cle: string) {
   try {
@@ -34,7 +36,7 @@ function recent(cle: string) {
  * tard" holds for a week, and the next one only shows once the previous is
  * answered or snoozed.
  */
-export function InvitationAccueil({ connecte }: { connecte: boolean }) {
+export function InvitationAccueil({ connecte, profilIncomplet = false }: { connecte: boolean; profilIncomplet?: boolean }) {
   const [choix, setChoix] = useState<Choix>(null);
   const [installable, setInstallable] = useState(false);
 
@@ -51,12 +53,14 @@ export function InvitationAccueil({ connecte }: { connecte: boolean }) {
         ? "notif"
         : installable && !recent(INSTALL_DISMISSED)
           ? "install"
-          : !connecte && !recent(SIGNIN_DISMISSED)
+          : profilIncomplet && !recent(PROFIL_DISMISSED)
+            ? "profil"
+            : !connecte && !recent(SIGNIN_DISMISSED)
             ? "connexion"
             : null;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setChoix(suivant);
-  }, [installable, connecte]);
+  }, [installable, connecte, profilIncomplet]);
 
   if (choix === "notif") {
     return (
@@ -68,6 +72,37 @@ export function InvitationAccueil({ connecte }: { connecte: boolean }) {
     );
   }
   if (choix === "install") return <InstallNudge />;
+  if (choix === "profil") {
+    return (
+      <div className="anim-fade mt-4 flex items-center gap-3 rounded-[20px] border border-teal-border bg-teal-tint-soft p-4">
+        <Link href="/profil" className="flex min-w-0 flex-1 items-center gap-3">
+          <span className="grid h-10 w-10 flex-none place-items-center rounded-[13px] bg-teal-tint text-teal-dark">
+            <Icon name="chat" size={19} />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[15px] font-extrabold">Complète ton profil</span>
+            <span className="mt-0.5 block text-[13.5px] leading-snug text-slate">
+              Ton prénom et ton WhatsApp, pour que les vendeurs te recontactent.
+            </span>
+          </span>
+        </Link>
+        <button
+          onClick={() => {
+            try {
+              localStorage.setItem(PROFIL_DISMISSED, String(Date.now()));
+            } catch {
+              // Private mode: asked again next time.
+            }
+            setChoix(null);
+          }}
+          aria-label="Plus tard"
+          className="press-scale grid h-11 w-11 flex-none place-items-center text-slate"
+        >
+          <Icon name="x" size={18} />
+        </button>
+      </div>
+    );
+  }
   if (choix !== "connexion") return null;
 
   return (

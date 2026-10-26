@@ -15,6 +15,7 @@ import {
   subjectSubmissions,
   subjects,
   programmePublications,
+  profils,
   pushSubscriptions,
   sondageReponses,
   sondages,
@@ -142,6 +143,20 @@ export async function appSignOut() {
 export async function setClasse(label: string) {
   const store = await cookies();
   store.set(CLASSE_COOKIE, label, { path: "/", maxAge: 60 * 60 * 24 * 365 });
+
+  // The device's profile follows the promo too, so the admin's breakdown by
+  // class stays true after someone changes theirs.
+  const deviceId = store.get(DEVICE_COOKIE)?.value;
+  if (deviceId) {
+    const choisie = await getClasseByLabel(label);
+    if (choisie) {
+      await db
+        .update(profils)
+        .set({ classeId: choisie.id, majLe: new Date() })
+        .where(eq(profils.deviceId, deviceId))
+        .catch(() => {});
+    }
+  }
 
   // The cookie alone is unreadable from a cron job, so the choice is mirrored
   // onto the account. Signed-out visitors keep only the cookie until they
