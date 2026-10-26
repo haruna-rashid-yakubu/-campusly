@@ -23,7 +23,8 @@ import { SondageVote } from "@/components/SondageVote";
 import { getMaReponse, getResultats, getSondageOuvert } from "@/lib/sondage";
 import { boutiquesRecentes, cartesALaUne, getVendeurs } from "@/lib/vendeurs";
 import { AlaUne } from "@/components/AlaUne";
-import { cartesAnnonces, cartesEvenements, decorDuJour, rubanDuJour } from "@/lib/evenements";
+import { cartesAnnonces, cartesEvenements, decorDuJour, decorEnApercu, rubanDuJour } from "@/lib/evenements";
+import { Halloween } from "@/components/Halloween";
 import { DecorSaison } from "@/components/DecorSaison";
 import { MaJournee } from "@/components/MaJournee";
 import { getJourneeEtudiant } from "@/lib/journee";
@@ -32,7 +33,7 @@ import { distanceLabel, fcfa, isWithinLastWeek } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-export default async function AccueilPage() {
+export default async function AccueilPage({ searchParams }: { searchParams: Promise<{ apercu?: string }> }) {
   const session = await auth();
   const [classe, classesRows, recentSubjects, recentCite] = await Promise.all([
     getPreferredClasse(),
@@ -60,8 +61,10 @@ export default async function AccueilPage() {
   // The pressing is a Campusly service, not a shop in the list, but it has its own card here.
   // A campus event of the day goes first: it is gone tomorrow, the shops are not.
   const cartesUne = [...cartesEvenements(), ...cartesAnnonces(), ...(await cartesALaUne(await getVendeurs({ inclureInternes: true })))];
-  const ruban = rubanDuJour();
-  const decor = decorDuJour();
+  const apercu = decorEnApercu((await searchParams).apercu);
+  const decor = apercu ?? decorDuJour();
+  const ruban = rubanDuJour() ?? (decor?.ruban ? { couleur: decor.ruban.fond, texte: decor.ruban.texte, encre: decor.ruban.encre } : null);
+  const nuit = decor?.motif === "halloween";
 
   // The open poll is answered right here, first thing under the greeting, and
   // stays with its results once answered, so the screen everyone lands on
@@ -73,9 +76,26 @@ export default async function AccueilPage() {
 
 
   return (
+    <>
+    {/* Outside the page's own stacking, so its bats fly over the tab bar too. */}
+    {nuit && <Halloween apercu={apercu !== null} />}
     <div className="relative isolate min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
       {decor && <DecorSaison decor={decor} />}
-      <div className="px-5" style={{ paddingTop: "calc(20px + var(--safe-top))" }}>
+      <div
+        className="px-5"
+        style={{
+          paddingTop: "calc(20px + var(--safe-top))",
+          // On a night sky, the greeting and its controls turn light.
+          ...(nuit && ({
+            color: "#ffffff",
+            "--color-ink": "#ffffff",
+            "--color-ink-soft": "rgba(255,255,255,.88)",
+            "--color-slate-light": "rgba(255,255,255,.7)",
+            "--color-teal-dark": "#fdba74",
+            "--color-surface": "rgba(255,255,255,.14)",
+          } as React.CSSProperties)),
+        }}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Logo size={36} />
@@ -151,8 +171,10 @@ export default async function AccueilPage() {
 
       {ruban && (
         <div
-          className="mx-5 mt-5 rounded-[14px] px-4 py-2.5 text-center text-[13.5px] font-extrabold text-white"
-          style={{ background: ruban.couleur }}
+          className={`mx-5 mt-5 rounded-[14px] px-4 py-2.5 text-center text-[13.5px] font-extrabold text-white ${
+            nuit ? "border border-[#f97316]/60 shadow-[0_0_22px_rgba(249,115,22,.45)]" : ""
+          }`}
+          style={{ background: ruban.couleur, color: "encre" in ruban ? ruban.encre : undefined }}
         >
           {ruban.texte}
         </div>
@@ -276,5 +298,6 @@ export default async function AccueilPage() {
         </ShareSheet>
       </div>
     </div>
+    </>
   );
 }

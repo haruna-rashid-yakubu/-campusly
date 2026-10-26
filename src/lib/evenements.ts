@@ -119,13 +119,26 @@ export function rubanDuJour(maintenant = new Date()) {
  * Kept to moments the campus marks itself, and never more than a wash and a
  * few motifs: the programme and the orders must read exactly as on any day.
  */
+const HALLOWEEN: Decor = {
+  motif: "halloween",
+  couleur: "#f97316",
+  fond: "radial-gradient(circle at 82% 26%, rgba(249,115,22,.35), transparent 40%), linear-gradient(180deg, #07040d 0%, #1c0f2e 45%, #3b1a4a 75%, rgba(255,255,255,0) 100%)",
+  ruban: { texte: "🎃 Joyeux Halloween… si tu oses 👻", fond: "#07040d", encre: "#fb923c" },
+};
+
 const SAISONS: { debut: string; fin: string; decor: Decor }[] = [
+  { debut: "2026-10-31", fin: "2026-10-31", decor: HALLOWEEN },
   {
     debut: "2026-10-20",
-    fin: "2026-10-31",
+    fin: "2026-10-30",
     decor: { motif: "ruban", couleur: "#e8457c", fond: "linear-gradient(180deg, #fde4ee 0%, #fff4f8 60%, rgba(255,255,255,0) 100%)" },
   },
 ];
+
+/* A season shown ahead of its day, for checking it on a real phone: /?apercu=halloween. */
+export function decorEnApercu(nom: string | undefined) {
+  return nom === "halloween" ? HALLOWEEN : null;
+}
 
 export function decorDuJour(maintenant = new Date()) {
   const jour = jourWAT(maintenant);
@@ -139,6 +152,7 @@ export function decorDuJour(maintenant = new Date()) {
  */
 const COULEURS_DU_JOUR: Record<string, { nom: string; barre: string }> = {
   "2026-10-21": { nom: "rose", barre: "#e8457c" },
+  "2026-10-31": { nom: "halloween", barre: "#07040d" },
 };
 
 export function scriptCouleurDuJour() {
