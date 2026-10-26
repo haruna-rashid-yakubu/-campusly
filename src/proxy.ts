@@ -26,6 +26,15 @@ const proxyAdmin = auth((req) => {
  * The bearer token is a row of the `session` table, so Auth.js checks it the
  * way it checks any web session.
  */
+function decoder(valeur: string | null) {
+  if (!valeur) return null;
+  try {
+    return decodeURIComponent(valeur);
+  } catch {
+    return valeur;
+  }
+}
+
 function pontMobile(req: NextRequest) {
   const ajouts: string[] = [];
   const [scheme, token] = (req.headers.get("authorization") ?? "").split(" ");
@@ -33,7 +42,8 @@ function pontMobile(req: NextRequest) {
     // Which of the two names Auth.js reads depends on whether it runs over https.
     ajouts.push(`authjs.session-token=${token}`, `__Secure-authjs.session-token=${token}`);
   }
-  const classe = req.headers.get("x-campusly-classe");
+  // Sent URL-encoded: a header cannot carry the "·" of "BME · L2" intact.
+  const classe = decoder(req.headers.get("x-campusly-classe"));
   if (classe) ajouts.push(`${CLASSE_COOKIE}=${encodeURIComponent(classe)}`);
   const device = req.headers.get("x-campusly-device");
   if (device) ajouts.push(`${DEVICE_COOKIE}=${encodeURIComponent(device)}`);
