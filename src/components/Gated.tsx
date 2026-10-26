@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Sheet } from "@/components/Sheet";
+import { GoogleLogo } from "@/components/GoogleLogo";
 import { googleSignIn } from "@/lib/actions";
 
 export function Gated({
@@ -34,7 +35,7 @@ export function Gated({
           onClick={() => startTransition(() => googleSignIn())}
           className="press-scale mt-4 flex h-[54px] w-full items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-line-4 bg-white text-[15.5px] font-bold disabled:opacity-60 active:bg-surface-3"
         >
-          <span className="text-[19px] font-extrabold">G</span>
+          <GoogleLogo size={20} />
           Continuer avec Google
         </button>
         <button
