@@ -79,7 +79,7 @@ export function ProgrammeGrid({
           <div
             key={label}
             id={estAujourdhui ? "aujourdhui" : undefined}
-            className={`mb-3 scroll-mt-40 overflow-hidden rounded-[20px] border ${estAujourdhui ? "border-[1.5px] border-teal" : "border-line"}`}
+            className={`mb-3 scroll-mt-48 overflow-hidden rounded-[20px] border ${estAujourdhui ? "border-[1.5px] border-teal" : "border-line"}`}
           >
             <div
               className={`flex items-center justify-between px-4 py-2 text-[13.5px] font-extrabold ${estAujourdhui ? "bg-teal-tint text-teal-active" : "bg-surface"}`}
