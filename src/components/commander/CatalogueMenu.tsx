@@ -14,6 +14,7 @@ import {
   type ItemMenu,
   type LigneMenu,
   type Menu,
+  type SectionMenu,
 } from "@/lib/menu";
 import { enablePush, readPushStatus, type PushStatus } from "@/lib/push-client";
 import { fcfa } from "@/lib/utils";
@@ -205,8 +206,10 @@ export function CatalogueMenu({
         </section>
       )}
 
-      {menu.sections.map((s) => (
-        <section key={s.titre}>
+      {menu.sections.length >= 5 && <BarreSections sections={menu.sections} />}
+
+      {menu.sections.map((s, i) => (
+        <section key={s.titre} id={`section-${i}`} data-section={i} className="scroll-mt-[calc(64px+var(--safe-top))]">
           <div className="mb-2.5 mt-6 flex items-center gap-2 text-[16.5px] font-extrabold tracking-tight">
             {s.icone && (
               <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--v-doux,#f4fbfa)] text-[var(--v-accent,#0a7f77)]"><IconeEmoji emoji={s.icone} size={17} /></span>
@@ -371,6 +374,62 @@ export function CatalogueMenu({
   );
 }
 
+/*
+ * A long menu's table of contents: one chip per section, held at the top of
+ * the screen while the student scrolls, the section in view lit. A tap jumps
+ * to it. Short menus go without: four sections read fine by scrolling.
+ */
+function BarreSections({ sections }: { sections: SectionMenu[] }) {
+  const [active, setActive] = useState(0);
+  const rail = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const visibles = new Set<number>();
+    const obs = new IntersectionObserver(
+      (entrees) => {
+        for (const e of entrees) {
+          const i = Number((e.target as HTMLElement).dataset.section);
+          if (e.isIntersecting) visibles.add(i);
+          else visibles.delete(i);
+        }
+        if (visibles.size > 0) setActive(Math.min(...visibles));
+      },
+      // A section counts as "in view" once it reaches the band just under the bar.
+      { rootMargin: "-80px 0px -60% 0px" }
+    );
+    document.querySelectorAll("[data-section]").forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  // Keep the lit chip in sight when the bar is wider than the screen.
+  useEffect(() => {
+    rail.current?.querySelector<HTMLElement>(`[data-puce="${active}"]`)?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+  }, [active]);
+
+  return (
+    <nav
+      ref={rail}
+      aria-label="Catégories du menu"
+      className="sticky top-0 z-10 -mx-5 mt-5 flex gap-1.5 overflow-x-auto bg-white/95 px-5 pb-2.5 pt-[calc(10px+var(--safe-top))] backdrop-blur [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
+      {sections.map((s, i) => (
+        <button
+          key={s.titre}
+          data-puce={i}
+          onClick={() => document.getElementById(`section-${i}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          aria-current={active === i}
+          className={`press-scale flex h-[38px] flex-none items-center gap-1.5 rounded-full px-3.5 text-[13.5px] font-extrabold ${
+            active === i ? "bg-[var(--v-accent,#14b8ac)] text-white" : "border-[1.5px] border-line-4 text-slate"
+          }`}
+        >
+          {s.icone && <IconeEmoji emoji={s.icone} size={15} />}
+          {s.titre}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
 /* One item of the menu: its sizes, its choice if it has one, and "add". */
 function CarteItem({
   item,
@@ -383,7 +442,8 @@ function CarteItem({
   epuises: ReadonlySet<string>;
   onAjouter: (l: LigneMenu) => void;
 }) {
-  const [taille, setTaille] = useState(item.tailles.length === 1 ? item.tailles[0].id : item.tailles[Math.min(1, item.tailles.length - 1)].id);
+  // Sizes start on the middle one; a longer list is a choice between things (which soda), so it starts on the first.
+  const [taille, setTaille] = useState(item.tailles.length === 1 || item.tailles.length > 3 ? item.tailles[0].id : item.tailles[1].id);
   const [choix, setChoix] = useState<string | undefined>(undefined);
   const epuise = itemEpuise(item, epuises);
   const manqueChoix = !!item.choix && !choix;
@@ -408,7 +468,7 @@ function CarteItem({
       </div>
 
       {item.tailles.length > 1 && (
-        <div className="mt-2.5 grid gap-1.5" style={{ gridTemplateColumns: `repeat(${item.tailles.length}, minmax(0, 1fr))` }}>
+        <div className="mt-2.5 grid gap-1.5" style={{ gridTemplateColumns: `repeat(${Math.min(item.tailles.length, 3)}, minmax(0, 1fr))` }}>
           {item.tailles.map((t) => (
             <button
               key={t.id}

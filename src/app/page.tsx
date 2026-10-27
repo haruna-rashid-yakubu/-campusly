@@ -32,6 +32,7 @@ import { getJourneeEtudiant } from "@/lib/journee";
 import { AccueilServices } from "@/components/AccueilServices";
 import { distanceLabel, fcfa, isWithinLastWeek } from "@/lib/utils";
 import { TexteIcone } from "@/components/TexteIcone";
+import { CARTE, TitreSection } from "@/components/TitreSection";
 
 export const dynamic = "force-dynamic";
 
@@ -132,7 +133,7 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
         </div>
       </div>
 
-      <MaJournee journee={journee} classe={classe} />
+      <MaJournee journee={journee} classe={classe} clair={nuit} />
 
       {sondage && sondageResultats && (
         <section className="anim-fade mx-5 mt-5 rounded-[20px] border-[1.5px] border-teal-border bg-teal-tint-soft p-4">
@@ -188,13 +189,9 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
 
       <AccueilServices boutiques={vendeursOuverts.map((v) => ({ nom: v.nom, logo: v.logoCarreUrl }))} />
 
-      <div className="flex items-baseline justify-between px-5 pb-1.5 pt-6">
-        <div className="text-lg font-extrabold tracking-tight">Nouveautés</div>
-        <Link href="/sujets" className="text-[13.5px] font-bold text-teal-dark">
-          Tout voir
-        </Link>
-      </div>
-      <div className="px-5">
+      <section className="mt-7 px-5">
+        <TitreSection lien={{ href: "/sujets", label: "Tout voir" }}>Nouveautés</TitreSection>
+      <div className={`overflow-hidden ${CARTE} [&>a:first-child]:border-t-0`}>
         {/* Newly opened shops take the first lines while they are new; the
             latest paper comes back when there is none to announce, and the
             latest residence when only one shop is. */}
@@ -203,29 +200,29 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
             <Link
               key={vendeurAnnonce.slug}
               href={`/commander/${vendeurAnnonce.slug}`}
-              className="flex items-center gap-3 border-t border-line-3 py-3 active:opacity-60"
+              className="flex items-center gap-3 border-t border-line-3 p-4 active:bg-surface-3"
             >
               {vendeurAnnonce.logoCarreUrl ? (
                 <Image
                   src={vendeurAnnonce.logoCarreUrl}
                   alt=""
-                  width={46}
-                  height={46}
-                  className="h-[46px] w-[46px] flex-none rounded-[14px] bg-black object-cover"
+                  width={44}
+                  height={44}
+                  className="h-11 w-11 flex-none rounded-[14px] bg-black object-cover"
                 />
               ) : (
-                <span className="grid h-[46px] w-[46px] flex-none place-items-center rounded-[14px] bg-surface text-teal-dark">
+                <span className="grid h-11 w-11 flex-none place-items-center rounded-[14px] bg-[#fde7ef] text-[#c2185b]">
                   <Icon name="bag" size={20} />
                 </span>
               )}
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-1.5">
-                  <span className="text-[14.5px] font-bold">{vendeurAnnonce.nom}</span>
+                  <span className="text-[14px] font-bold">{vendeurAnnonce.nom}</span>
                   <span className="rounded-full bg-[#fde7ef] px-2 py-px text-[11px] font-extrabold text-[#c2185b]">
                     Nouveau
                   </span>
                 </span>
-                <span className="mt-0.5 block truncate text-[12.5px] text-slate-light">
+                <span className="mt-0.5 block truncate text-[13px] text-slate-light">
                   {vendeurAnnonce.accroche ?? "À commander sur Campusly"}
                 </span>
               </span>
@@ -235,16 +232,16 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
         ) : recentSubjects[0] && (
           <Link
             href={`/sujets/${recentSubjects[0].id}`}
-            className="flex items-center gap-3 border-t border-line-3 py-3 active:opacity-60"
+            className="flex items-center gap-3 border-t border-line-3 p-4 active:bg-surface-3"
           >
-            <span className="grid h-[46px] w-[46px] flex-none place-items-center rounded-[14px] bg-surface text-teal-dark">
+            <span className="grid h-11 w-11 flex-none place-items-center rounded-[14px] bg-[#eef0ff] text-[#4f46e5]">
               <Icon name="doc" size={20} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[14.5px] font-bold">
+              <span className="block text-[14px] font-bold">
                 {recentSubjects[0].matiere} · {recentSubjects[0].annee}
               </span>
-              <span className="mt-0.5 block text-[12.5px] text-slate-light">
+              <span className="mt-0.5 block text-[13px] text-slate-light">
                 Nouveau sujet · {recentSubjects[0].type.toLowerCase()}
                 {recentSubjects[0].corrige ? " · corrigé" : ""}
               </span>
@@ -255,14 +252,14 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
         {recentCite && boutiquesAnnoncees.length < 2 && (
           <Link
             href={`/logements/${recentCite.id}`}
-            className="flex items-center gap-3 border-t border-line-3 py-3 active:opacity-60"
+            className="flex items-center gap-3 border-t border-line-3 p-4 active:bg-surface-3"
           >
-            <span className="grid h-[46px] w-[46px] flex-none place-items-center rounded-[14px] bg-surface text-teal-dark">
+            <span className="grid h-11 w-11 flex-none place-items-center rounded-[14px] bg-[#fff3e8] text-[#ea580c]">
               <Icon name="bed" size={20} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[14.5px] font-bold">{recentCite.nom}</span>
-              <span className="mt-0.5 block text-[12.5px] text-slate-light">
+              <span className="block text-[14px] font-bold">{recentCite.nom}</span>
+              <span className="mt-0.5 block text-[13px] text-slate-light">
                 Logement · {distanceLabel(recentCite.distanceM)} · à partir de{" "}
                 {fcfa(recentCite.minPrice)}
               </span>
@@ -273,14 +270,14 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
         {programmeRecent && (
           <Link
             href="/programme"
-            className="flex items-center gap-3 border-t border-b border-line-3 py-3 active:opacity-60"
+            className="flex items-center gap-3 border-t border-line-3 p-4 active:bg-surface-3"
           >
-            <span className="grid h-[46px] w-[46px] flex-none place-items-center rounded-[14px] bg-surface text-teal-dark">
+            <span className="grid h-11 w-11 flex-none place-items-center rounded-[14px] bg-[#e8f8f6] text-[#0d9488]">
               <Icon name="cal" size={20} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[14.5px] font-bold">Programme {classe} publié</span>
-              <span className="mt-0.5 block text-[12.5px] text-slate-light">
+              <span className="block text-[14px] font-bold">Programme {classe} publié</span>
+              <span className="mt-0.5 block text-[13px] text-slate-light">
                 Mis à jour le {latestProgramme!.publishedAt.toLocaleDateString("fr-FR")}
               </span>
             </span>
@@ -288,16 +285,17 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
           </Link>
         )}
       </div>
+      </section>
 
-      <div className="px-5 pb-7 pt-5">
+      <div className="px-5 pb-7 pt-7">
         {/* After the screen has done its job, never before it. */}
         <OuvrirDansSafari />
         {/* One request at a time, the most useful first (see InvitationAccueil). */}
         <InvitationAccueil connecte={!!session?.user} />
 
         <ShareSheet>
-          <button className="press-scale flex h-[52px] w-full items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-teal bg-white text-[15px] font-bold text-teal-dark active:bg-teal-tint-soft">
-            <Icon name="share" size={19} strokeWidth={1.9} />
+          <button className={`press-scale flex h-[50px] w-full items-center justify-center gap-2 text-[14px] font-bold text-teal-dark active:bg-teal-tint-soft ${CARTE} !rounded-[14px]`}>
+            <Icon name="share" size={18} strokeWidth={1.9} />
             Partager Campusly
           </button>
         </ShareSheet>

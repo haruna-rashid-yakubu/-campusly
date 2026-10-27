@@ -6,6 +6,17 @@
 
 export const ICONE_EMOJI = {
   "🍽": "utensils",
+  "🍛": "bowl",
+  "🍜": "bowl",
+  "🍲": "pot",
+  "🍝": "utensils",
+  "🥣": "wheat",
+  "🍳": "egg",
+  "🥚": "egg",
+  "🥛": "milk",
+  "🍶": "milk",
+  "🐟": "fish",
+  "🥩": "beef",
   "🥡": "takeaway",
   "🛵": "scooter",
   "🍗": "drumstick",

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { TexteIcone } from "@/components/TexteIcone";
+import { CARTE, TitreSection } from "@/components/TitreSection";
 
 /*
  * The shops, shown big on the home screen, one card at a time: its own photo,
@@ -64,7 +65,10 @@ export function AlaUne({ cartes }: { cartes: CarteUne[] }) {
   };
 
   return (
-    <div className="pt-5">
+    <section className="mt-7">
+      <div className="px-5">
+        <TitreSection>À la une</TitreSection>
+      </div>
       <div
         ref={rail}
         onScroll={surDefilement}
@@ -76,7 +80,7 @@ export function AlaUne({ cartes }: { cartes: CarteUne[] }) {
           <div key={c.href} className="w-full flex-none snap-center px-5">
             <Lien
               href={c.href}
-              className="press-scale relative block overflow-hidden rounded-[24px] bg-ink !text-white shadow-[0_10px_28px_rgba(15,23,42,.22)]"
+              className={`press-scale relative block overflow-hidden !text-ink ${CARTE}`}
             >
               <div className="relative aspect-[16/9] w-full">
                 <Image
@@ -88,25 +92,19 @@ export function AlaUne({ cartes }: { cartes: CarteUne[] }) {
                   className="object-cover"
                 />
                 {!c.affiche && (
-                  <>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    <span className="absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-[11.5px] font-extrabold uppercase tracking-wide text-[#c2185b] shadow">
-                      <TexteIcone texte={c.badge} size={14} />
-                    </span>
-                    <div className="absolute inset-x-0 bottom-0 p-4">
-                      <div className="text-[24px] font-extrabold leading-none tracking-tight">{c.nom}</div>
-                      <div className="mt-1 truncate text-[13.5px] font-semibold text-white/90">{c.ligne}</div>
-                    </div>
-                  </>
+                  <span className="absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-[11.5px] font-extrabold uppercase tracking-wide text-teal-dark shadow">
+                    <TexteIcone texte={c.badge} size={14} />
+                  </span>
                 )}
               </div>
-              <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="flex items-center justify-between gap-3 p-4">
                 <div className="min-w-0">
-                  {c.affiche && <div className="truncate text-[12px] font-bold uppercase tracking-wide text-[#5eead4]"><TexteIcone texte={c.badge} size={14} /></div>}
-                  <div className="truncate text-[15px] font-extrabold">{c.prix}</div>
-                  {c.offre && <div className="mt-0.5 flex items-center gap-1 truncate text-[12.5px] font-semibold text-[#5eead4]"><Icon name="truck" size={14} strokeWidth={2} className="flex-none" />{c.offre}</div>}
+                  {c.affiche && <div className="truncate text-[11.5px] font-extrabold uppercase tracking-wide text-teal-dark"><TexteIcone texte={c.badge} size={14} /></div>}
+                  <div className="truncate text-[16px] font-extrabold">{c.affiche ? c.prix : c.nom}</div>
+                  {!c.affiche && <div className="mt-0.5 truncate text-[13px] text-slate">{c.ligne} · {c.prix}</div>}
+                  {c.offre && <div className="mt-0.5 flex items-center gap-1 truncate text-[13px] font-semibold text-teal-dark"><Icon name="truck" size={14} strokeWidth={2} className="flex-none" />{c.offre}</div>}
                 </div>
-                <span className="flex flex-none items-center gap-1 rounded-full bg-white px-4 py-2.5 text-[14px] font-extrabold text-ink">
+                <span className="flex h-10 flex-none items-center gap-1 rounded-[14px] bg-ink px-4 text-[14px] font-bold text-white">
                   {c.bouton}
                   <Icon name="right" size={15} strokeWidth={2.6} />
                 </span>
@@ -125,6 +123,6 @@ export function AlaUne({ cartes }: { cartes: CarteUne[] }) {
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }
