@@ -82,7 +82,7 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
   return (
     <>
     {/* Outside the page's own stacking, so its bats fly over the tab bar too. */}
-    {nuit && <Halloween apercu={apercu !== null} />}
+    {nuit && <Halloween apercu={apercu !== null} essaim={decor?.essaim ?? false} />}
     {sport && <IntroSport apercu={parametres.apercu === "sport"} />}
     <div className="relative isolate min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
       {decor && <DecorSaison decor={decor} />}

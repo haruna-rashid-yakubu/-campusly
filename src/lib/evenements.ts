@@ -144,13 +144,26 @@ const HALLOWEEN: Decor = {
   couleur: "#f97316",
   fond: "radial-gradient(circle at 82% 26%, rgba(249,115,22,.35), transparent 40%), linear-gradient(180deg, #07040d 0%, #1c0f2e 45%, #3b1a4a 75%, rgba(255,255,255,0) 100%)",
   ruban: { texte: "🎃 Joyeux Halloween… si tu oses 👻", fond: "#07040d", encre: "#fb923c" },
+  essaim: true,
+};
+
+/*
+ * The days before: the same night sky and passing bats, but no swarm, so the
+ * 31st keeps its surprise and a student checking a timetable is not made to
+ * sit through a black screen every morning.
+ */
+const AVANT_HALLOWEEN: Decor = {
+  ...HALLOWEEN,
+  ruban: { texte: "👻 Halloween arrive… le 31 octobre", fond: "#07040d", encre: "#fb923c" },
+  essaim: false,
 };
 
 const SAISONS: { debut: string; fin: string; decor: Decor }[] = [
   { debut: "2026-10-31", fin: "2026-10-31", decor: HALLOWEEN },
+  { debut: "2026-10-28", fin: "2026-10-30", decor: AVANT_HALLOWEEN },
   {
     debut: "2026-10-20",
-    fin: "2026-10-30",
+    fin: "2026-10-27",
     decor: { motif: "ruban", couleur: "#e8457c", fond: "linear-gradient(180deg, #fde4ee 0%, #fff4f8 60%, rgba(255,255,255,0) 100%)" },
   },
 ];
@@ -167,7 +180,7 @@ export function introDuJour(maintenant = new Date()) {
 
 /* A season shown ahead of its day, for checking it on a real phone: /?apercu=halloween. */
 export function decorEnApercu(nom: string | undefined) {
-  return nom === "halloween" ? HALLOWEEN : null;
+  return nom === "halloween" ? HALLOWEEN : nom === "avant-halloween" ? AVANT_HALLOWEEN : null;
 }
 
 export function decorDuJour(maintenant = new Date()) {
@@ -182,6 +195,9 @@ export function decorDuJour(maintenant = new Date()) {
  */
 const COULEURS_DU_JOUR: Record<string, { nom: string; barre: string }> = {
   "2026-10-21": { nom: "rose", barre: "#e8457c" },
+  "2026-10-28": { nom: "halloween", barre: "#07040d" },
+  "2026-10-29": { nom: "halloween", barre: "#07040d" },
+  "2026-10-30": { nom: "halloween", barre: "#07040d" },
   "2026-10-31": { nom: "halloween", barre: "#07040d" },
 };
 

@@ -40,27 +40,18 @@ const ESSAIM = [
   { x: 190, y: 480, r: 140, t: 104, d: 0.48 }, { x: -20, y: 420, r: 180, t: 85, d: 0.3 },
 ];
 
-const CLE = "campusly_essaim";
-
-export function Halloween({ apercu = false }: { apercu?: boolean }) {
-  // The swarm is in the page from the start but hidden; it plays once the
-  // class goes on, so a second opening the same day never flashes it.
+export function Halloween({ apercu = false, essaim = true }: { apercu?: boolean; essaim?: boolean }) {
+  // The swarm is in the page from the start but hidden, and plays once the
+  // class goes on. On the day itself it plays on every opening: students
+  // open the app again to film it. The days before have no swarm at all.
   const intro = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Shown ahead of the day, the whole app takes the day's orange too.
     if (apercu) document.documentElement.setAttribute("data-couleur", "halloween");
-    const jour = new Date(Date.now() + 36e5).toISOString().slice(0, 10);
-    let dejaVu = false;
-    try {
-      dejaVu = !apercu && localStorage.getItem(CLE) === jour;
-      localStorage.setItem(CLE, jour);
-    } catch {
-      // Without storage the swarm simply plays on every opening.
-    }
-    if (!dejaVu) intro.current?.classList.add("hw-joue");
+    if (essaim) intro.current?.classList.add("hw-joue");
     if (apercu) return () => document.documentElement.removeAttribute("data-couleur");
-  }, [apercu]);
+  }, [apercu, essaim]);
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[45] overflow-hidden" aria-hidden="true">
@@ -70,7 +61,7 @@ export function Halloween({ apercu = false }: { apercu?: boolean }) {
       <div className="hw-retour absolute left-0 top-0 w-[64px]">
         <ChauveSouris batt=".24s" className="w-full" />
       </div>
-      <div ref={intro} className="hw-intro absolute inset-0">
+      <div ref={intro} className="hw-intro absolute inset-0" hidden={!essaim}>
           <div className="hw-intro-titre absolute inset-x-0 top-[46%] text-center text-[30px] font-extrabold tracking-tight text-[#f97316]">
             <span className="inline-flex items-center gap-2.5">
               Joyeux Halloween

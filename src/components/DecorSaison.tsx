@@ -11,6 +11,8 @@ export type Decor = {
   couleur: string;
   // A line of its own above the carousel, for a season that has something to say.
   ruban?: { texte: string; fond: string; encre: string };
+  // Halloween only: the swarm that opens the app, kept for the day itself.
+  essaim?: boolean;
 };
 
 function Ruban({ className, couleur }: { className: string; couleur: string }) {
