@@ -160,10 +160,10 @@ const AVANT_HALLOWEEN: Decor = {
 
 const SAISONS: { debut: string; fin: string; decor: Decor }[] = [
   { debut: "2026-10-31", fin: "2026-10-31", decor: HALLOWEEN },
-  { debut: "2026-10-28", fin: "2026-10-30", decor: AVANT_HALLOWEEN },
+  { debut: "2026-10-27", fin: "2026-10-30", decor: AVANT_HALLOWEEN },
   {
     debut: "2026-10-20",
-    fin: "2026-10-27",
+    fin: "2026-10-26",
     decor: { motif: "ruban", couleur: "#e8457c", fond: "linear-gradient(180deg, #fde4ee 0%, #fff4f8 60%, rgba(255,255,255,0) 100%)" },
   },
 ];
@@ -195,6 +195,7 @@ export function decorDuJour(maintenant = new Date()) {
  */
 const COULEURS_DU_JOUR: Record<string, { nom: string; barre: string }> = {
   "2026-10-21": { nom: "rose", barre: "#e8457c" },
+  "2026-10-27": { nom: "halloween", barre: "#07040d" },
   "2026-10-28": { nom: "halloween", barre: "#07040d" },
   "2026-10-29": { nom: "halloween", barre: "#07040d" },
   "2026-10-30": { nom: "halloween", barre: "#07040d" },
