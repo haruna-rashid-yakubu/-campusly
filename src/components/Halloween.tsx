@@ -18,11 +18,21 @@ export function ChauveSouris({ className = "", batt }: { className?: string; bat
       style={batt ? ({ "--batt": batt } as React.CSSProperties) : undefined}
       aria-hidden="true"
     >
-      <path className="hw-aile-g" fill="#07040d" d="M56 24C46 10 26 4 2 10c8 4 12 10 12 18 5-4 11-4 15 1 3-4 9-5 13-1 2-4 8-5 14-4z" />
-      <path className="hw-aile-d" fill="#07040d" d="M64 24c10-14 30-20 54-14-8 4-12 10-12 18-5-4-11-4-15 1-3-4-9-5-13-1-2-4-8-5-14-4z" />
-      <path fill="#07040d" d="M53 16l2-8 4 6h2l4-6 2 8c3 3 4 8 3 13-2 8-6 13-8 15-2-2-6-7-8-15-1-5 0-10 3-13z" />
-      <circle cx="57" cy="20" r="1.4" fill="#ff3b1f" />
-      <circle cx="63" cy="20" r="1.4" fill="#ff3b1f" />
+      <path
+        className="hw-aile-g"
+        fill="#05030a"
+        d="M56 22C46 12 30 6 4 9c6 3 9 8 10 14 4-3 9-3 12 1 2-4 7-5 11-2 1-4 6-6 10-4 2-3 6-3 9-1z"
+      />
+      <path className="hw-aile-g" fill="none" stroke="#2a1f3a" strokeWidth=".8" d="M54 22 14 23M52 22 26 24M50 22 37 22" />
+      <path
+        className="hw-aile-d"
+        fill="#05030a"
+        d="M64 22c10-10 26-16 52-13-6 3-9 8-10 14-4-3-9-3-12 1-2-4-7-5-11-2-1-4-6-6-10-4-2-3-6-3-9-1z"
+      />
+      <path className="hw-aile-d" fill="none" stroke="#2a1f3a" strokeWidth=".8" d="M66 22l40 1M68 22l26 2M70 22h13" />
+      <path fill="#05030a" d="M54 15l1-9 4 6h2l4-6 1 9c3 3 4 8 3 13-2 9-5 14-8 17-3-3-6-8-8-17-1-5 0-10 3-13z" />
+      <circle className="hw-oeil" cx="57.5" cy="19.5" r="1.3" fill="#ff2a12" />
+      <circle className="hw-oeil" cx="62.5" cy="19.5" r="1.3" fill="#ff2a12" />
     </svg>
   );
 }

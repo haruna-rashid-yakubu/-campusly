@@ -236,6 +236,23 @@ html[data-couleur="rose"] {
 .hw-brume { animation: hw-brume 14s linear infinite; }
 @keyframes hw-brume { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
+
+/* Halloween night, the scarier details. */
+.hw-etoile { animation: hw-etoile 3.6s ease-in-out infinite; }
+@keyframes hw-etoile { 0%, 100% { opacity: .15; } 50% { opacity: .95; } }
+.hw-nuage { left: -170px; animation: hw-nuage 22s linear infinite; }
+@keyframes hw-nuage { 0% { transform: translateX(0); } 100% { transform: translateX(560px); } }
+.hw-flash { opacity: 0; animation: hw-flash 9s linear infinite; }
+@keyframes hw-flash { 0%, 61%, 63.5%, 65%, 100% { opacity: 0; } 62% { opacity: .55; } 64% { opacity: .35; } }
+.hw-eclair { opacity: 0; filter: drop-shadow(0 0 8px #c4b5fd); animation: hw-eclair 9s linear infinite; }
+@keyframes hw-eclair { 0%, 61%, 63%, 63.6%, 65%, 100% { opacity: 0; } 61.6%, 64% { opacity: 1; } }
+.hw-yeux { opacity: 0; filter: drop-shadow(0 0 4px #ff2a12); animation: hw-ouvre 7s ease-in-out infinite; }
+@keyframes hw-ouvre { 0%, 30%, 72%, 100% { opacity: 0; transform: scaleY(.1); } 36%, 52%, 58%, 66% { opacity: 1; transform: scaleY(1); } 55% { opacity: 1; transform: scaleY(.1); } }
+.hw-oeil { animation: hw-oeil 2.2s ease-in-out infinite; }
+@keyframes hw-oeil { 0%, 100% { opacity: .65; } 50% { opacity: 1; } }
+.hw-brume-inverse { animation: hw-brume-inverse 18s linear infinite; }
+@keyframes hw-brume-inverse { 0% { transform: translateX(0); } 100% { transform: translateX(50%); } }
+
 @media (prefers-reduced-motion: reduce) {
   [class*="hw-"], .hw-bat * { animation: none !important; }
   .hw-intro, .hw-traverse, .hw-retour { display: none; }
