@@ -37,8 +37,8 @@ const CIBLES = [
  */
 const BROUILLONS: Record<string, { titre: string; corps: string }> = {
   "/pressing": {
-    titre: "Tes habits veulent te parler 👕",
-    corps: "« On n\u2019en peut plus », signé : la pile dans le coin de la chambre. Campusly Pressing s\u2019en occupe.",
+    titre: "Ton linge lavé sans bouger 👕",
+    corps: "On le récupère, on le lave, on te le livre sur le campus. 500 F les couleurs, 800 F les blancs : commande ici.",
   },
   "/logements": {
     titre: "Tu cherches une chambre près du campus ? 🏠",
@@ -66,8 +66,26 @@ const BROUILLONS: Record<string, { titre: string; corps: string }> = {
   },
 };
 
+// Each shop in its own words: what it sells, how it reaches the student.
+const BOUTIQUES: Record<string, { titre: string; corps: string }> = {
+  "j-rich": {
+    titre: "Poulet pané bien croustillant 🍗",
+    corps: "Poulet pané, fried rice et glaces chez J-Rich, en face du campus. Plats dès 1 000 F, livrés là où tu es.",
+  },
+  "la-bergere": {
+    titre: "Une Bergère bien fraîche ? 🥛",
+    corps: "Fraise, menthe ou cacao, livrée gratuitement sur le campus. Commande en quelques secondes.",
+  },
+  bronuts: {
+    titre: "Vendredi, c\u2019est donuts 🍩",
+    corps: "Compose ton pack Bronuts et fais-toi livrer sur le campus vendredi midi. Commande avant la limite !",
+  },
+};
+
 function brouillon(cible: string, vendeurs: { nom: string; slug: string }[]) {
   const boutique = vendeurs.find((v) => cible === `/commander/${v.slug}`);
+  if (boutique?.slug === "pressing") return BROUILLONS["/pressing"];
+  if (boutique && BOUTIQUES[boutique.slug]) return BOUTIQUES[boutique.slug];
   if (boutique)
     return {
       titre: `Envie de ${boutique.nom} ? 🛍️`,
