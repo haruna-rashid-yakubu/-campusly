@@ -20,6 +20,8 @@ type Evenement = {
   detail: string;
   // The day's colour on the home screen, with the line shown above the carousel.
   ruban?: { couleur: string; texte: string };
+  // In place of the day: an election poster says what it is, not when.
+  badge?: string;
 };
 
 const EVENEMENTS: Evenement[] = [
@@ -34,6 +36,24 @@ const EVENEMENTS: Evenement[] = [
     depuis: "2026-10-20",
     detail: "Contre le cancer du sein",
     ruban: { couleur: "#e8457c", texte: "🎀 Aujourd'hui, on vient en rose" },
+  },
+  /*
+   * A candidate's poster in a student election. Any candidate who asks gets
+   * the same card on the same terms; the day's line and its opening stay
+   * neutral and only call to vote.
+   */
+  {
+    id: "elections-as-nana-hamgue",
+    nom: "Nana Hamgue Brayan",
+    ligne: "Candidat à la présidence de l'Association sportive",
+    image: "/evenements/elections-as-une.jpg",
+    affiche: "/evenements/elections-as.jpg",
+    jour: "2026-10-27",
+    jourLabel: "mardi 27 octobre",
+    depuis: "2026-10-27",
+    detail: "Nana Hamgue Brayan · BME 3",
+    badge: "🗳️ Élections · Candidat",
+    ruban: { couleur: "#b45309", texte: "🗳️ Élections de l'Association sportive : fais entendre ta voix !" },
   },
 ];
 
@@ -57,7 +77,7 @@ export function cartesEvenements(maintenant = new Date()): CarteUne[] {
     ligne: e.ligne,
     prix: e.detail,
     offre: null,
-    badge: e.jour === jour ? "Aujourd'hui" : e.jourLabel,
+    badge: e.badge ?? (e.jour === jour ? "Aujourd'hui" : e.jourLabel),
     bouton: "L'affiche",
     affiche: true,
   }));
@@ -134,6 +154,16 @@ const SAISONS: { debut: string; fin: string; decor: Decor }[] = [
     decor: { motif: "ruban", couleur: "#e8457c", fond: "linear-gradient(180deg, #fde4ee 0%, #fff4f8 60%, rgba(255,255,255,0) 100%)" },
   },
 ];
+
+/*
+ * Days the app opens on a short animation of their own, once per phone and
+ * per day. Kept neutral: on an election day it calls to vote, for no one.
+ */
+const INTROS: Record<string, "sport"> = { "2026-10-27": "sport" };
+
+export function introDuJour(maintenant = new Date()) {
+  return INTROS[jourWAT(maintenant)] ?? null;
+}
 
 /* A season shown ahead of its day, for checking it on a real phone: /?apercu=halloween. */
 export function decorEnApercu(nom: string | undefined) {

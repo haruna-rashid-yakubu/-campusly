@@ -240,3 +240,24 @@ html[data-couleur="rose"] {
   [class*="hw-"], .hw-bat * { animation: none !important; }
   .hw-intro, .hw-traverse, .hw-retour { display: none; }
 }
+
+/* The sports association's election day: balls bounce up, then a call to vote. */
+.sp-intro { display: none; }
+.sp-intro.sp-joue { display: block; animation: sp-fond 3.2s ease-out forwards; }
+@keyframes sp-fond {
+  0% { background: rgba(120, 53, 15, .94); }
+  70% { background: rgba(120, 53, 15, .85); }
+  99% { background: rgba(120, 53, 15, 0); visibility: visible; }
+  100% { background: rgba(120, 53, 15, 0); visibility: hidden; }
+}
+.sp-ballon { opacity: 0; animation: sp-rebond 2.6s cubic-bezier(.25,.6,.4,1) forwards; animation-delay: var(--d); }
+@keyframes sp-rebond {
+  0% { opacity: 1; transform: translateY(110%) rotate(0); }
+  35% { transform: translateY(var(--h)) rotate(200deg); }
+  60% { transform: translateY(calc(var(--h) * .45)) rotate(320deg); }
+  80% { opacity: 1; transform: translateY(calc(var(--h) * .7)) rotate(400deg); }
+  100% { opacity: 0; transform: translateY(calc(var(--h) * .6)) rotate(460deg); }
+}
+.sp-titre { opacity: 0; animation: sp-titre 3s ease-out forwards; animation-delay: .3s; }
+@keyframes sp-titre { 0% { opacity: 0; transform: scale(.85); } 20% { opacity: 1; transform: scale(1.04); } 30%, 75% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.1); } }
+@media (prefers-reduced-motion: reduce) { .sp-intro { display: none !important; } }

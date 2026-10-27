@@ -23,7 +23,8 @@ import { SondageVote } from "@/components/SondageVote";
 import { getMaReponse, getResultats, getSondageOuvert } from "@/lib/sondage";
 import { boutiquesRecentes, cartesALaUne, getVendeurs } from "@/lib/vendeurs";
 import { AlaUne } from "@/components/AlaUne";
-import { cartesAnnonces, cartesEvenements, decorDuJour, decorEnApercu, rubanDuJour } from "@/lib/evenements";
+import { cartesAnnonces, cartesEvenements, decorDuJour, decorEnApercu, introDuJour, rubanDuJour } from "@/lib/evenements";
+import { IntroSport } from "@/components/IntroSport";
 import { Halloween } from "@/components/Halloween";
 import { DecorSaison } from "@/components/DecorSaison";
 import { MaJournee } from "@/components/MaJournee";
@@ -61,10 +62,12 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
   // The pressing is a Campusly service, not a shop in the list, but it has its own card here.
   // A campus event of the day goes first: it is gone tomorrow, the shops are not.
   const cartesUne = [...cartesEvenements(), ...cartesAnnonces(), ...(await cartesALaUne(await getVendeurs({ inclureInternes: true })))];
-  const apercu = decorEnApercu((await searchParams).apercu);
+  const parametres = await searchParams;
+  const apercu = decorEnApercu(parametres.apercu);
   const decor = apercu ?? decorDuJour();
   const ruban = rubanDuJour() ?? (decor?.ruban ? { couleur: decor.ruban.fond, texte: decor.ruban.texte, encre: decor.ruban.encre } : null);
   const nuit = decor?.motif === "halloween";
+  const sport = parametres.apercu === "sport" || introDuJour() === "sport";
 
   // The open poll is answered right here, first thing under the greeting, and
   // stays with its results once answered, so the screen everyone lands on
@@ -79,6 +82,7 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
     <>
     {/* Outside the page's own stacking, so its bats fly over the tab bar too. */}
     {nuit && <Halloween apercu={apercu !== null} />}
+    {sport && <IntroSport apercu={parametres.apercu === "sport"} />}
     <div className="relative isolate min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
       {decor && <DecorSaison decor={decor} />}
       <div
