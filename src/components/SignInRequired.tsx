@@ -23,7 +23,7 @@ export function SignInRequired({ backHref, title }: { backHref: string; title?: 
         </p>
         <button
           disabled={pending}
-          onClick={() => startTransition(() => googleSignIn())}
+          onClick={() => startTransition(() => googleSignIn(window.location.pathname + window.location.search))}
           className="press-scale mx-auto mt-6 flex h-[54px] w-full max-w-xs items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-line-4 bg-white text-[15.5px] font-bold disabled:opacity-60 active:bg-surface-3"
         >
           <GoogleLogo size={20} />

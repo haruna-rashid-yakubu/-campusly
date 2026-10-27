@@ -130,8 +130,11 @@ async function porteeModeration(): Promise<string[] | null> {
   return rows.map((r) => r.label);
 }
 
-export async function googleSignIn() {
-  await signIn("google");
+// Back to the page the student signed in from: a path of this site only,
+// never another domain nor an /api route.
+export async function googleSignIn(apres?: string) {
+  const sur = typeof apres === "string" && apres.startsWith("/") && !apres.startsWith("//") && !apres.startsWith("/api/");
+  await signIn("google", { redirectTo: sur ? apres : "/" });
 }
 
 export async function appSignOut() {

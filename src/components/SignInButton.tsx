@@ -23,7 +23,7 @@ export function SignInButton({
   return (
     <button
       disabled={pending}
-      onClick={() => startTransition(() => googleSignIn())}
+      onClick={() => startTransition(() => googleSignIn(window.location.pathname + window.location.search))}
       className={
         className ??
         "inline-flex items-center gap-1.5 text-[13px] font-bold text-teal-dark underline-offset-2 active:underline disabled:opacity-60"

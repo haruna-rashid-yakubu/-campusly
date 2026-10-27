@@ -32,7 +32,7 @@ export function Gated({
         </p>
         <button
           disabled={pending}
-          onClick={() => startTransition(() => googleSignIn())}
+          onClick={() => startTransition(() => googleSignIn(window.location.pathname + window.location.search))}
           className="press-scale mt-4 flex h-[54px] w-full items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-line-4 bg-white text-[15.5px] font-bold disabled:opacity-60 active:bg-surface-3"
         >
           <GoogleLogo size={20} />
