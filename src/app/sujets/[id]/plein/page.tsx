@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { FullscreenViewer } from "@/components/FullscreenViewer";
 import { getSubjectById } from "@/lib/data";
+import { lienFichier } from "@/lib/fichiers";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,9 @@ export default async function SujetPleinPage({
   if (!subject) notFound();
 
   const isCorrection = mode === "correction";
-  const fileUrl = isCorrection ? subject.correctionUrl : subject.fileUrl;
+  const fileUrl = isCorrection
+    ? lienFichier(subject.id, subject.correctionUrl, true)
+    : lienFichier(subject.id, subject.fileUrl);
   const title = isCorrection ? `${subject.matiere} — Corrigé` : subject.matiere;
 
   return (

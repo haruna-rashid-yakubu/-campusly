@@ -5,6 +5,7 @@ import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
 import { downloadFile } from "@/lib/download";
 import { ZoomViewer } from "@/components/ZoomViewer";
+import { lienApercu } from "@/lib/fichiers";
 
 export function FullscreenViewer({
   title,
@@ -68,7 +69,7 @@ export function FullscreenViewer({
           )}
           {fileUrl && isPdf && (
             <iframe
-              src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
+              src={`https://docs.google.com/viewer?url=${encodeURIComponent(lienApercu(fileUrl))}&embedded=true`}
               title={title}
               className="h-full w-full rounded-lg border-0 bg-white"
             />

@@ -14,6 +14,7 @@ import {
   getUserSubmissions,
 } from "@/lib/data";
 import { filiereDeClasse, niveauDeClasse } from "@/lib/utils";
+import { lienFichier } from "@/lib/fichiers";
 
 export const metadata: Metadata = {
   title: "Anciens sujets d'examens",
@@ -164,7 +165,7 @@ export default async function SujetsPage({
                 <DownloadButton
                   compact
                   label={`Télécharger ${s.matiere}`}
-                  fileUrl={s.fileUrl}
+                  fileUrl={lienFichier(s.id, s.fileUrl)}
                   onRecord={incrementSubjectDownload.bind(null, s.id)}
                 />
               </div>

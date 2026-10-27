@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { proposeSubject } from "@/lib/actions";
 import { getPreferredClasse, getSubjectFacets, getSubjectsPage, getUserSubmissions } from "@/lib/data";
 import { filiereDeClasse, niveauDeClasse } from "@/lib/utils";
+import { masquerFichiers } from "@/lib/fichiers";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     filiere: filiere ?? null,
     niveauPrefere: niveauPrefere ?? null,
-    subjects: page.subjects,
+    subjects: page.subjects.map(masquerFichiers),
     total: page.total,
     offset: debut,
     limit: taille,

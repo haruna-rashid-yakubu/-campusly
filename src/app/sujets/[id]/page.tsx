@@ -9,6 +9,7 @@ import { ShareSheet } from "@/components/ShareSheet";
 import { ToastButton } from "@/components/ToastButton";
 import { getRelatedSubjects, getSubjectById } from "@/lib/data";
 import { incrementSubjectDownload } from "@/lib/actions";
+import { lienFichier } from "@/lib/fichiers";
 
 export const dynamic = "force-dynamic";
 
@@ -76,8 +77,8 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
           matiere={subject.matiere}
           filiere={subject.filiere}
           niveau={subject.niveau}
-          fileUrl={subject.fileUrl}
-          correctionUrl={subject.correctionUrl}
+          fileUrl={lienFichier(subject.id, subject.fileUrl)}
+          correctionUrl={lienFichier(subject.id, subject.correctionUrl, true)}
           onRecord={incrementSubjectDownload.bind(null, subject.id)}
         />
 
