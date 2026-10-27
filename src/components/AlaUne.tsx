@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
+import { TexteIcone } from "@/components/TexteIcone";
 
 /*
  * The shops, shown big on the home screen, one card at a time: its own photo,
@@ -90,7 +91,7 @@ export function AlaUne({ cartes }: { cartes: CarteUne[] }) {
                   <>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <span className="absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-[11.5px] font-extrabold uppercase tracking-wide text-[#c2185b] shadow">
-                      {c.badge}
+                      <TexteIcone texte={c.badge} size={14} />
                     </span>
                     <div className="absolute inset-x-0 bottom-0 p-4">
                       <div className="text-[24px] font-extrabold leading-none tracking-tight">{c.nom}</div>
@@ -101,7 +102,7 @@ export function AlaUne({ cartes }: { cartes: CarteUne[] }) {
               </div>
               <div className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">
-                  {c.affiche && <div className="truncate text-[12px] font-bold uppercase tracking-wide text-[#5eead4]">{c.badge}</div>}
+                  {c.affiche && <div className="truncate text-[12px] font-bold uppercase tracking-wide text-[#5eead4]"><TexteIcone texte={c.badge} size={14} /></div>}
                   <div className="truncate text-[15px] font-extrabold">{c.prix}</div>
                   {c.offre && <div className="mt-0.5 flex items-center gap-1 truncate text-[12.5px] font-semibold text-[#5eead4]"><Icon name="truck" size={14} strokeWidth={2} className="flex-none" />{c.offre}</div>}
                 </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { Icon } from "@/components/icons";
 
 /*
  * Halloween's moving parts. A bat with ears, red eyes and two wings that beat
@@ -71,7 +72,10 @@ export function Halloween({ apercu = false }: { apercu?: boolean }) {
       </div>
       <div ref={intro} className="hw-intro absolute inset-0">
           <div className="hw-intro-titre absolute inset-x-0 top-[46%] text-center text-[30px] font-extrabold tracking-tight text-[#f97316]">
-            Joyeux Halloween 🎃
+            <span className="inline-flex items-center gap-2.5">
+              Joyeux Halloween
+              <Icon name="pumpkin" size={30} strokeWidth={2} />
+            </span>
           </div>
           {ESSAIM.map((b, i) => (
             <div

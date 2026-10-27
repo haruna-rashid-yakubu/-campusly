@@ -44,6 +44,15 @@ export const ICONE_EMOJI = {
   "⭐": "star",
   "✨": "star",
   "🏷": "tag",
+  "🗳": "ballot",
+  "🎃": "pumpkin",
+  "👻": "ghost",
+  "⚽": "soccer",
+  "🏀": "basketball",
+  "🏐": "volleyball",
+  "🎾": "tennis",
+  "🏓": "pingpong",
+  "🏸": "shuttlecock",
 } as const;
 
 export type IconeEmoji = (typeof ICONE_EMOJI)[keyof typeof ICONE_EMOJI];

@@ -1,5 +1,5 @@
 import { Icon, type IconName } from "@/components/icons";
-import { separerEmoji } from "@/lib/emoji";
+import { sansEmoji, separerEmoji } from "@/lib/emoji";
 
 /*
  * Text that may open on an emoji ("🛵 Livraison 500 F"): drawn with the
@@ -19,7 +19,8 @@ export function TexteIcone({
   return (
     <span className={`inline-flex items-center gap-1.5 ${className}`}>
       {icone && <Icon name={icone as IconName} size={size} strokeWidth={1.9} className="flex-none" />}
-      <span>{reste}</span>
+      {/* Any emoji left further on ("… si tu oses 👻") is dropped. */}
+      <span>{sansEmoji(reste)}</span>
     </span>
   );
 }
