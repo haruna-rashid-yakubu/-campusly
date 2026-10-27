@@ -30,9 +30,69 @@ const CIBLES = [
   { url: "/", label: "Accueil" },
 ] as const;
 
-const TITRE = "Tes habits veulent te parler 👕";
-const CORPS =
-  "« On n\u2019en peut plus », signé : la pile dans le coin de la chambre. Campusly Pressing s\u2019en occupe.";
+/*
+ * A first draft for each place the tap can open, so that changing the target
+ * also changes what the notification says. It stays a draft: edited text is
+ * never replaced, only a draft nobody has touched yet.
+ */
+const BROUILLONS: Record<string, { titre: string; corps: string }> = {
+  "/pressing": {
+    titre: "Ton linge lavé sans bouger 👕",
+    corps: "On le récupère, on le lave, on te le livre sur le campus. 500 F les couleurs, 800 F les blancs : commande ici.",
+  },
+  "/logements": {
+    titre: "Tu cherches une chambre près du campus ? 🏠",
+    corps: "Des logements vérifiés autour du campus, avec photos et prix. Regarde avant qu\u2019ils partent.",
+  },
+  "/sujets": {
+    titre: "Les examens approchent 📚",
+    corps: "Des anciens sujets classés par filière et par matière t\u2019attendent sur Campusly. Révise avec les vrais sujets.",
+  },
+  "/programme": {
+    titre: "Ton programme de la semaine est prêt 📅",
+    corps: "Cours, salles et horaires : tout est sur Campusly. Ouvre-le pour voir ta semaine.",
+  },
+  "/": {
+    titre: "Quoi de neuf sur Campusly ? 👋",
+    corps: "Nouveaux sujets, boutiques et bons plans du campus : passe faire un tour.",
+  },
+  "/commander": {
+    titre: "Une petite faim ? 🍔",
+    corps: "Commande à manger depuis Campusly et fais-toi livrer sur le campus.",
+  },
+  whatsapp: {
+    titre: "Une offre rien que pour toi 📲",
+    corps: "Touche cette notification pour en profiter directement sur WhatsApp.",
+  },
+};
+
+// Each shop in its own words: what it sells, how it reaches the student.
+const BOUTIQUES: Record<string, { titre: string; corps: string }> = {
+  "j-rich": {
+    titre: "Poulet pané bien croustillant 🍗",
+    corps: "Poulet pané, fried rice et glaces chez J-Rich, en face du campus. Plats dès 1 000 F, livrés là où tu es.",
+  },
+  "la-bergere": {
+    titre: "Une Bergère bien fraîche ? 🥛",
+    corps: "Fraise, menthe ou cacao, livrée gratuitement sur le campus. Commande en quelques secondes.",
+  },
+  bronuts: {
+    titre: "Vendredi, c\u2019est donuts 🍩",
+    corps: "Compose ton pack Bronuts et fais-toi livrer sur le campus vendredi midi. Commande avant la limite !",
+  },
+};
+
+function brouillon(cible: string, vendeurs: { nom: string; slug: string }[]) {
+  const boutique = vendeurs.find((v) => cible === `/commander/${v.slug}`);
+  if (boutique?.slug === "pressing") return BROUILLONS["/pressing"];
+  if (boutique && BOUTIQUES[boutique.slug]) return BOUTIQUES[boutique.slug];
+  if (boutique)
+    return {
+      titre: `Envie de ${boutique.nom} ? 🛍️`,
+      corps: `Commande ${boutique.nom} en quelques secondes sur Campusly, sans te déplacer.`,
+    };
+  return BROUILLONS[cible] ?? BROUILLONS["/"];
+}
 
 /*
  * Shops get their own targets, but only once they are open to students: a
@@ -44,8 +104,8 @@ export function AnnonceATous({
 }: {
   vendeurs?: { nom: string; slug: string; actif: boolean }[];
 }) {
-  const [titre, setTitre] = useState(TITRE);
-  const [corps, setCorps] = useState(CORPS);
+  const [titre, setTitre] = useState(BROUILLONS["/pressing"].titre);
+  const [corps, setCorps] = useState(BROUILLONS["/pressing"].corps);
   const [cible, setCible] = useState<string>("/pressing");
   // "WhatsApp" sends the tap to a conversation with this number, message already typed.
   const [numero, setNumero] = useState("");
@@ -123,6 +183,11 @@ export function AnnonceATous({
                 <button
                   key={c.url}
                   onClick={() => {
+                    // The draft follows the target, unless the text has been written by hand.
+                    const avant = brouillon(cible, vendeurs);
+                    const apres = brouillon(c.url, vendeurs);
+                    if (titre === avant.titre) setTitre(apres.titre);
+                    if (corps === avant.corps) setCorps(apres.corps);
                     setCible(c.url);
                     setConfirme(false);
                   }}
