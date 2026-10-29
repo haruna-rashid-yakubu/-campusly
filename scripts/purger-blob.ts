@@ -14,11 +14,17 @@
  *   npx tsx scripts/purger-blob.ts            dry run: says what it would delete
  *   npx tsx scripts/purger-blob.ts --supprimer
  *
- * Needs DATABASE_URL and BLOB_READ_WRITE_TOKEN (vercel env pull) besides R2's.
+ * R2's keys come from .env.local; DATABASE_URL and BLOB_READ_WRITE_TOKEN from
+ * the file named by ENV_FILE (vercel env pull), deleted afterwards:
+ *
+ *   npx vercel link --yes --project campusly
+ *   npx vercel env pull /tmp/campusly-prod.env --environment=production --yes
+ *   ENV_FILE=/tmp/campusly-prod.env npx tsx scripts/purger-blob.ts
+ *   rm /tmp/campusly-prod.env
  */
 import { config } from "dotenv";
 
-config({ path: process.env.ENV_FILE ?? ".env.local", quiet: true });
+config({ path: [".env.local", ...(process.env.ENV_FILE ? [process.env.ENV_FILE] : [])], quiet: true });
 
 async function principal() {
   const { del, head } = await import("@vercel/blob");
