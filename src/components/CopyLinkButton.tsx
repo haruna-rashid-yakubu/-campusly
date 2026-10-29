@@ -6,7 +6,7 @@ import { useToast } from "@/components/Toast";
 
 /*
  * A link copied without its scheme is not a link. Pasted into WhatsApp — a
- * message, and above all a statut — "campusly-ucac.vercel.app/installer"
+ * message, and above all a statut — "www.mycampusly.fr/installer"
  * stays grey text that nobody can tap, so the person who received it reports
  * that the link does not open and the person who sent it cannot post it at
  * all. Normalising here, rather than at each call site, means no screen can

@@ -69,7 +69,7 @@ export async function GET(request: Request, ctx: { params: Promise<{ id: string;
       page.drawText(code, { x: 2, y: 2, size: 2, font: police, color: rgb(1, 1, 1), opacity: 0 });
     }
     pdf.setProducer("Campusly");
-    pdf.setCreator("Campusly · campusly-ucac.vercel.app");
+    pdf.setCreator("Campusly · www.mycampusly.fr");
     pdf.setKeywords([code]);
     marque = await pdf.save();
   } catch {

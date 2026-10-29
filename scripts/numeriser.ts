@@ -29,7 +29,7 @@ import { cles, deposer, lire } from "../src/lib/numerisation/r2";
 // The modules read their keys when called, so loading them first is fine.
 config({ path: ".env.local", quiet: true });
 
-const SITE = "https://campusly-ucac.vercel.app";
+const SITE = "https://www.mycampusly.fr";
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 const args = process.argv.slice(2);

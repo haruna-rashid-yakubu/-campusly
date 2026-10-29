@@ -66,7 +66,7 @@ export async function versionOriginale(pages: { image: Uint8Array; extraite: Pag
   const police = await pdf.embedFont(StandardFonts.Helvetica);
   pdf.setTitle(titre);
   pdf.setProducer("Campusly");
-  pdf.setCreator("Campusly · campusly-ucac.vercel.app");
+  pdf.setCreator("Campusly · www.mycampusly.fr");
 
   for (const { image, extraite } of pages) {
     const page = pdf.addPage([A4.l, A4.h]);

@@ -47,7 +47,7 @@ export const CITE_PRICE_OPTIONS = [
  * domain is bought (or the app is renamed), it's one Vercel setting and not a
  * hunt through components.
  */
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://campusly-ucac.vercel.app";
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.mycampusly.fr";
 export const APP_DOMAIN = APP_URL.replace(/^https?:\/\//, "");
 
 /*
