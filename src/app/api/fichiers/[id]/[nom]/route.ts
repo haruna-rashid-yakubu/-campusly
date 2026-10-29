@@ -6,6 +6,7 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { db } from "@/db";
 import { subjects } from "@/db/schema";
 import { DEVICE_COOKIE } from "@/lib/constants";
+import { cles, lire } from "@/lib/numerisation/r2";
 
 /*
  * Serves a past paper with Campusly's mark on it (see lib/fichiers).
@@ -42,9 +43,22 @@ export async function GET(request: Request, ctx: { params: Promise<{ id: string;
   const jour = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const code = `CPL-${numero}-${qui}-${jour}`;
 
-  const original = await fetch(source);
-  if (!original.ok) return NextResponse.redirect(source);
-  const octets = new Uint8Array(await original.arrayBuffer());
+  // The digitised versions in R2 first: the Version reconstituée, or the
+  // Version originale with ?o=1. The file as first published is the fallback
+  // while a paper has not been digitised (or R2 is not configured).
+  const corrige = params.get("c") === "1";
+  const cle = params.get("o") === "1" ? cles.originale(numero, corrige) : cles.reconstituee(numero, corrige);
+  const numerise = await lire(cle).catch(() => null);
+  let octets: Uint8Array;
+  if (numerise) {
+    octets = numerise;
+  } else {
+    const original = await fetch(source);
+    if (!original.ok) return NextResponse.redirect(source);
+    octets = new Uint8Array(await original.arrayBuffer());
+    // A photo published as is: no PDF to mark.
+    if (!(original.headers.get("content-type") ?? "").includes("pdf")) return NextResponse.redirect(source);
+  }
   if (octets.byteLength > LIMITE) return NextResponse.redirect(source);
 
   let marque: Uint8Array;

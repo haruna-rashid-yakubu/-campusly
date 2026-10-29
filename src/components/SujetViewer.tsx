@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { FilePreview } from "@/components/FilePreview";
+import { lienOriginal } from "@/lib/fichiers";
 import { DownloadButton } from "@/components/DownloadButton";
 import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 import { Icon } from "@/components/icons";
@@ -74,6 +75,19 @@ export function SujetViewer({
           </div>
         )}
       </div>
+
+      {activeUrl && (
+        <div className="mt-2.5 flex items-start gap-2 rounded-[14px] bg-surface px-3.5 py-2.5 text-[13px] leading-snug text-slate">
+          <Icon name="doc" size={16} className="mt-0.5 flex-none" />
+          <span>
+            Version reconstituée automatiquement à partir de la photo.{" "}
+            <a href={lienOriginal(activeUrl)} target="_blank" rel="noreferrer" className="font-bold text-teal-dark underline">
+              Voir l&rsquo;original
+            </a>{" "}
+            en cas de doute sur un mot ou un chiffre.
+          </span>
+        </div>
+      )}
 
       <div
         className="fixed inset-x-0 z-[4] flex gap-2.5 bg-white px-5 pb-[18px] pt-4"
