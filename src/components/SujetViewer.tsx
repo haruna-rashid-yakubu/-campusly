@@ -59,7 +59,7 @@ export function SujetViewer({
       )}
 
       {lecture ? (
-        <LectureSujet key={mode} lecture={lecture} />
+        <LectureSujet key={mode} lecture={lecture} pdf={activeUrl} />
       ) : (
         <>
           <div className="mt-4 overflow-hidden rounded-[20px] border border-line bg-surface-3">
