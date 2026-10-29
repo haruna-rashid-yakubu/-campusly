@@ -3,6 +3,7 @@ import Google from "next-auth/providers/google";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
+import { SESSION_SECONDES } from "@/lib/constants";
 import { users, accounts, sessions, verificationTokens, delegations } from "@/db/schema";
 
 const adminEmails = (process.env.ADMIN_EMAILS ?? "")
@@ -18,7 +19,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     verificationTokensTable: verificationTokens,
   }),
   providers: [Google],
-  session: { strategy: "database" },
+  // Permanent while in use: see SESSION_SECONDES. The row is pushed back at most once a day.
+  session: { strategy: "database", maxAge: SESSION_SECONDES, updateAge: 24 * 60 * 60 },
   pages: {
     signIn: "/",
   },

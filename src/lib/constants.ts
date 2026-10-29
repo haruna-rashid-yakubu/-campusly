@@ -86,3 +86,11 @@ export const DEMI_JOURNEES = [
 export function momentDuSlot(slot: number) {
   return slot <= 2 ? ("matin" as const) : ("apres_midi" as const);
 }
+
+/*
+ * How long a sign-in lasts: 400 days, the longest a browser keeps a cookie
+ * (Chrome caps it there), renewed on every day of use — by Auth.js for the
+ * session row, by the proxy for the cookie. Someone who opens Campusly is never
+ * signed out; only a year without it, or "Se déconnecter", ends the session.
+ */
+export const SESSION_SECONDES = 400 * 24 * 60 * 60;

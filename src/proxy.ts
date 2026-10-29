@@ -1,6 +1,6 @@
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { auth } from "@/auth";
-import { CLASSE_COOKIE, DEVICE_COOKIE } from "@/lib/constants";
+import { CLASSE_COOKIE, DEVICE_COOKIE, SESSION_SECONDES } from "@/lib/constants";
 
 /*
  * /admin is no longer one door. An admin sees all of it; a délégué sees the
@@ -55,14 +55,46 @@ function pontMobile(req: NextRequest) {
   return NextResponse.next({ request: { headers } });
 }
 
+/*
+ * The session cookie, given its full life again once a day of use.
+ *
+ * Auth.js pushes the session row back as the pages read it, but a page cannot
+ * set a cookie, so the browser kept the one written at sign-in and dropped it
+ * on its date: signed out a month later however often Campusly was opened.
+ * The marker cookie keeps this to one renewal a day.
+ */
+const SESSIONS = ["__Secure-authjs.session-token", "authjs.session-token"];
+const RENOUVELE = "cy-session-renouvelee";
+
+function prolonger(req: NextRequest, res: NextResponse) {
+  if (req.cookies.has(RENOUVELE)) return res;
+  const nom = SESSIONS.find((n) => req.cookies.has(n));
+  if (!nom) return res;
+  const secure = nom.startsWith("__Secure-");
+  const options = { path: "/", httpOnly: true, sameSite: "lax" as const, secure };
+  res.cookies.set(nom, req.cookies.get(nom)!.value, { ...options, maxAge: SESSION_SECONDES });
+  res.cookies.set(RENOUVELE, "1", { ...options, maxAge: 24 * 60 * 60 });
+  return res;
+}
+
 export default function proxy(req: NextRequest, ev: NextFetchEvent) {
-  if (req.nextUrl.pathname.startsWith("/admin")) {
+  const chemin = req.nextUrl.pathname;
+  if (chemin.startsWith("/admin")) {
     return (proxyAdmin as unknown as (r: NextRequest, e: NextFetchEvent) => ReturnType<typeof pontMobile>)(req, ev);
   }
-  return pontMobile(req);
+  if (chemin.startsWith("/api/")) return pontMobile(req);
+  return prolonger(req, NextResponse.next());
 }
 
 export const config = {
-  // The files too: a later app sends its session to them directly instead of a signed link.
-  matcher: ["/admin/:path*", "/api/v1/:path*", "/api/blob/:path*", "/api/fichiers/:path*", "/api/sujets/:path*"],
+  matcher: [
+    // The files too: a later app sends its session to them directly instead of a signed link.
+    "/admin/:path*",
+    "/api/v1/:path*",
+    "/api/blob/:path*",
+    "/api/fichiers/:path*",
+    "/api/sujets/:path*",
+    // Every page, for the session's renewal; not the build's files or the images.
+    "/((?!api/|_next/|.*\\.(?:png|jpg|jpeg|svg|webp|ico|webmanifest|js|css|txt|xml)$).*)",
+  ],
 };
