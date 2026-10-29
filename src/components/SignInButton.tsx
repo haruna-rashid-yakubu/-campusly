@@ -8,9 +8,9 @@ import { googleSignIn } from "@/lib/actions";
  * The discreet counterpart to SignOutButton. It replaces a sheet that opened
  * by itself 1.2s after any page load: a link shared on WhatsApp opened onto a
  * request for a Google account before the person had seen a single paper.
- * Nothing on the app requires an account to browse or even to download, so
- * signing in is offered here and demanded only where it is genuinely needed —
- * proposing a paper, or messaging a cité.
+ * Nothing on the app requires an account to browse, so signing in is offered
+ * here and demanded only where it is genuinely needed — reading a Sujet's
+ * content (lib/acces), proposing a paper, or messaging a cité.
  */
 export function SignInButton({
   className,

@@ -22,7 +22,7 @@ export type Bloc =
   | { t: "tableau"; lignes: string[][]; entete: boolean }
   // A diagram, a graph, a drawing: cropped from the photograph, never redrawn.
   // `boite` is [x0, y0, x1, y1] in thousandths of the page's width and height.
-  | { t: "figure"; legende: string | null; boite: [number, number, number, number] };
+  | { t: "figure"; legende: string | null; boite: [number, number, number, number]; image?: string };
 
 export type PageExtraite = {
   // Only read from the first page; null when the page does not say.
@@ -57,6 +57,8 @@ export type Extraction = {
   themes: string[];
   pages: PageExtraite[];
   verification?: { par: string; le: string; corrections: string[] } | null;
+  // R2 file names (under sujets/<id>/) of the cleaned page photographs, in order.
+  photos?: string[];
 };
 
 const CONSIGNE = `Tu numérises une page d'un examen universitaire (UCAC, Cameroun) photographiée au téléphone.

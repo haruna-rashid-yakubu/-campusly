@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { useRetour } from "@/components/Retour";
 import { Icon } from "@/components/icons";
 
 export function PhotoCarousel({
@@ -17,6 +17,7 @@ export function PhotoCarousel({
   shareButton: React.ReactNode;
 }) {
   const [index, setIndex] = useState(0);
+  const retour = useRetour();
   const total = Math.max(photos.length, 1);
 
   return (
@@ -28,13 +29,13 @@ export function PhotoCarousel({
       )}
 
       <div className="absolute inset-x-4 flex justify-between" style={{ top: "calc(50px + var(--safe-top))" }}>
-        <Link
-          href={backHref}
+        <button
+          onClick={() => retour(backHref)}
           className="press-scale grid h-[42px] w-[42px] place-items-center rounded-full bg-white/95 shadow-md"
           aria-label="Retour"
         >
           <Icon name="back" size={20} strokeWidth={2} />
-        </Link>
+        </button>
         {shareButton}
       </div>
 

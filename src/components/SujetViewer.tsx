@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { FilePreview } from "@/components/FilePreview";
+import { LectureSujet } from "@/components/LectureSujet";
+import type { Lecture } from "@/lib/numerisation/lecture";
 import { lienOriginal } from "@/lib/fichiers";
 import { DownloadButton } from "@/components/DownloadButton";
 import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
@@ -17,6 +19,7 @@ export function SujetViewer({
   niveau,
   fileUrl,
   correctionUrl,
+  lectures,
   onRecord,
 }: {
   subjectId: number;
@@ -25,11 +28,14 @@ export function SujetViewer({
   niveau: string;
   fileUrl: string | null;
   correctionUrl: string | null;
+  // The digitised text and photos, when the paper has been through the digitisation.
+  lectures: { sujet: Lecture | null; correction: Lecture | null };
   onRecord: () => Promise<void>;
 }) {
   const hasCorrection = !!correctionUrl;
   const [mode, setMode] = useState<Mode>("sujet");
   const activeUrl = mode === "correction" ? correctionUrl : fileUrl;
+  const lecture = mode === "correction" ? lectures.correction : lectures.sujet;
 
   return (
     <>
@@ -52,41 +58,58 @@ export function SujetViewer({
         </div>
       )}
 
-      <div className="mt-4 overflow-hidden rounded-[20px] border border-line bg-surface-3">
-        {activeUrl ? (
-          <Link href={`/sujets/${subjectId}/plein?mode=${mode}`} className="press-scale relative block">
-            <FilePreview url={activeUrl} className="h-[360px] w-full border-0" />
-            <span className="absolute bottom-3 right-3 flex h-10 items-center gap-1.5 rounded-[13px] bg-ink/80 px-3.5 text-[12.5px] font-bold text-white">
-              <Icon name="full" size={18} strokeWidth={2} />
-              Agrandir
-            </span>
-          </Link>
-        ) : (
-          <div className="p-7 text-center">
-            <div className="mx-auto mb-1 h-[11px] w-[52%] rounded-md bg-line-4" />
-            <div className="mx-auto mt-5 h-2 w-[88%] rounded bg-line-3" />
-            <div className="mx-auto mt-2.5 h-2 w-[94%] rounded bg-line-3" />
-            <div className="mx-auto mt-2.5 h-2 w-[70%] rounded bg-line-3" />
-            <div className="mt-6 text-[13px] font-semibold text-slate-light">
-              {mode === "correction"
-                ? "Aperçu du corrigé indisponible pour ce contenu de démonstration"
-                : "Aperçu indisponible pour ce contenu de démonstration"}
-            </div>
+      {lecture ? (
+        <LectureSujet key={mode} lecture={lecture} />
+      ) : (
+        <>
+          <div className="mt-4 overflow-hidden rounded-[20px] border border-line bg-surface-3">
+            {activeUrl ? (
+              <Link
+                href={`/sujets/${subjectId}/plein?mode=${mode}`}
+                className="press-scale relative block"
+              >
+                <FilePreview
+                  url={activeUrl}
+                  className="h-[360px] w-full border-0"
+                />
+                <span className="absolute bottom-3 right-3 flex h-10 items-center gap-1.5 rounded-[13px] bg-ink/80 px-3.5 text-[12.5px] font-bold text-white">
+                  <Icon name="full" size={18} strokeWidth={2} />
+                  Agrandir
+                </span>
+              </Link>
+            ) : (
+              <div className="p-7 text-center">
+                <div className="mx-auto mb-1 h-[11px] w-[52%] rounded-md bg-line-4" />
+                <div className="mx-auto mt-5 h-2 w-[88%] rounded bg-line-3" />
+                <div className="mx-auto mt-2.5 h-2 w-[94%] rounded bg-line-3" />
+                <div className="mx-auto mt-2.5 h-2 w-[70%] rounded bg-line-3" />
+                <div className="mt-6 text-[13px] font-semibold text-slate-light">
+                  {mode === "correction"
+                    ? "Aperçu du corrigé indisponible pour ce contenu de démonstration"
+                    : "Aperçu indisponible pour ce contenu de démonstration"}
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      {activeUrl && (
-        <div className="mt-2.5 flex items-start gap-2 rounded-[14px] bg-surface px-3.5 py-2.5 text-[13px] leading-snug text-slate">
-          <Icon name="doc" size={16} className="mt-0.5 flex-none" />
-          <span>
-            Version reconstituée automatiquement à partir de la photo.{" "}
-            <a href={lienOriginal(activeUrl)} target="_blank" rel="noreferrer" className="font-bold text-teal-dark underline">
-              Voir l&rsquo;original
-            </a>{" "}
-            en cas de doute sur un mot ou un chiffre.
-          </span>
-        </div>
+          {activeUrl && (
+            <div className="mt-2.5 flex items-start gap-2 rounded-[14px] bg-surface px-3.5 py-2.5 text-[13px] leading-snug text-slate">
+              <Icon name="doc" size={16} className="mt-0.5 flex-none" />
+              <span>
+                Version reconstituée automatiquement à partir de la photo.{" "}
+                <a
+                  href={lienOriginal(activeUrl)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-bold text-teal-dark underline"
+                >
+                  Voir l&rsquo;original
+                </a>{" "}
+                en cas de doute sur un mot ou un chiffre.
+              </span>
+            </div>
+          )}
+        </>
       )}
 
       <div
@@ -96,7 +119,9 @@ export function SujetViewer({
         <DownloadButton
           fileUrl={activeUrl}
           onRecord={onRecord}
-          label={mode === "correction" ? "Télécharger le corrigé" : "Télécharger"}
+          label={
+            mode === "correction" ? "Télécharger le corrigé" : "Télécharger"
+          }
         />
         <WhatsAppShareButton
           text={`Regarde ce sujet sur Campusly : ${matiere} (${filiere} · ${niveau})`}

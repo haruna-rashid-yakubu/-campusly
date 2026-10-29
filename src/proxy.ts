@@ -63,5 +63,6 @@ export default function proxy(req: NextRequest, ev: NextFetchEvent) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/v1/:path*", "/api/blob/:path*"],
+  // The files too: a later app sends its session to them directly instead of a signed link.
+  matcher: ["/admin/:path*", "/api/v1/:path*", "/api/blob/:path*", "/api/fichiers/:path*", "/api/sujets/:path*"],
 };

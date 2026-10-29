@@ -15,6 +15,7 @@ import {
 } from "@/lib/data";
 import { filiereDeClasse, niveauDeClasse } from "@/lib/utils";
 import { lienFichier } from "@/lib/fichiers";
+import { jetonFichier } from "@/lib/jeton";
 
 export const metadata: Metadata = {
   title: "Anciens sujets d'examens",
@@ -42,6 +43,8 @@ export default async function SujetsPage({
 }) {
   const params = await searchParams;
   const [session, classe] = await Promise.all([auth(), getPreferredClasse()]);
+  // Download links signed for the reader (lib/jeton); a visitor's lead to the Sujet's page, which asks to sign in.
+  const jeton = session?.user?.id ? jetonFichier(session.user.id) : undefined;
 
   /*
    * The list opens on the student's own filière. A LEG student searching
@@ -165,7 +168,7 @@ export default async function SujetsPage({
                 <DownloadButton
                   compact
                   label={`Télécharger ${s.matiere}`}
-                  fileUrl={lienFichier(s.id, s.fileUrl)}
+                  fileUrl={lienFichier(s.id, s.fileUrl, false, jeton)}
                   onRecord={incrementSubjectDownload.bind(null, s.id)}
                 />
               </div>

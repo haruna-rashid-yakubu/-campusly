@@ -23,7 +23,7 @@ import puppeteer from "puppeteer-core";
 import sharp from "sharp";
 import { extrairePage, type Bloc, type Extraction, type PageExtraite } from "../src/lib/numerisation/extraction";
 import { gabarit, piedDePage } from "../src/lib/numerisation/gabarit";
-import { versionOriginale } from "../src/lib/numerisation/originale";
+import { nettoyerPage, versionOriginale } from "../src/lib/numerisation/originale";
 import { cles, deposer, lire } from "../src/lib/numerisation/r2";
 
 // The modules read their keys when called, so loading them first is fine.
@@ -55,7 +55,10 @@ async function original(id: number, corrige: boolean) {
   const nom = corrige ? "corrige.pdf" : "sujet.pdf";
   const archive = await lire(cles.original(id, nom, corrige));
   if (archive) return archive;
-  const r = await fetch(`${SITE}/api/fichiers/${id}/f.pdf?v=1${corrige ? "&c=1" : ""}`);
+  // The file route is for signed-in readers; the script shows the deployment's secret instead.
+  const r = await fetch(`${SITE}/api/fichiers/${id}/f.pdf${corrige ? "?c=1" : ""}`, {
+    headers: { Authorization: `Bearer ${process.env.CRON_SECRET ?? ""}` },
+  });
   if (!r.ok) return null;
   const octets = new Uint8Array(await r.arrayBuffer());
   await deposer(cles.original(id, nom, corrige), octets, r.headers.get("content-type") ?? "application/pdf");
@@ -189,7 +192,29 @@ async function publier(id: number, corrige: boolean) {
     });
   }
 
-  const reconstituee = await imprimer(gabarit(meta, pages, await figures(images, pages)), piedDePage(meta));
+  const figs = await figures(images, pages);
+  const reconstituee = await imprimer(gabarit(meta, pages, figs), piedDePage(meta));
+
+  // The Sujet page shows the content as text and the photographs as images:
+  // both need their pictures in R2, under names the page can ask for.
+  const prefixe = corrige ? "corrige-" : "";
+  extraction.photos = [];
+  for (const [i, image] of images.entries()) {
+    const nom = `${prefixe}page-${String(i + 1).padStart(2, "0")}.jpg`;
+    await deposer(cles.image(id, nom), await nettoyerPage(image, pages[i]?.rotation ?? 0), "image/jpeg");
+    extraction.photos.push(nom);
+  }
+  let n = 0;
+  for (const page of pages) {
+    for (const b of page.blocs) {
+      if (b.t !== "figure") continue;
+      const src = figs.get(b);
+      if (!src) continue;
+      const nom = `${prefixe}figure-${String(++n).padStart(2, "0")}.jpg`;
+      await deposer(cles.image(id, nom), new Uint8Array(Buffer.from(src.split(",")[1], "base64")), "image/jpeg");
+      b.image = nom;
+    }
+  }
   const originale = await versionOriginale(
     images.map((image, i) => ({ image, extraite: pages[i] })),
     `${meta.matiere} ${meta.annee}`

@@ -44,4 +44,6 @@ export const cles = {
   originale: (id: number, corrige = false) => `sujets/${id}/${corrige ? "corrige-" : ""}originale.pdf`,
   reconstituee: (id: number, corrige = false) => `sujets/${id}/${corrige ? "corrige-" : ""}reconstituee.pdf`,
   extraction: (id: number, corrige = false) => `sujets/${id}/${corrige ? "corrige-" : ""}extraction.json`,
+  // A cleaned page photograph or a cropped figure, shown on the Sujet page.
+  image: (id: number, nom: string) => `sujets/${id}/images/${nom}`,
 };

@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
 import { downloadFile } from "@/lib/download";
 import { ZoomViewer } from "@/components/ZoomViewer";
-import { lienApercu } from "@/lib/fichiers";
+import { useRetour } from "@/components/Retour";
 
 export function FullscreenViewer({
   title,
@@ -17,6 +16,7 @@ export function FullscreenViewer({
   closeHref: string;
 }) {
   const { show } = useToast();
+  const retour = useRetour();
   const isPdf = fileUrl ? /\.pdf(\?|$)/i.test(fileUrl) : false;
 
   // Synchronous for the same reason as the download button: an await here
@@ -36,13 +36,13 @@ export function FullscreenViewer({
         className="absolute inset-x-3.5 z-10 flex items-center justify-between text-white"
         style={{ top: "calc(14px + var(--safe-top))" }}
       >
-        <Link
-          href={closeHref}
+        <button
+          onClick={() => retour(closeHref)}
           className="press-scale grid h-11 w-11 place-items-center"
           aria-label="Fermer"
         >
           <Icon name="x" size={21} strokeWidth={2} />
-        </Link>
+        </button>
         <span className="max-w-[60%] truncate text-[14px] font-bold">{title}</span>
         {fileUrl ? (
           <button
@@ -69,7 +69,7 @@ export function FullscreenViewer({
           )}
           {fileUrl && isPdf && (
             <iframe
-              src={`https://docs.google.com/viewer?url=${encodeURIComponent(lienApercu(fileUrl))}&embedded=true`}
+              src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
               title={title}
               className="h-full w-full rounded-lg border-0 bg-white"
             />

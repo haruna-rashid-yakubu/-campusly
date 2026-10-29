@@ -10,6 +10,8 @@ import { SignInRequired } from "@/components/SignInRequired";
 import { SubjectEditForm } from "@/components/admin/SubjectEditForm";
 import { subjectTypeEnum } from "@/db/schema";
 import { getProposerFacets, getSubjectById, getSubjectFacets } from "@/lib/data";
+import { lienFichier } from "@/lib/fichiers";
+import { jetonFichier } from "@/lib/jeton";
 
 export const metadata: Metadata = {
   title: "Modifier un sujet",
@@ -68,7 +70,8 @@ export default async function AdminSubjectPage({
 
         {subject.fileUrl ? (
           <FilePreview
-            url={subject.fileUrl}
+            // Through the file route, like the public page: the stored address is not kept public.
+            url={lienFichier(subject.id, subject.fileUrl, false, jetonFichier(session.user.id!))!}
             className="mt-3.5 h-[46vh] w-full rounded-[18px] border border-line"
           />
         ) : (

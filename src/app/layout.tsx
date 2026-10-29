@@ -10,6 +10,7 @@ import { TabBarGate } from "@/components/TabBarGate";
 import { ChoixClasseGate } from "@/components/ChoixClasseGate";
 import { AppleSplashLinks } from "@/components/AppleSplashLinks";
 import { Visite } from "@/components/Visite";
+import { SuiviNavigation } from "@/components/Retour";
 import { APP_URL } from "@/lib/constants";
 
 const manrope = Manrope({
@@ -93,6 +94,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </ToastProvider>
         <ServiceWorkerRegister />
         <Visite />
+        <SuiviNavigation />
         <SpeedInsights />
       </body>
     </html>

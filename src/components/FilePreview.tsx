@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { lienApercu } from "@/lib/fichiers";
 
 export function FilePreview({ url, className }: { url: string; className?: string }) {
   const isPdf = /\.pdf(\?|$)/i.test(url);
@@ -9,7 +8,7 @@ export function FilePreview({ url, className }: { url: string; className?: strin
     // and force horizontal scrolling/cropping inside a fixed-width preview.
     return (
       <iframe
-        src={`https://docs.google.com/viewer?url=${encodeURIComponent(lienApercu(url))}&embedded=true`}
+        src={`https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`}
         className={`bg-white ${className ?? ""}`}
         title="Document"
       />

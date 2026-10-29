@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRetour } from "@/components/Retour";
 import { Icon } from "@/components/icons";
 
 export function BackHeader({
@@ -14,7 +14,7 @@ export function BackHeader({
   right?: React.ReactNode;
   border?: boolean;
 }) {
-  const router = useRouter();
+  const retour = useRetour();
   return (
     <div
       className={
@@ -24,7 +24,7 @@ export function BackHeader({
       style={{ paddingTop: "calc(20px + var(--safe-top))" }}
     >
       <button
-        onClick={() => (fallbackHref ? router.push(fallbackHref) : router.back())}
+        onClick={() => retour(fallbackHref)}
         className="press-scale grid h-11 w-11 flex-none place-items-center border-0 bg-none"
         aria-label="Retour"
       >

@@ -561,11 +561,15 @@ export const notificationEnvoisRelations = relations(notificationEnvois, ({ one 
  * believing anything Campusly says afterwards.
  *
  * `partage` is someone passing the app on.
+ *
+ * `lecture` is an account opening a Sujet's content, once per Sujet per day:
+ * what the daily limit counts (lib/acces). `quota_atteint` is the first
+ * refusal of that limit, which is when the admins are told.
  */
-export const evenementTypeEnum = ["contact_bailleur", "partage"] as const;
+export const evenementTypeEnum = ["contact_bailleur", "partage", "lecture", "quota_atteint"] as const;
 
 /** What the event is about. `app` is Campusly itself, shared from anywhere. */
-export const evenementCibleEnum = ["cite", "app"] as const;
+export const evenementCibleEnum = ["cite", "app", "sujet"] as const;
 
 export const evenements = pgTable(
   "evenement",

@@ -5,12 +5,19 @@ import { APP_URL } from "@/lib/constants";
  * screen, and the mobile API, points at /api/fichiers instead, which serves
  * the digitised Version reconstituée (or, with ?o=1, the Version originale)
  * and marks the PDF on its way out with an invisible code that says which
- * paper it was and, for a download, which phone took it.
+ * paper it was and which account took it.
+ *
+ * `jeton` (lib/jeton) is the signed-in reader's: the link then works where no
+ * session travels with it, the app's in-app browser.
  */
-export function lienFichier(subjectId: number, url: string | null, correction = false): string | null {
+export function lienFichier(subjectId: number, url: string | null, correction = false, jeton?: string): string | null {
   if (!url) return url;
   const nom = `${(url.split("/").pop() ?? "sujet").replace(/-[A-Za-z0-9]{20,}(?=\.\w+$)/, "").replace(/\.\w+$/, "")}.pdf`;
-  return `${APP_URL}/api/fichiers/${subjectId}/${encodeURIComponent(nom)}${correction ? "?c=1" : ""}`;
+  const params = new URLSearchParams();
+  if (correction) params.set("c", "1");
+  if (jeton) params.set("t", jeton);
+  const requete = params.toString();
+  return `${APP_URL}/api/fichiers/${subjectId}/${encodeURIComponent(nom)}${requete ? `?${requete}` : ""}`;
 }
 
 /** The same paper as photographed: the reference to check the reconstituted text against. */
@@ -19,12 +26,9 @@ export function lienOriginal(url: string) {
 }
 
 /* A paper as screens and the API may show it: the stored addresses replaced. */
-export function masquerFichiers<T extends { id: number; fileUrl: string | null; correctionUrl: string | null }>(s: T): T {
-  return { ...s, fileUrl: lienFichier(s.id, s.fileUrl), correctionUrl: lienFichier(s.id, s.correctionUrl, true) };
-}
-
-/* The preview is fetched by Google's viewer, with no cookie: one cached copy serves everyone. */
-export function lienApercu(url: string) {
-  if (!url.includes("/api/fichiers/")) return url;
-  return `${url}${url.includes("?") ? "&" : "?"}v=1`;
+export function masquerFichiers<T extends { id: number; fileUrl: string | null; correctionUrl: string | null }>(
+  s: T,
+  jeton?: string
+): T {
+  return { ...s, fileUrl: lienFichier(s.id, s.fileUrl, false, jeton), correctionUrl: lienFichier(s.id, s.correctionUrl, true, jeton) };
 }

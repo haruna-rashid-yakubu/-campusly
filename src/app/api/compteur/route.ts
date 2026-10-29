@@ -5,6 +5,11 @@ import { evenementCibleEnum, evenementTypeEnum, evenements } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
 
+const DE_LA_PAGE = {
+  types: ["contact_bailleur", "partage"] as readonly (typeof evenementTypeEnum)[number][],
+  cibles: ["cite", "app"] as readonly (typeof evenementCibleEnum)[number][],
+};
+
 /*
  * Records one action: a landlord contacted, or the app shared.
  *
@@ -25,10 +30,11 @@ export async function POST(request: Request) {
 
     const type = String(corps.type ?? "");
     const cible = String(corps.cible ?? "");
-    if (!evenementTypeEnum.includes(type as (typeof evenementTypeEnum)[number])) {
+    // What a page may report about itself; reading a Sujet is recorded by the server alone.
+    if (!DE_LA_PAGE.types.includes(type as (typeof evenementTypeEnum)[number])) {
       return new NextResponse(null, { status: 204 });
     }
-    if (!evenementCibleEnum.includes(cible as (typeof evenementCibleEnum)[number])) {
+    if (!DE_LA_PAGE.cibles.includes(cible as (typeof evenementCibleEnum)[number])) {
       return new NextResponse(null, { status: 204 });
     }
 

@@ -108,6 +108,11 @@ const LOGO = `<svg viewBox="0 0 64 64" width="44" height="44"><rect width="64" h
 // When the sheet's own header was cut off or unreadable.
 const ETABLISSEMENT = ["Université Catholique d'Afrique Centrale", "Institut Catholique de Yaoundé · Nkolbisson"];
 
+/** The paper's content alone, as HTML: printed in the PDF, and read on the site's Sujet page. */
+export function contenu(pages: PageExtraite[], figures: Figures, langue: "fr" | "en") {
+  return pages.flatMap((p) => p.blocs.map((b) => bloc(b, figures, langue))).join("\n");
+}
+
 export function gabarit(meta: Meta, pages: PageExtraite[], figures: Figures) {
   const en = meta.langue === "en";
   const etablissement = meta.etablissement.length ? meta.etablissement : ETABLISSEMENT;
@@ -119,7 +124,6 @@ export function gabarit(meta: Meta, pages: PageExtraite[], figures: Figures) {
     [en ? "Duration" : "Durée", meta.duree],
     ["Session", meta.session],
   ];
-  const contenu = pages.flatMap((p) => p.blocs.map((b) => bloc(b, figures, meta.langue))).join("\n");
 
   return `<!doctype html><html lang="${meta.langue}"><head><meta charset="utf-8">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
@@ -168,7 +172,7 @@ figcaption { font-size: 9pt; color: #64748b; margin-top: 1.5mm; }
       : "Version reconstituée automatiquement à partir de la feuille d'origine. En cas de doute sur un mot ou un chiffre, compare avec l'original sur Campusly."
   }</div>
 </section>
-<main><p></p>${contenu}</main>
+<main><p></p>${contenu(pages, figures, meta.langue)}</main>
 </body></html>`;
 }
 

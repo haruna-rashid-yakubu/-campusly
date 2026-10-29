@@ -9,7 +9,12 @@ import { ShareSheet } from "@/components/ShareSheet";
 import { ToastButton } from "@/components/ToastButton";
 import { getRelatedSubjects, getSubjectById } from "@/lib/data";
 import { incrementSubjectDownload } from "@/lib/actions";
+import { auth } from "@/auth";
+import { SignInButton } from "@/components/SignInButton";
+import { ouvrir, QUOTA, type Acces } from "@/lib/acces";
 import { lienFichier } from "@/lib/fichiers";
+import { jetonFichier } from "@/lib/jeton";
+import { lireExtraction, versLecture } from "@/lib/numerisation/lecture";
 
 export const dynamic = "force-dynamic";
 
@@ -38,11 +43,16 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
   const subject = await getSubjectById(subjectId);
   if (!subject) notFound();
 
-  const { sameMatiere, sameFiliere } = await getRelatedSubjects(
-    subject.id,
-    subject.matiere,
-    subject.filiere
-  );
+  const [{ sameMatiere, sameFiliere }, session, extraction, extractionCorrige] = await Promise.all([
+    getRelatedSubjects(subject.id, subject.matiere, subject.filiere),
+    auth(),
+    lireExtraction(subject.id).catch(() => null),
+    subject.correctionUrl ? lireExtraction(subject.id, true).catch(() => null) : null,
+  ]);
+  // Opening the page is reading the Sujet: it counts against the account's day (lib/acces).
+  const acces = await ouvrir(session?.user?.id ?? null, subject.id);
+  const jeton = acces.ok ? jetonFichier(acces.userId) : undefined;
+  const themes = extraction?.themes ?? [];
 
   return (
     <div className="relative min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
@@ -72,15 +82,36 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
           </Badge>
         </div>
 
-        <SujetViewer
-          subjectId={subject.id}
-          matiere={subject.matiere}
-          filiere={subject.filiere}
-          niveau={subject.niveau}
-          fileUrl={lienFichier(subject.id, subject.fileUrl)}
-          correctionUrl={lienFichier(subject.id, subject.correctionUrl, true)}
-          onRecord={incrementSubjectDownload.bind(null, subject.id)}
-        />
+        {acces.ok ? (
+          <SujetViewer
+            subjectId={subject.id}
+            matiere={subject.matiere}
+            filiere={subject.filiere}
+            niveau={subject.niveau}
+            fileUrl={lienFichier(subject.id, subject.fileUrl, false, jeton)}
+            correctionUrl={lienFichier(subject.id, subject.correctionUrl, true, jeton)}
+            lectures={{
+              sujet: extraction && versLecture(extraction, subject.id),
+              correction: extractionCorrige && versLecture(extractionCorrige, subject.id),
+            }}
+            onRecord={incrementSubjectDownload.bind(null, subject.id)}
+          />
+        ) : (
+          <Verrou raison={acces.raison} />
+        )}
+
+        {themes.length > 0 && (
+          <div className="mt-[18px]">
+            <div className="text-[13px] font-bold text-slate-light">Thèmes abordés</div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {themes.map((t) => (
+                <Badge key={t} tone="neutral">
+                  {t}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-[18px] rounded-[20px] border border-line px-3.5">
           {([
@@ -187,6 +218,39 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
           Signaler un problème sur ce sujet
         </ToastButton>
       </div>
+    </div>
+  );
+}
+
+/*
+ * In place of the content, for a visitor or an account past its day's limit.
+ * The rest of the page — what the paper is, its Thèmes, the others like it —
+ * stays, so a shared link still says what it points to.
+ */
+function Verrou({ raison }: { raison: Exclude<Acces, { ok: true }>["raison"] }) {
+  return (
+    <div className="mt-4 rounded-[20px] border border-line bg-surface px-5 py-7 text-center">
+      <span className="mx-auto mb-4 grid h-[60px] w-[60px] place-items-center rounded-[20px] bg-white text-teal-dark">
+        <Icon name="lock" size={26} strokeWidth={1.7} />
+      </span>
+      {raison === "connexion" ? (
+        <>
+          <div className="text-[17px] font-extrabold">Connecte-toi pour lire ce sujet</div>
+          <p className="mx-auto mt-2 max-w-xs text-[14px] leading-relaxed text-slate">
+            Le texte complet, les photos d&rsquo;origine et le PDF sont réservés aux étudiants connectés. C&rsquo;est
+            gratuit, avec ton compte Google.
+          </p>
+          <SignInButton className="press-scale mx-auto mt-5 flex h-[52px] w-full max-w-xs items-center justify-center rounded-2xl border-[1.5px] border-line-4 bg-white text-[15px] font-bold active:bg-surface-3" />
+        </>
+      ) : (
+        <>
+          <div className="text-[17px] font-extrabold">Limite du jour atteinte</div>
+          <p className="mx-auto mt-2 max-w-xs text-[14px] leading-relaxed text-slate">
+            Tu as ouvert {QUOTA} sujets différents en 24 heures. Ceux que tu as déjà ouverts restent accessibles ; les
+            autres se débloquent au fil de la journée.
+          </p>
+        </>
+      )}
     </div>
   );
 }
