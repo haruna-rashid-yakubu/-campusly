@@ -33,14 +33,20 @@ const BLOC = "\u0000";
 function enLigne(s: string, grandesFractions = false) {
   const mis: string[] = [];
   const garder = (html: string) => `${MIS}${mis.push(html) - 1}${MIS}`;
+  // An escaped dollar is a currency sign, not a formula's edge; inside a formula it stays LaTeX's \$.
+  const dollar = "\u0003";
   const texte = s
-    // Backslash escapes: \* \_ \# \` \| \[ \] \~ \$ keep their character and lose their meaning.
-    .replace(/\\([*_#`|[\]~$>\\])/g, (_, c: string) => garder(echapper(c)))
-    .replace(/`([^`\n]+)`/g, (_, c: string) => garder(`<code>${echapper(c)}</code>`))
-    .replace(/\$\$([^$]+)\$\$|\$([^$\n]+?)\$/g, (_, d: string | undefined, m: string | undefined) =>
+    .replace(/\\\$/g, dollar)
+    .replace(/`([^`\n]+)`/g, (_, c: string) => garder(`<code>${echapper(c.replaceAll(dollar, "\\$"))}</code>`))
+    // Formulas before the other escapes: \\ (a matrix's row) and \{ belong to LaTeX, not to Markdown.
+    .replace(/\$\$([^$]+)\$\$|\$([^$\n]+?)\$/g, (_, d: string | undefined, m: string | undefined) => {
+      const latex = (d ?? m!).replaceAll(dollar, "\\$");
       // In a table cell, a fraction keeps its full size: the row grows to fit it.
-      garder(grandesFractions ? katex.renderToString(d ?? m!, { throwOnError: false, strict: "ignore", output: "html" }) : maths(d ?? m!, false))
-    );
+      return garder(grandesFractions ? katex.renderToString(latex, { throwOnError: false, strict: "ignore", output: "html" }) : maths(latex, false));
+    })
+    // Backslash escapes: \* \_ \# \` \| \[ \] \~ \> \\ keep their character and lose their meaning.
+    .replace(/\\([*_#`|[\]~>\\])/g, (_, c: string) => garder(echapper(c)))
+    .replaceAll(dollar, "$");
   return echapper(texte)
     .replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)"<>]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
     .replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>")
