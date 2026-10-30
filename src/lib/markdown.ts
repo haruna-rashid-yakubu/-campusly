@@ -49,6 +49,10 @@ export function markdown(source: string) {
     const puce = ligne.match(/^[-*•]\s+(.*)$/);
     const numero = ligne.match(/^\d+[.)]\s+(.*)$/);
     if (!ligne) fermer();
+    else if (/^(-{3,}|\*{3,}|_{3,})$/.test(ligne)) {
+      fermer();
+      sortie.push("<hr>");
+    }
     else if (formule) {
       fermer();
       sortie.push(`<div class="formule">${formules[Number(formule[1])]}</div>`);

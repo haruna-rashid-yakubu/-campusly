@@ -7,11 +7,29 @@
  * incomplete and shown as being written, and a half-written suggestions line
  * is hidden until it ends.
  */
+export type QuestionQuiz = { question: string; choix: { texte: string; juste: boolean }[]; explication: string };
+
 export type Bloc =
   | { t: "md"; texte: string }
   | { t: "indice" | "solution" | "cle"; texte: string; complet: boolean }
   | { t: "etapes"; etapes: string[]; complet: boolean }
-  | { t: "quiz"; question: string; choix: { texte: string; juste: boolean }[]; explication: string; complet: boolean };
+  // Several questions, asked one after the other: separated by "---" in a block, or blocks in a row.
+  | { t: "quiz"; questions: QuestionQuiz[]; complet: boolean };
+
+function questionQuiz(lignes: string[]): QuestionQuiz {
+  const choix: { texte: string; juste: boolean }[] = [];
+  const question: string[] = [];
+  let explication = "";
+  for (const l of lignes.map((x) => x.trim()).filter(Boolean)) {
+    const c = l.match(/^[-*]\s*\[( |x|X)\]\s*(.*)$/);
+    if (c && !explication) choix.push({ texte: c[2], juste: c[1].toLowerCase() === "x" });
+    else if (/^explication\s*:/i.test(l)) explication = l.replace(/^explication\s*:\s*/i, "");
+    else if (explication) explication += `\n${l}`;
+    else if (!choix.length) question.push(l.replace(/^(question\s*)?\d+\s*[.):-]\s*/i, ""));
+  }
+  const texte = question.join("\n");
+  return { question: texte.charAt(0).toUpperCase() + texte.slice(1), choix, explication };
+}
 
 const NOMS = ["indice", "solution", "cle", "etapes", "quiz"] as const;
 
@@ -22,17 +40,13 @@ function bloc(nom: (typeof NOMS)[number], lignes: string[], complet: boolean): B
     return { t: "etapes", etapes, complet };
   }
   if (nom === "quiz") {
-    const choix: { texte: string; juste: boolean }[] = [];
-    const question: string[] = [];
-    let explication = "";
-    for (const l of lignes.map((x) => x.trim()).filter(Boolean)) {
-      const c = l.match(/^[-*]\s*\[( |x|X)\]\s*(.*)$/);
-      if (c) choix.push({ texte: c[2], juste: c[1].toLowerCase() === "x" });
-      else if (/^explication\s*:/i.test(l)) explication = l.replace(/^explication\s*:\s*/i, "");
-      else if (explication) explication += `\n${l}`;
-      else if (!choix.length) question.push(l);
+    const groupes: string[][] = [[]];
+    for (const l of lignes) {
+      if (/^\s*-{3,}\s*$/.test(l)) groupes.push([]);
+      else groupes.at(-1)!.push(l);
     }
-    return { t: "quiz", question: question.join("\n"), choix, explication, complet: complet && choix.some((c) => c.juste) };
+    const questions = groupes.filter((g) => g.join("").trim()).map(questionQuiz);
+    return { t: "quiz", questions, complet: complet && questions.length > 0 && questions.every((q) => q.choix.some((c) => c.juste)) };
   }
   return { t: nom, texte, complet };
 }
@@ -70,7 +84,18 @@ export function decouper(source: string): { blocs: Bloc[]; suggestions: string[]
   }
   viderMd();
   if (ouvert) blocs.push(bloc(ouvert.nom, ouvert.lignes, false));
-  return { blocs, suggestions };
+
+  // Quiz blocks in a row are one quiz.
+  const fusion: Bloc[] = [];
+  for (const b of blocs) {
+    // A rule or blank line between two quizzes is not a break between them.
+    const entre = fusion.at(-1);
+    if (b.t === "quiz" && entre?.t === "md" && /^[\s\-*_]*$/.test(entre.texte) && fusion.at(-2)?.t === "quiz") fusion.pop();
+    const avant = fusion.at(-1);
+    if (b.t === "quiz" && avant?.t === "quiz") fusion[fusion.length - 1] = { t: "quiz", questions: [...avant.questions, ...b.questions], complet: b.complet };
+    else fusion.push(b);
+  }
+  return { blocs: fusion, suggestions };
 }
 
 /** The answer as plain text, for "Copier": the blocks' markers removed. */

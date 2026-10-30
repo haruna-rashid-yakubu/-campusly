@@ -66,7 +66,8 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     body: JSON.stringify({
       model: "deepseek-flash",
       stream: true,
-      max_tokens: 2500,
+      // Its reasoning counts in here too (up to ~2000 tokens): a quiz was cut off at 2500.
+      max_tokens: 6000,
       temperature: 0.4,
       messages: [
         { role: "system", content: consigne(s.matiere, `${s.type} · ${s.filiere} ${s.niveau} · ${s.annee}`, texteBrut(extraction), corrige, cours) },

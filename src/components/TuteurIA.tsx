@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Icon, type IconName } from "@/components/icons";
 import { lireCours, type Cours } from "@/lib/cours";
 import { markdown } from "@/lib/markdown";
+import { QuizCarrousel } from "@/components/QuizCarrousel";
 import { decouper, enClair, type Bloc } from "@/lib/tuteur-blocs";
 
 /*
@@ -30,7 +31,7 @@ const SUGGESTIONS = ["Par quoi je commence ?", "Explique-moi le premier exercice
 const ACTIONS: { libelle: string; icone: IconName; question: string }[] = [
   { libelle: "Plus simple", icone: "bulb", question: "Explique-moi ça plus simplement, avec des mots simples." },
   { libelle: "Un exemple", icone: "list", question: "Donne-moi un exemple concret pour bien comprendre." },
-  { libelle: "Teste-moi", icone: "check", question: "Teste-moi avec un quiz sur ce qu'on vient de voir." },
+  { libelle: "Teste-moi", icone: "check", question: "Teste-moi avec un quiz de quelques questions sur ce qu'on vient de voir." },
 ];
 
 const cle = (id: number, corrige: boolean, quoi: string) => `campusly.tuteur.${quoi}.${id}${corrige ? ".corrige" : ""}`;
@@ -371,12 +372,14 @@ function Reponse({
       </div>
     );
   }
-  const { blocs, suggestions } = decouper(contenu);
+  const { blocs, suggestions: proposees } = decouper(contenu);
+  // A quiz's score already offers another quiz: the same button twice is noise.
+  const suggestions = blocs.some((b) => b.t === "quiz") ? proposees.filter((s) => !/autre quiz/i.test(s)) : proposees;
 
   return (
     <div className="mr-3 flex flex-col gap-2 self-start">
       {blocs.map((b, i) => (
-        <BlocReponse key={i} bloc={b} />
+        <BlocReponse key={i} bloc={b} onSuite={onSuite} />
       ))}
 
       {derniere && !ecrit && (
@@ -426,12 +429,18 @@ function Reponse({
 
 const html = (texte: string) => ({ __html: markdown(texte) });
 
-function BlocReponse({ bloc }: { bloc: Bloc }) {
+function BlocReponse({ bloc, onSuite }: { bloc: Bloc; onSuite: (question: string) => void }) {
   if (bloc.t === "md") {
     return <div className="reponse-ia rounded-[18px] rounded-bl-md bg-surface px-3.5 py-3 text-ink" dangerouslySetInnerHTML={html(bloc.texte)} />;
   }
   if (!bloc.complet) {
-    const nom = { indice: "un indice", solution: "la réponse", cle: "l'essentiel", etapes: "la méthode", quiz: "un quiz" }[bloc.t];
+    const nom = {
+      indice: "un indice",
+      solution: "la réponse",
+      cle: "l'essentiel",
+      etapes: "la méthode",
+      quiz: bloc.t === "quiz" && bloc.questions.length > 1 ? `ton quiz (${bloc.questions.length} questions)` : "ton quiz",
+    }[bloc.t];
     return (
       <div className="flex items-center gap-2 rounded-2xl border-[1.5px] border-dashed border-line-4 px-3.5 py-3 text-[13px] font-bold text-slate">
         <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-light border-t-transparent" />
@@ -452,7 +461,7 @@ function BlocReponse({ bloc }: { bloc: Bloc }) {
     );
   }
   if (bloc.t === "etapes") return <Etapes etapes={bloc.etapes} />;
-  if (bloc.t === "quiz") return <Quiz question={bloc.question} choix={bloc.choix} explication={bloc.explication} />;
+  if (bloc.t === "quiz") return <QuizCarrousel questions={bloc.questions} onSuite={onSuite} />;
   return null;
 }
 
@@ -514,53 +523,6 @@ function Etapes({ etapes }: { etapes: string[] }) {
           <button onClick={() => setVues(etapes.length)} className="press-scale h-10 rounded-xl px-3 text-[13px] font-bold text-slate">
             Tout voir
           </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// A question answered by tapping, with the explanation once a choice is made.
-function Quiz({ question, choix, explication }: { question: string; choix: { texte: string; juste: boolean }[]; explication: string }) {
-  const [pris, setPris] = useState<number | null>(null);
-  const repondu = pris !== null;
-  return (
-    <div className="rounded-2xl border-[1.5px] border-line-4 bg-white p-3">
-      <div className="mb-1 flex items-center gap-1.5 px-0.5 text-[11.5px] font-black uppercase tracking-[.08em] text-teal-dark">
-        <Icon name="ballot" size={14} strokeWidth={2.2} />
-        Quiz
-      </div>
-      <div className="reponse-ia px-0.5 font-bold" dangerouslySetInnerHTML={html(question)} />
-      <div className="mt-2.5 flex flex-col gap-2">
-        {choix.map((c, i) => {
-          const etat = !repondu ? "" : c.juste ? "juste" : i === pris ? "faux" : "neutre";
-          return (
-            <button
-              key={i}
-              disabled={repondu}
-              onClick={() => setPris(i)}
-              className={`press-scale flex min-h-12 items-center gap-2.5 rounded-xl border-[1.5px] px-3 py-2 text-left text-[14px] font-semibold transition-colors ${
-                etat === "juste"
-                  ? "border-[#16a34a] bg-[#f0fdf4] text-[#166534]"
-                  : etat === "faux"
-                    ? "border-[#dc2626] bg-[#fef2f2] text-[#991b1b]"
-                    : etat === "neutre"
-                      ? "border-line-3 text-slate-light"
-                      : "border-line-4 bg-white active:bg-surface-3"
-              }`}
-            >
-              <span className="grid h-6 w-6 flex-none place-items-center rounded-full border-[1.5px] border-current text-[11px] font-black">
-                {etat === "juste" ? <Icon name="check" size={13} strokeWidth={3} /> : etat === "faux" ? <Icon name="x" size={13} strokeWidth={3} /> : String.fromCharCode(65 + i)}
-              </span>
-              <span className="reponse-ia min-w-0 flex-1" dangerouslySetInnerHTML={html(c.texte)} />
-            </button>
-          );
-        })}
-      </div>
-      {repondu && (
-        <div className="anim-fade mt-2.5 rounded-xl bg-surface px-3 py-2.5">
-          <div className="text-[13.5px] font-extrabold">{choix[pris].juste ? "Bravo, c'est juste !" : "Pas tout à fait."}</div>
-          {explication && <div className="reponse-ia mt-1 text-[14px]" dangerouslySetInnerHTML={html(explication)} />}
         </div>
       )}
     </div>

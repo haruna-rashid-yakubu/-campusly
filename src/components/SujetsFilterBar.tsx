@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Chip } from "@/components/Chip";
 import { PickerButton } from "@/components/PickerButton";
@@ -36,11 +36,20 @@ export function SujetsFilterBar({
   const searchParams = useSearchParams();
   const [q, setQ] = useState(() => searchParams.get("q") ?? "");
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [enCours, startTransition] = useTransition();
 
+  /*
+   * The results follow the URL, but a search is not a place to go back to:
+   * the address is replaced, not pushed (one history step per letter made the
+   * back button replay the typing), and the page does not jump to the top.
+   * While the new results load, the layout is marked pending: the list dims
+   * and the field shows a spinner, instead of the screen being swapped out.
+   */
   const pushParams = (mutate: (params: URLSearchParams) => void) => {
     const params = new URLSearchParams(searchParams.toString());
     mutate(params);
-    router.push(params.size ? `${pathname}?${params.toString()}` : pathname);
+    params.delete("n");
+    startTransition(() => router.replace(params.size ? `${pathname}?${params.toString()}` : pathname, { scroll: false }));
   };
 
   const onQChange = (value: string) => {
@@ -53,19 +62,40 @@ export function SujetsFilterBar({
 
   return (
     <>
-      <div className="mt-3 flex h-12 items-center gap-2.5 rounded-2xl bg-surface-2 px-3.5">
-        <span className="flex-none text-slate-light">
-          <Icon name="search" size={19} strokeWidth={2} />
+      <div
+        data-pending={enCours ? "" : undefined}
+        className="mt-3 flex h-12 items-center gap-2.5 rounded-2xl bg-surface-2 px-3.5"
+      >
+        <span className="grid w-[19px] flex-none place-items-center text-slate-light">
+          {enCours ? (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-light border-t-transparent" aria-label="Recherche en cours" />
+          ) : (
+            <Icon name="search" size={19} strokeWidth={2} />
+          )}
         </span>
+        {/* type="search" with the keyboard's "Rechercher" key: Enter only closes the keyboard, it never submits a page. */}
         <input
+          type="search"
+          inputMode="search"
+          enterKeyHint="search"
+          autoComplete="off"
           value={q}
           onChange={(e) => onQChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              e.currentTarget.blur();
+            }
+          }}
           placeholder="Matière ou enseignant"
-          className="min-w-0 flex-1 border-0 bg-transparent text-[15px] text-ink outline-none"
+          className="min-w-0 flex-1 appearance-none border-0 bg-transparent text-[15px] text-ink outline-none [&::-webkit-search-cancel-button]:hidden"
         />
         {q && (
           <button
+            type="button"
+            aria-label="Effacer la recherche"
             onClick={() => {
+              if (debounce.current) clearTimeout(debounce.current);
               setQ("");
               pushParams((params) => params.delete("q"));
             }}

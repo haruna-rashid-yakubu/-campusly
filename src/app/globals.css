@@ -325,3 +325,18 @@ html[data-couleur="rose"] {
 .reponse-ia .formule { margin: 8px 0; overflow-x: auto; overflow-y: hidden; }
 .reponse-ia .katex-display { margin: 0; }
 .reponse-ia .katex { font-size: 1.04em; }
+.reponse-ia hr { border: 0; border-top: 1px solid var(--color-line-4); margin: 12px 0; }
+
+/* The tutor's quiz carousel (TuteurIA): the next question slides in from the
+   right, a reviewed one from the left; the score lands with a small pop. */
+@keyframes cy-glisse { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: none; } }
+@keyframes cy-glisse-retour { from { opacity: 0; transform: translateX(-32px); } to { opacity: 1; transform: none; } }
+@keyframes cy-pop { 0% { opacity: 0; transform: scale(.85); } 60% { opacity: 1; transform: scale(1.04); } 100% { transform: none; } }
+@keyframes cy-deplie { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.anim-glisse { animation: cy-glisse .32s cubic-bezier(.2, .8, .2, 1) both; }
+.anim-glisse-retour { animation: cy-glisse-retour .32s cubic-bezier(.2, .8, .2, 1) both; }
+.anim-pop { animation: cy-pop .42s cubic-bezier(.2, .8, .2, 1) both; }
+.anim-deplie { animation: cy-deplie .24s cubic-bezier(.2, .8, .2, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .anim-glisse, .anim-glisse-retour, .anim-pop, .anim-deplie { animation: cy-fade .2s ease both; }
+}

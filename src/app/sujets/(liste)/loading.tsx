@@ -1,9 +1,9 @@
 import { SubjectCardSkeleton } from "@/components/Skeletons";
 
+// Under the layout's title and search, which stay on screen: only the results are waited for.
 export default function Loading() {
   return (
-    <div className="min-h-dvh px-5" style={{ paddingTop: "calc(20px + var(--safe-top))" }}>
-      <div className="mb-4 h-8 w-48 rounded-lg bg-line-3 anim-skeleton" />
+    <div className="px-5 pt-3">
       <SubjectCardSkeleton />
       <SubjectCardSkeleton />
       <SubjectCardSkeleton />
