@@ -364,3 +364,17 @@ html[data-couleur="rose"] {
 @media (prefers-reduced-motion: reduce) {
   .anim-glisse, .anim-glisse-retour, .anim-pop, .anim-deplie { animation: cy-fade .2s ease both; }
 }
+
+/*
+ * Against captures (AntiCapture, Filigrane): the page blurs while it is not
+ * being looked at, nothing outside a field can be selected or long-pressed,
+ * and printing gives a blank page with a word of explanation.
+ */
+html.cy-masque body { filter: blur(22px) saturate(.6); transition: filter .08s; }
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+img { -webkit-user-drag: none; }
+@media print {
+  body * { display: none !important; }
+  body::after { content: "L'impression est désactivée sur Campusly."; display: block; padding: 40px; font: 700 16px sans-serif; }
+}

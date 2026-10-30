@@ -31,6 +31,7 @@ export function SujetViewer({
   fileUrl,
   correctionUrl,
   lectures,
+  filigrane,
   onRecord,
 }: {
   subjectId: number;
@@ -43,6 +44,8 @@ export function SujetViewer({
   correctionUrl: string | null;
   // The digitised text and photos, when the paper has been through the digitisation.
   lectures: { sujet: Lecture | null; correction: Lecture | null };
+  // The reader's name, marked across the content (Filigrane).
+  filigrane: string;
   onRecord: () => Promise<void>;
 }) {
   const hasCorrection = !!correctionUrl;
@@ -148,13 +151,14 @@ export function SujetViewer({
         </div>
       )}
 
-      {lecture && <LectureSujet key={mode} lecture={lecture} />}
+      {lecture && <LectureSujet key={mode} lecture={lecture} filigrane={filigrane} />}
 
       {tuteur && (
         <TuteurIA
           subjectId={subjectId}
           matiere={matiere}
           corrige={corrige}
+          filigrane={filigrane}
           onFermer={() => setTuteur(false)}
         />
       )}
@@ -163,6 +167,7 @@ export function SujetViewer({
         <LecteurPdf
           url={activeUrl}
           titre={`${corrige ? "Corrigé · " : ""}${matiere}`}
+          filigrane={filigrane}
           onFermer={() => setOuvert(false)}
         />
       )}

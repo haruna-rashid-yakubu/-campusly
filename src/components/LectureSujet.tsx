@@ -3,6 +3,7 @@
 import "katex/dist/katex.min.css";
 import { useState } from "react";
 import { Icon } from "@/components/icons";
+import { Filigrane } from "@/components/Filigrane";
 import type { Lecture } from "@/lib/numerisation/lecture";
 
 type Onglet = "texte" | "original";
@@ -14,7 +15,7 @@ type Onglet = "texte" | "original";
  * maths, tables and marks of the PDF. The photographs it was read from are
  * one tab away, full width; a tap opens one full screen to zoom.
  */
-export function LectureSujet({ lecture }: { lecture: Lecture }) {
+export function LectureSujet({ lecture, filigrane }: { lecture: Lecture; filigrane: string }) {
   const [onglet, setOnglet] = useState<Onglet>("texte");
   const [plein, setPlein] = useState<string | null>(null);
   // Folded to a preview: the whole text inline pushed the rest of the page thousands of pixels down.
@@ -43,6 +44,7 @@ export function LectureSujet({ lecture }: { lecture: Lecture }) {
       </div>
 
       <div className="relative mt-3">
+        <Filigrane texte={filigrane} />
         <div className={deplie ? "" : "max-h-[440px] overflow-hidden"}>
       {onglet === "texte" ? (
         <>
@@ -104,7 +106,8 @@ export function LectureSujet({ lecture }: { lecture: Lecture }) {
             </button>
           </div>
           {/* Native pinch-zoom and panning: the page is the image, nothing else listens to touch. */}
-          <div className="flex-1 overflow-auto" style={{ touchAction: "pan-x pan-y pinch-zoom" }}>
+          <div className="relative flex-1 overflow-auto" style={{ touchAction: "pan-x pan-y pinch-zoom" }}>
+            <Filigrane texte={filigrane} sombre />
             {/* eslint-disable-next-line @next/next/no-img-element -- same as above */}
             <img src={plein} alt="Page agrandie" className="mx-auto block w-full max-w-[900px]" />
           </div>

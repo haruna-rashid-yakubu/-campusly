@@ -6,6 +6,7 @@ import { Icon, type IconName } from "@/components/icons";
 import { lireCours, type Cours } from "@/lib/cours";
 import { markdown } from "@/lib/markdown";
 import { QuizCarrousel } from "@/components/QuizCarrousel";
+import { Filigrane } from "@/components/Filigrane";
 import { decouper, enClair, type Bloc } from "@/lib/tuteur-blocs";
 
 /*
@@ -56,11 +57,13 @@ export function TuteurIA({
   subjectId,
   matiere,
   corrige,
+  filigrane,
   onFermer,
 }: {
   subjectId: number;
   matiere: string;
   corrige: boolean;
+  filigrane: string;
   onFermer: () => void;
 }) {
   const [messages, setMessages] = useState<Message[]>(() => lire(cle(subjectId, corrige, "fil"), []));
@@ -165,6 +168,8 @@ export function TuteurIA({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-white anim-fade" role="dialog" aria-label="Tuteur IA">
+      {/* Over the whole screen, not the scrolling thread: it stays in every capture. */}
+      <Filigrane texte={filigrane} />
       <div className="flex-none border-b border-line-3" style={{ paddingTop: "calc(10px + var(--safe-top))" }}>
         <div className="flex items-center gap-2 px-2 pb-2.5">
           <button onClick={() => window.history.back()} className="press-scale grid h-11 w-11 place-items-center" aria-label="Fermer">

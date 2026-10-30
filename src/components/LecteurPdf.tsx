@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icons";
 import { downloadFile } from "@/lib/download";
+import { Filigrane } from "@/components/Filigrane";
 
 /*
  * A Sujet's PDF, read full screen on the page itself.
@@ -21,7 +22,7 @@ const ZOOMS = [1, 1.6, 2.2];
 
 type Etat = { t: "chargement"; part: number } | { t: "pret"; pages: number } | { t: "erreur" };
 
-export function LecteurPdf({ url, titre, onFermer }: { url: string; titre: string; onFermer: () => void }) {
+export function LecteurPdf({ url, titre, filigrane, onFermer }: { url: string; titre: string; filigrane: string; onFermer: () => void }) {
   const [etat, setEtat] = useState<Etat>({ t: "chargement", part: 0 });
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(0);
@@ -162,7 +163,7 @@ export function LecteurPdf({ url, titre, onFermer }: { url: string; titre: strin
         </button>
       </div>
 
-      <div ref={pagesRef} className="flex-1 overflow-auto overscroll-contain" style={{ touchAction: "pan-x pan-y pinch-zoom" }}>
+      <div ref={pagesRef} className="relative flex-1 overflow-auto overscroll-contain" style={{ touchAction: "pan-x pan-y pinch-zoom" }}>
         {etat.t === "chargement" && (
           <div className="mx-auto flex max-w-[420px] flex-col items-center px-8 pt-16">
             <div className="cy-skeleton aspect-[1/1.414] w-full rounded-md opacity-20" />
@@ -185,7 +186,8 @@ export function LecteurPdf({ url, titre, onFermer }: { url: string; titre: strin
           </div>
         )}
         {etat.t === "pret" && (
-          <div className="flex w-max min-w-full flex-col items-center gap-3 px-3 py-4" style={{ paddingBottom: "calc(24px + var(--safe-bottom))" }}>
+          <div className="relative flex w-max min-w-full flex-col items-center gap-3 px-3 py-4" style={{ paddingBottom: "calc(24px + var(--safe-bottom))" }}>
+            <Filigrane texte={filigrane} />
             {Array.from({ length: etat.pages }, (_, i) => (
               <canvas
                 key={`${i}-${zoom}`}
