@@ -105,7 +105,8 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
         }}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+          {/* On a laptop the sidebar carries the name; the header keeps its bell. */}
+          <div className="flex items-center gap-2.5 lg:invisible">
             <Logo size={36} />
             <span className="text-xl font-extrabold tracking-tight">Campusly</span>
           </div>

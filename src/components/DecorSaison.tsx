@@ -74,7 +74,7 @@ function Yeux({ className, delai }: { className: string; delai: string }) {
 
 function NuitHalloween({ fond }: { fond: string }) {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[310px] overflow-hidden" aria-hidden="true">
+    <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[310px] overflow-hidden md:rounded-b-[32px]" aria-hidden="true">
       <div className="absolute inset-0" style={{ background: fond }} />
       {/* Stars, each on its own beat. */}
       {[[8, 40], [22, 18], [35, 64], [48, 26], [58, 52], [70, 14], [12, 92], [64, 88], [88, 40], [44, 104]].map(([x, y], i) => (
@@ -143,7 +143,7 @@ function NuitHalloween({ fond }: { fond: string }) {
 export function DecorSaison({ decor }: { decor: Decor }) {
   if (decor.motif === "halloween") return <NuitHalloween fond={decor.fond} />;
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[230px] overflow-hidden" aria-hidden="true">
+    <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[230px] overflow-hidden md:rounded-b-[32px]" aria-hidden="true">
       <div className="absolute inset-0" style={{ background: decor.fond }} />
       <Ruban couleur={decor.couleur} className="absolute right-[-6px] top-[58px] h-[78px] w-[50px] rotate-[14deg] opacity-25" />
       <Ruban couleur={decor.couleur} className="absolute right-[64px] top-[128px] h-[44px] w-[28px] -rotate-[10deg] opacity-15" />
