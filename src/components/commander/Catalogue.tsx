@@ -364,7 +364,7 @@ export function Catalogue({
       {/* The button stays in reach while the flavours are scrolled. */}
       {panier.length > 0 && (
         <div
-          className="fixed inset-x-0 z-20 mx-auto max-w-[480px] px-5"
+          className="fixed inset-x-0 z-20 mx-auto max-w-[480px] px-5 lg:left-[248px]"
           style={{ bottom: "calc(76px + var(--safe-bottom) + 10px)" }}
         >
           <button

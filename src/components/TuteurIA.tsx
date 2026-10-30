@@ -177,7 +177,7 @@ export function TuteurIA({
   const vide = messages.length === 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white anim-fade" role="dialog" aria-label="Tuteur IA">
+    <div className="cy-tiroir fixed inset-0 z-50 flex flex-col bg-white anim-fade" role="dialog" aria-label="Tuteur IA">
       <div className="flex-none border-b border-line-3" style={{ paddingTop: "calc(10px + var(--safe-top))" }}>
         <div className="flex items-center gap-2 px-2 pb-2.5">
           <button onClick={() => window.history.back()} className="press-scale grid h-11 w-11 place-items-center" aria-label="Fermer">

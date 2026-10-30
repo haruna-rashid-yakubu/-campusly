@@ -30,7 +30,7 @@ export default async function LogementsPage({
   const hasFilters = Boolean(params.dist || params.prix || params.quartier);
 
   return (
-    <div className="min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
+    <div className="cy-large min-h-dvh pb-[calc(92px+var(--safe-bottom))] lg:pb-10">
       <div className="sticky top-0 z-10 bg-white px-5" style={{ paddingTop: "calc(20px + var(--safe-top))" }}>
         <div className="text-[24px] font-extrabold tracking-tight">Logements</div>
         <div className="mt-0.5 text-[13.5px] text-slate-light">
@@ -61,12 +61,14 @@ export default async function LogementsPage({
           </EmptyState>
         ) : (
           <>
+            {/* One column on a phone, a grid from a tablet's width. */}
+            <div className="md:grid md:grid-cols-2 md:gap-4 xl:grid-cols-3">
             {cites.map((c) => (
               <Link
                 key={c.id}
                 href={`/logements/${c.id}`}
                 prefetch={false}
-                className="press-scale mb-3.5 block overflow-hidden rounded-[22px] border border-line bg-white"
+                className="press-scale mb-3.5 block overflow-hidden rounded-[22px] border border-line bg-white transition-shadow md:mb-0 md:hover:shadow-[0_12px_28px_-16px_rgba(15,23,42,.35)]"
               >
                 <div className="relative grid h-[154px] place-items-center bg-line-3 text-[12.5px] font-semibold text-slate-light">
                   {c.photos[0] ? (
@@ -110,6 +112,7 @@ export default async function LogementsPage({
                 </div>
               </Link>
             ))}
+            </div>
             <div className="pb-2.5 pt-1 text-center text-[12.5px] text-slate-light">
               Annonces ajoutées et vérifiées par l&rsquo;équipe Campusly
             </div>

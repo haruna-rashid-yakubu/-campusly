@@ -87,7 +87,7 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
     {/* Outside the page's own stacking, so its bats fly over the tab bar too. */}
     {nuit && <Halloween apercu={apercu !== null} essaim={decor?.essaim ?? false} />}
     {sport && <IntroSport apercu={parametres.apercu === "sport"} />}
-    <div className="relative isolate min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
+    <div className="cy-large relative isolate min-h-dvh pb-[calc(92px+var(--safe-bottom))] lg:pb-10">
       {decor && <DecorSaison decor={decor} />}
       <div
         className="px-5"
@@ -136,6 +136,10 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
       </div>
 
       <MaJournee journee={journee} classe={classe} clair={nuit} />
+
+      {/* Two columns on a laptop: what is happening (poll, featured) beside the doors (services, news). */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-start lg:gap-x-2">
+      <div className="min-w-0">
 
       {sondage && sondageResultats && (
         <section className="anim-fade mx-5 mt-5 rounded-[20px] border-[1.5px] border-teal-border bg-teal-tint-soft p-4">
@@ -188,6 +192,8 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
         </div>
       )}
       {cartesUne.length > 0 && <AlaUne cartes={cartesUne} />}
+      </div>
+      <div className="min-w-0">
 
       <AccueilServices
         boutiques={vendeursOuverts.map((v) => ({ nom: v.nom, logo: v.logoCarreUrl }))}
@@ -305,6 +311,8 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
             Partager Campusly
           </button>
         </ShareSheet>
+      </div>
+      </div>
       </div>
     </div>
     </>

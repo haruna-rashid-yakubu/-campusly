@@ -378,3 +378,34 @@ img { -webkit-user-drag: none; }
   body * { display: none !important; }
   body::after { content: "L'impression est désactivée sur Campusly."; display: block; padding: 40px; font: 700 16px sans-serif; }
 }
+
+/*
+ * Wide screens. The app is drawn for a phone; on a tablet its pages sit in a
+ * centred column, and from a laptop's width beside the sidebar (TabBar): a
+ * reading column, or a wide one for the pages marked .cy-large (grids, two
+ * columns). Nothing here applies below 768px.
+ *
+ * .cy-tiroir: a full-screen panel on a phone (the assistant, the tutor),
+ * a panel on the right of a laptop's screen, the page still in view.
+ */
+button:not(:disabled), [role="button"], summary, label[for] { cursor: pointer; }
+@media (min-width: 768px) {
+  .cy-page { max-width: 760px; margin-inline: auto; }
+}
+@media (min-width: 1024px) {
+  html:has(#cy-barre-laterale) .cy-contenu { padding-left: 248px; }
+  /* A reading column by default; a page laid out in columns or grids says so with .cy-large. */
+  .cy-page { max-width: 780px; padding-inline: 24px; }
+  .cy-page:has(.cy-large) { max-width: 1120px; }
+  /* The room kept for the tab bar, which a laptop does not have. */
+  .cy-page [class*="pb-[calc(92px"] { padding-bottom: 40px; }
+  .cy-tiroir {
+    left: auto !important;
+    width: 480px;
+    border-left: 1px solid var(--color-line);
+    box-shadow: -30px 0 70px -30px rgba(15, 23, 42, .35);
+  }
+}
+@media (min-width: 1440px) {
+  .cy-page:has(.cy-large) { max-width: 1200px; }
+}

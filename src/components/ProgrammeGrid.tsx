@@ -70,7 +70,8 @@ export function ProgrammeGrid({
   aujourdhui?: number | null;
 }) {
   return (
-    <div>
+    // The days side by side on a tablet and a laptop: a week seen at once, like the sheet on the noticeboard.
+    <div className="md:grid md:grid-cols-2 md:items-start md:gap-3 xl:grid-cols-3">
       {aujourdhui && <DefilerVersAujourdhui />}
       {JOURS.map((label, i) => {
         const jour = i + 1;
@@ -79,7 +80,7 @@ export function ProgrammeGrid({
           <div
             key={label}
             id={estAujourdhui ? "aujourdhui" : undefined}
-            className={`mb-3 scroll-mt-48 overflow-hidden rounded-[20px] border ${estAujourdhui ? "border-[1.5px] border-teal" : "border-line"}`}
+            className={`mb-3 scroll-mt-48 overflow-hidden rounded-[20px] border md:mb-0 ${estAujourdhui ? "border-[1.5px] border-teal" : "border-line"}`}
           >
             <div
               className={`flex items-center justify-between px-4 py-2 text-[13.5px] font-extrabold ${estAujourdhui ? "bg-teal-tint text-teal-active" : "bg-surface"}`}

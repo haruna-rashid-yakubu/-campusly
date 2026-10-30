@@ -85,7 +85,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="h-full font-sans antialiased">
         <ToastProvider>
-          {children}
+          {/* The page's frame on wide screens (globals.css): a column on a tablet, beside the sidebar on a laptop. */}
+          <div className="cy-contenu">
+            <div className="cy-page">{children}</div>
+          </div>
           <TabBarGate />
           {/* After the page, so its HTML is complete underneath, and last so
               it paints over the tab bar rather than beside it. */}

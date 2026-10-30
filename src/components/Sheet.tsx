@@ -57,7 +57,7 @@ export function Sheet({
         aria-label={title}
         // dvh, not vh: iOS resolves vh against the *largest* viewport, which
         // pushes the bottom of the sheet under the browser chrome.
-        className="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-[28px] bg-white anim-up"
+        className="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-[28px] bg-white anim-up md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:max-h-[80dvh] md:w-[460px] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-[28px] md:shadow-2xl"
       >
         <div className="flex-none px-5 pt-3.5">
           <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-line-5" />

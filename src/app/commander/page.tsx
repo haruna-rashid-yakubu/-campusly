@@ -32,7 +32,7 @@ export default async function CommanderPage() {
   const titres = [...parCategorie.values()].some((liste) => liste.length > 1);
 
   return (
-    <div className="min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
+    <div className="cy-large min-h-dvh pb-[calc(92px+var(--safe-bottom))] lg:pb-10">
       <div className="px-5" style={{ paddingTop: "calc(20px + var(--safe-top))" }}>
         <div className="text-[24px] font-extrabold tracking-tight">Commander</div>
         <div className="mt-0.5 pb-3 text-[13.5px] text-slate-light">
@@ -42,15 +42,15 @@ export default async function CommanderPage() {
 
       <div className="flex flex-col gap-3 px-5">
         {[...parCategorie.entries()].map(([categorie, liste]) => (
-          <div key={categorie} className="flex flex-col gap-3">
+          <div key={categorie} className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-3">
             {titres && (
-              <div className="mt-2 text-base font-extrabold">{CATEGORIES[categorie] ?? categorie}</div>
+              <div className="mt-2 text-base font-extrabold md:col-span-2">{CATEGORIES[categorie] ?? categorie}</div>
             )}
             {liste.map((v) => (
               <Link
                 key={v.id}
                 href={`/commander/${v.slug}`}
-                className="press-scale flex items-center gap-3.5 overflow-hidden rounded-[22px] border border-line bg-white p-3 active:bg-surface-3"
+                className="press-scale flex items-center gap-3.5 overflow-hidden rounded-[22px] border border-line bg-white p-3 transition-shadow active:bg-surface-3 md:hover:shadow-[0_12px_28px_-16px_rgba(15,23,42,.35)]"
               >
                 {v.logoCarreUrl ? (
                   <Image

@@ -140,7 +140,7 @@ export function RapportIA({
   const faites = etape.t === "redaction" ? Object.values(etape.etats).filter((e) => e === "faite").length : 0;
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col bg-white anim-fade" role="dialog" aria-label="Rapport de révision">
+    <div className="cy-tiroir fixed inset-0 z-[70] flex flex-col bg-white anim-fade" role="dialog" aria-label="Rapport de révision">
       <div className="flex flex-none items-center gap-2 border-b border-line-3 px-2 pb-2.5" style={{ paddingTop: "calc(10px + var(--safe-top))" }}>
         <button
           onClick={() => window.history.back()}

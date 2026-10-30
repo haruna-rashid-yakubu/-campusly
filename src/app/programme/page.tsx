@@ -41,7 +41,7 @@ export default async function ProgrammePage() {
   const suit = classeRow ? await getTroncCommun(classeRow.id) : null;
 
   return (
-    <div className="min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
+    <div className="cy-large min-h-dvh pb-[calc(92px+var(--safe-bottom))] lg:pb-10">
       <div className="sticky top-0 z-10 bg-white px-5" style={{ paddingTop: "calc(20px + var(--safe-top))" }}>
         <div className="pb-3">
           <div className="text-[24px] font-extrabold tracking-tight">Programme</div>

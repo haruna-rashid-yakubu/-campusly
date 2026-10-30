@@ -55,7 +55,7 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
   const themes = extraction?.themes ?? [];
 
   return (
-    <div className="relative min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
+    <div className="cy-large relative min-h-dvh pb-[calc(92px+var(--safe-bottom))] lg:pb-10">
       <BackHeader
         border
         right={
@@ -80,6 +80,9 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
           {subject.corrige && <Badge tone="teal">Avec corrigé</Badge>}
         </div>
 
+        {/* A laptop: the paper on the left, what describes it on the right. */}
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-8">
+        <div className="min-w-0">
         {acces.ok ? (
           <SujetViewer
             subjectId={subject.id}
@@ -99,9 +102,11 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
         ) : (
           <Verrou raison={acces.raison} />
         )}
+        </div>
+        <aside className="min-w-0">
 
         {themes.length > 0 && (
-          <div className="mt-7">
+          <div className="mt-7 lg:mt-5">
             <h2 className="text-[17px] font-extrabold tracking-tight">Thèmes abordés</h2>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {themes.map((t) => (
@@ -216,6 +221,8 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
         >
           Signaler un problème sur ce sujet
         </ToastButton>
+        </aside>
+        </div>
       </div>
     </div>
   );

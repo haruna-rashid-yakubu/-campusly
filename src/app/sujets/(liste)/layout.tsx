@@ -33,7 +33,7 @@ export default async function SujetsListeLayout({
   const filiereDefaut = filiereDeClasse(classe);
 
   return (
-    <div className="group/liste relative min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
+    <div className="cy-large group/liste relative min-h-dvh pb-[calc(92px+var(--safe-bottom))] lg:pb-10">
       <div
         className="sticky top-0 z-10 bg-white px-5"
         style={{ paddingTop: "calc(20px + var(--safe-top))" }}

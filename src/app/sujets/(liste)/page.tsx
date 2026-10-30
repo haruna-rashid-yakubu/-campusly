@@ -115,55 +115,58 @@ export default async function SujetsPage({
               ? `${niveauPrefere} d'abord, du plus récent`
               : "du plus récent"}
           </div>
-          {subjects.map((s) => (
-            // The card opens the paper; the download button beside it downloads it,
-            // as its icon says. They are siblings: a button cannot sit inside a link.
-            <div
-              key={s.id}
-              className="mb-3 flex items-start gap-3 rounded-[20px] border border-line bg-white p-3.5"
-            >
-              <Link
-                href={`/sujets/${s.id}`}
-                prefetch={false}
-                className="press-scale flex min-w-0 flex-1 items-start gap-3 active:opacity-80"
+          {/* One column on a phone, a grid from a tablet's width. */}
+          <div className="md:grid md:grid-cols-2 md:gap-3 xl:grid-cols-3">
+            {subjects.map((s) => (
+              // The card opens the paper; the download button beside it downloads it,
+              // as its icon says. They are siblings: a button cannot sit inside a link.
+              <div
+                key={s.id}
+                className="mb-3 flex items-start gap-3 rounded-[20px] border border-line bg-white p-3.5 transition-shadow md:mb-0 md:hover:shadow-[0_10px_24px_-16px_rgba(15,23,42,.35)]"
               >
-                <span className="grid h-[58px] w-12 flex-none place-items-center rounded-[10px] bg-surface text-teal-dark">
-                  <Icon name="doc" size={22} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[15.5px] font-extrabold leading-tight">
-                    {s.matiere}
-                  </div>
-                  <div className="mt-0.5 text-[13px] text-slate">
-                    {s.filiere} · {s.niveau} · {s.annee}
-                  </div>
-                  {s.enseignant && (
-                    <div className="mt-0.5 truncate text-[13px] text-slate">
-                      {s.enseignant}
+                <Link
+                  href={`/sujets/${s.id}`}
+                  prefetch={false}
+                  className="press-scale flex min-w-0 flex-1 items-start gap-3 active:opacity-80"
+                >
+                  <span className="grid h-[58px] w-12 flex-none place-items-center rounded-[10px] bg-surface text-teal-dark">
+                    <Icon name="doc" size={22} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[15.5px] font-extrabold leading-tight">
+                      {s.matiere}
                     </div>
-                  )}
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    <Badge tone="neutral">{s.type}</Badge>
-                    <Badge tone={s.corrige ? "teal" : "neutral"}>
-                      {s.corrige ? "Corrigé" : "Sans corrigé"}
-                    </Badge>
+                    <div className="mt-0.5 text-[13px] text-slate">
+                      {s.filiere} · {s.niveau} · {s.annee}
+                    </div>
+                    {s.enseignant && (
+                      <div className="mt-0.5 truncate text-[13px] text-slate">
+                        {s.enseignant}
+                      </div>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <Badge tone="neutral">{s.type}</Badge>
+                      <Badge tone={s.corrige ? "teal" : "neutral"}>
+                        {s.corrige ? "Corrigé" : "Sans corrigé"}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-              </Link>
-              <DownloadButton
-                compact
-                label={`Télécharger ${s.matiere}`}
-                fileUrl={lienFichier(s.id, s.fileUrl, false, jeton)}
-                onRecord={incrementSubjectDownload.bind(null, s.id)}
-              />
-            </div>
-          ))}
+                </Link>
+                <DownloadButton
+                  compact
+                  label={`Télécharger ${s.matiere}`}
+                  fileUrl={lienFichier(s.id, s.fileUrl, false, jeton)}
+                  onRecord={incrementSubjectDownload.bind(null, s.id)}
+                />
+              </div>
+            ))}
+          </div>
 
           {subjects.length < total && (
             <Link
               href={`/sujets?${new URLSearchParams({ ...(Object.fromEntries(Object.entries(filtres).filter(([, v]) => v)) as Record<string, string>), n: String(affiches + PAGE) })}`}
               scroll={false}
-              className="press-scale mb-4 flex h-[50px] w-full items-center justify-center rounded-2xl border-[1.5px] border-line-4 bg-white text-[14.5px] font-bold text-teal-dark active:bg-surface-2"
+              className="press-scale mb-4 flex h-[50px] w-full items-center justify-center rounded-2xl border-[1.5px] border-line-4 bg-white text-[14.5px] font-bold text-teal-dark active:bg-surface-2 md:mx-auto md:mt-4 md:max-w-[360px] md:hover:bg-surface-2"
             >
               Voir plus · {total - subjects.length} restant
               {total - subjects.length > 1 ? "s" : ""}

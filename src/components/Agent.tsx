@@ -139,7 +139,7 @@ export function Agent({ onFermer }: { onFermer: () => void }) {
   const vide = tours.length === 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white anim-fade" role="dialog" aria-label="Assistant Campusly">
+    <div className="cy-tiroir fixed inset-0 z-50 flex flex-col bg-white anim-fade" role="dialog" aria-label="Assistant Campusly">
       <div className="flex flex-none items-center gap-2 border-b border-line-3 px-2 pb-2.5" style={{ paddingTop: "calc(10px + var(--safe-top))" }}>
         <button onClick={() => window.history.back()} className="press-scale grid h-11 w-11 place-items-center" aria-label="Fermer">
           <Icon name="x" size={21} strokeWidth={2} />
