@@ -31,7 +31,6 @@ import { DecorSaison } from "@/components/DecorSaison";
 import { MaJournee } from "@/components/MaJournee";
 import { getJourneeEtudiant } from "@/lib/journee";
 import { AccueilServices } from "@/components/AccueilServices";
-import { AgentBouton } from "@/components/Agent";
 import { distanceLabel, fcfa, isWithinLastWeek } from "@/lib/utils";
 import { TexteIcone } from "@/components/TexteIcone";
 import { CARTE, TitreSection } from "@/components/TitreSection";
@@ -189,9 +188,6 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
         </div>
       )}
       {cartesUne.length > 0 && <AlaUne cartes={cartesUne} />}
-
-      {/* The assistant: floating over the home screen, above the tab bar. */}
-      <AgentBouton />
 
       <AccueilServices
         boutiques={vendeursOuverts.map((v) => ({ nom: v.nom, logo: v.logoCarreUrl }))}

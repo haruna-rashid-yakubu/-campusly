@@ -9,7 +9,7 @@ import { markdown } from "@/lib/markdown";
 import { decouper } from "@/lib/tuteur-blocs";
 
 /*
- * The home screen's assistant: one button, and then whatever the student asks
+ * The assistant, the tab bar's middle tab: one tap, and then whatever the student asks
  * — order lunch, find a paper, read tomorrow's courses, find a room, answer
  * the poll. The route (api/agent) does it with its tools and streams each
  * step; this screen shows the steps as they happen, the cards the tools
@@ -40,28 +40,7 @@ function lire(): Tour[] {
   }
 }
 
-export function AgentBouton() {
-  const [ouvert, setOuvert] = useState(false);
-  return (
-    <>
-      <button
-        onClick={() => setOuvert(true)}
-        className="press-scale fixed right-4 z-[6] flex h-14 items-center gap-2 rounded-full pl-4 pr-5 text-[14.5px] font-extrabold text-white shadow-[0_14px_30px_-10px_rgba(79,70,229,.75)]"
-        style={{ bottom: "calc(90px + var(--safe-bottom))", background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 45%, #7c3aed 100%)" }}
-        aria-label="Ouvrir l'assistant Campusly"
-      >
-        <span className="relative grid h-7 w-7 place-items-center">
-          <span className="absolute inset-0 animate-ping rounded-full bg-white/30 [animation-duration:2.4s]" />
-          <Icon name="spark" size={22} strokeWidth={2.1} />
-        </span>
-        Assistant
-      </button>
-      {ouvert && <Agent onFermer={() => setOuvert(false)} />}
-    </>
-  );
-}
-
-function Agent({ onFermer }: { onFermer: () => void }) {
+export function Agent({ onFermer }: { onFermer: () => void }) {
   const [tours, setTours] = useState<Tour[]>(lire);
   const [saisie, setSaisie] = useState("");
   const [enCours, setEnCours] = useState(false);
