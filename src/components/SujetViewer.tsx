@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { LectureSujet } from "@/components/LectureSujet";
 import { LecteurPdf } from "@/components/LecteurPdf";
@@ -48,7 +49,9 @@ export function SujetViewer({
   const hasCorrection = !!correctionUrl;
   const [mode, setMode] = useState<Mode>("sujet");
   const [ouvert, setOuvert] = useState(false);
-  const [tuteur, setTuteur] = useState(false);
+  // ?tuteur=1 (from the assistant's "Réviser" button) opens the tutor straight away.
+  const params = useSearchParams();
+  const [tuteur, setTuteur] = useState(() => params.get("tuteur") === "1" && !!lectures.sujet);
   const activeUrl = mode === "correction" ? correctionUrl : fileUrl;
   const lecture = mode === "correction" ? lectures.correction : lectures.sujet;
   const corrige = mode === "correction";
