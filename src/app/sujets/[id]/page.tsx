@@ -88,6 +88,8 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
             matiere={subject.matiere}
             filiere={subject.filiere}
             niveau={subject.niveau}
+            type={subject.type}
+            annee={subject.annee}
             fileUrl={lienFichier(subject.id, subject.fileUrl, false, jeton)}
             correctionUrl={lienFichier(subject.id, subject.correctionUrl, true, jeton)}
             lectures={{

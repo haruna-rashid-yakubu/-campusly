@@ -3,7 +3,6 @@
 import "katex/dist/katex.min.css";
 import { useState } from "react";
 import { Icon } from "@/components/icons";
-import { lienOriginal } from "@/lib/fichiers";
 import type { Lecture } from "@/lib/numerisation/lecture";
 
 type Onglet = "texte" | "original";
@@ -15,7 +14,7 @@ type Onglet = "texte" | "original";
  * maths, tables and marks of the PDF. The photographs it was read from are
  * one tab away, full width; a tap opens one full screen to zoom.
  */
-export function LectureSujet({ lecture, pdf }: { lecture: Lecture; pdf: string | null }) {
+export function LectureSujet({ lecture }: { lecture: Lecture }) {
   const [onglet, setOnglet] = useState<Onglet>("texte");
   const [plein, setPlein] = useState<string | null>(null);
 
@@ -37,19 +36,6 @@ export function LectureSujet({ lecture, pdf }: { lecture: Lecture; pdf: string |
           </button>
         ))}
       </div>
-
-      {/* The PDF of what the tab shows: the Version reconstituée for the text, the Version originale for the photos. */}
-      {pdf && (
-        <a
-          href={onglet === "texte" ? pdf : lienOriginal(pdf)}
-          target="_blank"
-          rel="noreferrer"
-          className="press-scale mt-3 flex h-12 items-center justify-center gap-2 rounded-2xl border-[1.5px] border-line-4 bg-white text-[14.5px] font-bold text-teal-dark active:bg-surface-3"
-        >
-          <Icon name="full" size={17} strokeWidth={2} />
-          {onglet === "texte" ? "Ouvrir le PDF" : "Ouvrir le PDF des photos"}
-        </a>
-      )}
 
       {onglet === "texte" ? (
         <>
