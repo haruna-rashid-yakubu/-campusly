@@ -76,14 +76,14 @@ export function AccueilServices({
             </span>
           </div>
 
-          {/* The shops themselves, overlapping like a group of faces. */}
+          {/* The shops themselves, their square logos overlapping. */}
           <div className="relative mt-3.5 flex items-center gap-2.5">
             <span className="flex -space-x-2">
               {visibles.map((b) =>
                 b.logo ? (
-                  <Image key={b.nom} src={b.logo} alt={b.nom} width={34} height={34} className="h-[34px] w-[34px] rounded-full bg-white object-cover ring-2 ring-white" />
+                  <Image key={b.nom} src={b.logo} alt={b.nom} width={34} height={34} className="h-[34px] w-[34px] rounded-[11px] bg-white object-cover ring-2 ring-white" />
                 ) : (
-                  <span key={b.nom} className="grid h-[34px] w-[34px] place-items-center rounded-full bg-white text-[12px] font-black text-[#c2185b] ring-2 ring-white">
+                  <span key={b.nom} className="grid h-[34px] w-[34px] place-items-center rounded-[11px] bg-white text-[12px] font-black text-[#c2185b] ring-2 ring-white">
                     {b.nom.charAt(0)}
                   </span>
                 )
