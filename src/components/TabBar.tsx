@@ -15,6 +15,7 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
 ];
 
 const SERVICES: { href: string; label: string; icon: IconName }[] = [
+  { href: "/entrainement", label: "Entraînement", icon: "cap" },
   { href: "/commander", label: "Commander", icon: "bag" },
   { href: "/logements", label: "Logements", icon: "bed" },
   { href: "/pressing", label: "Pressing", icon: "shirt" },
@@ -87,7 +88,8 @@ export function TabBar() {
           <div className="mx-auto flex max-w-[560px]">
             {[...TABS.slice(0, 2), null, TABS[2]].map((tab) => {
               if (!tab) return ongletAssistant;
-              const active = estActif(pathname, tab.href);
+              // The Entraînement is the Sujets tab's second drawer (OngletsSujets).
+              const active = estActif(pathname, tab.href) || (tab.href === "/sujets" && pathname.startsWith("/entrainement"));
               return (
                 <Link
                   key={tab.href}

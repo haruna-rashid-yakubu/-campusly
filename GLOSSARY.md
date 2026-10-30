@@ -9,6 +9,9 @@ _À éviter_ : correction, solution.
 **Corrigé IA** : une proposition de solution d'un Sujet rédigée par l'intelligence artificielle de Campusly, puis revérifiée par elle, quand le Sujet n'a pas de Corrigé. Il n'est pas validé par l'enseignant et le dit toujours. Un Sujet qui a un Corrigé n'a pas de Corrigé IA.
 _À éviter_ : corrigé (seul, pour désigner celui de l'IA), corrigé officiel.
 
+**Sujet d'entraînement** : un sujet inédit écrit par l'intelligence artificielle de Campusly dans la manière d'un enseignant (structure, types de questions, barème, notions), pour s'entraîner avant ses épreuves. Il ne reprend aucun exercice de ses vrais Sujets, n'a jamais été donné en examen et vient toujours avec son corrigé.
+_À éviter_ : faux sujet, sujet probable, annale (ce n'en est pas une).
+
 **Type d'épreuve** : la nature de l'examen dont vient un Sujet, choisie dans une liste fermée : Partiel, CC, Examen, Rattrapage, TD, Concours.
 _À éviter_ : « Mid-term » (c'est un Partiel), « contrôle » (c'est un CC).
 

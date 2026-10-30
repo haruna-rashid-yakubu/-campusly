@@ -56,4 +56,8 @@ export const cles = {
   corrigeIa: (id: number) => `sujets/${id}/corrige-ia.pdf`,
   corrigeIaTexte: (id: number) => `sujets/${id}/corrige-ia.json`,
   indexCorrigesIa: "corriges-ia/index.json",
+  // The Sujets d'entraînement (GLOSSARY.md): the lecturers and their papers, then each paper's PDFs and texts.
+  indexEntrainement: "entrainement/index.json",
+  entrainementPdf: (slug: string, n: number, corrige = false) => `entrainement/${slug}/${n}/${corrige ? "corrige" : "sujet"}.pdf`,
+  entrainementTextes: (slug: string, n: number) => `entrainement/${slug}/${n}/textes.json`,
 };

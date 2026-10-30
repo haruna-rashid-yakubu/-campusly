@@ -94,6 +94,7 @@ export const config = {
     "/api/blob/:path*",
     "/api/fichiers/:path*",
     "/api/sujets/:path*",
+    "/api/entrainement/:path*",
     // Every page, for the session's renewal; not the build's files or the images.
     "/((?!api/|_next/|.*\\.(?:png|jpg|jpeg|svg|webp|ico|webmanifest|js|mjs|css|txt|xml)$).*)",
   ],

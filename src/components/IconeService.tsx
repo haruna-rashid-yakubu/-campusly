@@ -4,7 +4,7 @@
  * a glance as what it is (a paper with the tutor's spark, a calendar, a
  * house, a shirt, a bag) and all five look like one family.
  */
-export type Service = "sujets" | "programme" | "logements" | "pressing" | "commander";
+export type Service = "sujets" | "entrainement" | "programme" | "logements" | "pressing" | "commander";
 
 export function IconeService({ service, couleur, taille = 30 }: { service: Service; couleur: string; taille?: number }) {
   const trait = { stroke: couleur, strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
@@ -17,6 +17,14 @@ export function IconeService({ service, couleur, taille = 30 }: { service: Servi
           <path d="M14.5 2.9v4.3h4.4" {...trait} />
           <path d="M9.4 11.2h6.2M9.4 14.6h3.8" {...trait} />
           <path d="M5.2 13.6l.75 1.75 1.75.75-1.75.75-.75 1.75-.75-1.75-1.75-.75 1.75-.75z" fill={couleur} />
+        </>
+      )}
+      {service === "entrainement" && (
+        <>
+          <circle cx="12" cy="12.6" r="8.4" {...teinte} {...trait} />
+          <circle cx="12" cy="12.6" r="4.6" {...trait} />
+          <circle cx="12" cy="12.6" r="1.4" fill={couleur} />
+          <path d="M12 12.6 18.6 6M16.4 3.6l.4 2.6 2.6.4" {...trait} />
         </>
       )}
       {service === "programme" && (

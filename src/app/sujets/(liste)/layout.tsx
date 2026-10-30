@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { Icon } from "@/components/icons";
+import { OngletsSujets } from "@/components/OngletsSujets";
 import { SujetsFilterBar } from "@/components/SujetsFilterBar";
 import {
   getPreferredClasse,
@@ -60,6 +61,7 @@ export default async function SujetsListeLayout({
             <Icon name="plus" size={20} strokeWidth={2.2} />
           </Link>
         </div>
+        <OngletsSujets actif="annales" />
         <SujetsFilterBar
           facets={facets}
           defaults={{ filiere: filiereDefaut }}

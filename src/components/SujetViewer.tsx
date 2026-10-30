@@ -192,14 +192,17 @@ export function SujetViewer({
 }
 
 // The PDF's first page in miniature: the Campusly cover every Version reconstituée opens on.
-function Couverture({
+export function Couverture({
   matiere,
   type,
   corrige,
+  nature,
 }: {
   matiere: string;
   type: string;
   corrige: boolean;
+  // What the cover says above the title, when not "Sujet · Examen" (a Sujet d'entraînement).
+  nature?: string;
 }) {
   return (
     <span className="relative block h-[86px] w-[64px] flex-none rounded-[6px] bg-white p-2 shadow-[0_6px_14px_-8px_rgba(15,23,42,.5)] ring-1 ring-line">
@@ -208,7 +211,7 @@ function Couverture({
         <span className="text-[5.5px] font-extrabold">Campusly</span>
       </span>
       <span className="mt-2.5 block text-[4.5px] font-extrabold uppercase tracking-[.1em] text-teal-dark">
-        {corrige ? "Corrigé" : "Sujet"} · {type}
+        {nature ?? `${corrige ? "Corrigé" : "Sujet"} · ${type}`}
       </span>
       <span className="mt-0.5 line-clamp-2 block text-[6.5px] font-extrabold leading-[1.15]">
         {matiere}

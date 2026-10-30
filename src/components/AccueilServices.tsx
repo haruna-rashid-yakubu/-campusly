@@ -15,7 +15,8 @@ import { TitreSection } from "@/components/TitreSection";
  * week, rather than a generic word.
  */
 
-type Tuile = { href: string; titre: string; sous: string; icone: Service; teinte: string; fond: string; badge?: string };
+// `large`: the whole row, for a door that needs a sentence to say what is behind it.
+type Tuile = { href: string; titre: string; sous: string; icone: Service; teinte: string; fond: string; badge?: string; large?: boolean };
 
 export function AccueilServices({
   boutiques,
@@ -47,6 +48,16 @@ export function AccueilServices({
     },
     { href: "/logements", titre: "Logements", sous: "Cités vérifiées autour du campus", icone: "logements", teinte: "#ea580c", fond: "#fff1e6" },
     { href: "/pressing", titre: "Pressing", sous: "Lavage et repassage, retrait au campus", icone: "pressing", teinte: "#0284c7", fond: "#e8f4fd" },
+    {
+      href: "/entrainement",
+      titre: "Entraînement",
+      sous: "Des sujets inédits dans la manière de chaque enseignant, avec corrigé",
+      icone: "entrainement",
+      teinte: "#4f46e5",
+      fond: "#eef0ff",
+      badge: "Nouveau",
+      large: true,
+    },
   ];
   const visibles = boutiques.slice(0, 4);
 
@@ -98,7 +109,30 @@ export function AccueilServices({
       )}
 
       <div className="grid grid-cols-2 gap-3">
-        {tuiles.map((t) => (
+        {tuiles.map((t) =>
+          t.large ? (
+            <Link
+              key={t.href}
+              href={t.href}
+              className="press-scale col-span-2 flex items-center gap-3.5 rounded-[20px] border border-line bg-white p-3.5 text-ink shadow-[0_1px_2px_rgba(15,23,42,.04),0_10px_24px_-16px_rgba(15,23,42,.22)] active:bg-surface-3"
+            >
+              <span className="grid h-12 w-12 flex-none place-items-center rounded-[15px]" style={{ background: t.fond }}>
+                <IconeService service={t.icone} couleur={t.teinte} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-2">
+                  <span className="text-[15px] font-extrabold leading-tight tracking-tight">{t.titre}</span>
+                  {t.badge && (
+                    <span className="flex h-5 items-center rounded-full px-2 text-[10.5px] font-black text-white" style={{ background: t.teinte }}>
+                      {t.badge}
+                    </span>
+                  )}
+                </span>
+                <span className="mt-0.5 line-clamp-2 block text-[12.5px] leading-snug text-slate">{t.sous}</span>
+              </span>
+              <Icon name="right" size={16} className="flex-none text-slate-light" />
+            </Link>
+          ) : (
           <Link
             key={t.href}
             href={t.href}
@@ -121,7 +155,8 @@ export function AccueilServices({
             <span className="mt-3 block text-[15px] font-extrabold leading-tight tracking-tight">{t.titre}</span>
             <span className="mt-1 line-clamp-2 block min-h-[2lh] text-[12.5px] leading-snug text-slate">{t.sous}</span>
           </Link>
-        ))}
+          )
+        )}
       </div>
     </section>
   );
