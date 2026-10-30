@@ -565,9 +565,10 @@ export const notificationEnvoisRelations = relations(notificationEnvois, ({ one 
  * `lecture` is an account opening a Sujet's content, once per Sujet per day:
  * what the daily limit counts (lib/acces). `quota_atteint` is the first
  * refusal of that limit, which is when the admins are told. `message_ia` is
- * one question asked to the revision tutor on a Sujet (its own daily limit).
+ * one question asked to the revision tutor on a Sujet (its own daily limit),
+ * `page_cours_ia` one page of a student's course transcribed for it.
  */
-export const evenementTypeEnum = ["contact_bailleur", "partage", "lecture", "quota_atteint", "message_ia"] as const;
+export const evenementTypeEnum = ["contact_bailleur", "partage", "lecture", "quota_atteint", "message_ia", "page_cours_ia"] as const;
 
 /** What the event is about. `app` is Campusly itself, shared from anywhere. */
 export const evenementCibleEnum = ["cite", "app", "sujet"] as const;

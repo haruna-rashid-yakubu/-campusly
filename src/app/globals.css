@@ -324,3 +324,4 @@ html[data-couleur="rose"] {
 .reponse-ia code { font-size: 13.5px; background: var(--color-line); border-radius: 5px; padding: 1px 5px; }
 .reponse-ia .formule { margin: 8px 0; overflow-x: auto; overflow-y: hidden; }
 .reponse-ia .katex-display { margin: 0; }
+.reponse-ia .katex { font-size: 1.04em; }

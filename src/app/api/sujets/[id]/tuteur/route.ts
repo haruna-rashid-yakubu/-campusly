@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { evenements, subjects, users } from "@/db/schema";
 import { lecteur, ouvrir } from "@/lib/acces";
 import { lireExtraction, texteBrut } from "@/lib/numerisation/lecture";
-import { consigne } from "@/lib/tuteur";
+import { consigne, COURS_MAX } from "@/lib/tuteur";
 
 /*
  * The revision tutor of a Sujet: a conversation with DeepSeek, which has the
@@ -29,7 +29,9 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   const acces = await ouvrir(await lecteur(), numero);
   if (!acces.ok) return NextResponse.json({ erreur: acces.raison }, { status: acces.raison === "quota" ? 429 : 401 });
 
-  const corps = (await request.json().catch(() => null)) as { messages?: Message[]; corrige?: boolean } | null;
+  const corps = (await request.json().catch(() => null)) as { messages?: Message[]; corrige?: boolean; cours?: string } | null;
+  // The student's course, already text (read on the phone, or transcribed by ./cours).
+  const cours = typeof corps?.cours === "string" ? corps.cours.slice(0, COURS_MAX) : "";
   const messages = (corps?.messages ?? [])
     .filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim())
     .slice(-HISTORIQUE)
@@ -64,10 +66,10 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     body: JSON.stringify({
       model: "deepseek-flash",
       stream: true,
-      max_tokens: 1800,
+      max_tokens: 2500,
       temperature: 0.4,
       messages: [
-        { role: "system", content: consigne(s.matiere, `${s.type} · ${s.filiere} ${s.niveau} · ${s.annee}`, texteBrut(extraction), corrige) },
+        { role: "system", content: consigne(s.matiere, `${s.type} · ${s.filiere} ${s.niveau} · ${s.annee}`, texteBrut(extraction), corrige, cours) },
         ...messages,
       ],
     }),
