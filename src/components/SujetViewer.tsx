@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { LectureSujet } from "@/components/LectureSujet";
 import { LecteurPdf } from "@/components/LecteurPdf";
@@ -7,6 +8,12 @@ import type { Lecture } from "@/lib/numerisation/lecture";
 import { DownloadButton } from "@/components/DownloadButton";
 import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 import { Icon } from "@/components/icons";
+
+// Loaded on first open: KaTeX and the conversation weigh nothing until then.
+const TuteurIA = dynamic(
+  () => import("@/components/TuteurIA").then((m) => m.TuteurIA),
+  { ssr: false },
+);
 
 type Mode = "sujet" | "correction";
 
@@ -16,6 +23,7 @@ type Mode = "sujet" | "correction";
  * paper to read in place, folded until asked for.
  */
 export function SujetViewer({
+  subjectId,
   matiere,
   filiere,
   niveau,
@@ -40,6 +48,7 @@ export function SujetViewer({
   const hasCorrection = !!correctionUrl;
   const [mode, setMode] = useState<Mode>("sujet");
   const [ouvert, setOuvert] = useState(false);
+  const [tuteur, setTuteur] = useState(false);
   const activeUrl = mode === "correction" ? correctionUrl : fileUrl;
   const lecture = mode === "correction" ? lectures.correction : lectures.sujet;
   const corrige = mode === "correction";
@@ -80,7 +89,11 @@ export function SujetViewer({
                   : "Le document tel qu'il a été envoyé"}
               </span>
             </span>
-            <Icon name="right" size={18} className="flex-none text-slate-light" />
+            <Icon
+              name="right"
+              size={18}
+              className="flex-none text-slate-light"
+            />
           </button>
 
           <div className="mt-3 flex gap-2">
@@ -98,15 +111,28 @@ export function SujetViewer({
               label={corrige ? "Télécharger le corrigé" : "Télécharger le PDF"}
               className="press-scale grid h-[52px] w-[52px] flex-none place-items-center rounded-2xl border-[1.5px] border-line-4 bg-white text-ink active:bg-surface-3"
             />
-            <WhatsAppShareButton
-              text={`Regarde ce sujet sur Campusly : ${matiere} (${filiere} · ${niveau})`}
-              aria-label="Partager sur WhatsApp"
-              className="press-scale grid h-[52px] w-[52px] flex-none place-items-center rounded-2xl border-[1.5px] border-line-4 bg-white active:bg-surface-3"
-            >
-              <Icon name="chat" size={19} strokeWidth={1.9} />
-            </WhatsAppShareButton>
+            {lecture ? (
+              // The revision tutor needs the digitised text; a paper without it keeps the share button.
+              <button
+                onClick={() => setTuteur(true)}
+                aria-label="Réviser avec l'IA"
+                className="press-scale flex h-[52px] w-[52px] flex-none flex-col items-center justify-center gap-0.5 rounded-2xl border-[1.5px] border-teal-border bg-teal-tint text-teal-dark active:bg-teal-border"
+              >
+                <Icon name="spark" size={18} strokeWidth={2} />
+                <span className="text-[10px] font-black leading-none tracking-wide">
+                  IA
+                </span>
+              </button>
+            ) : (
+              <WhatsAppShareButton
+                text={`Regarde ce sujet sur Campusly : ${matiere} (${filiere} · ${niveau})`}
+                aria-label="Partager sur WhatsApp"
+                className="press-scale grid h-[52px] w-[52px] flex-none place-items-center rounded-2xl border-[1.5px] border-line-4 bg-white active:bg-surface-3"
+              >
+                <Icon name="chat" size={19} strokeWidth={1.9} />
+              </WhatsAppShareButton>
+            )}
           </div>
-
         </div>
       ) : (
         <div className="mt-5 overflow-hidden rounded-[20px] border border-line bg-surface-3 p-7 text-center">
@@ -124,6 +150,15 @@ export function SujetViewer({
 
       {lecture && <LectureSujet key={mode} lecture={lecture} />}
 
+      {tuteur && (
+        <TuteurIA
+          subjectId={subjectId}
+          matiere={matiere}
+          corrige={corrige}
+          onFermer={() => setTuteur(false)}
+        />
+      )}
+
       {ouvert && activeUrl && (
         <LecteurPdf
           url={activeUrl}
@@ -136,7 +171,15 @@ export function SujetViewer({
 }
 
 // The PDF's first page in miniature: the Campusly cover every Version reconstituée opens on.
-function Couverture({ matiere, type, corrige }: { matiere: string; type: string; corrige: boolean }) {
+function Couverture({
+  matiere,
+  type,
+  corrige,
+}: {
+  matiere: string;
+  type: string;
+  corrige: boolean;
+}) {
   return (
     <span className="relative block h-[86px] w-[64px] flex-none rounded-[6px] bg-white p-2 shadow-[0_6px_14px_-8px_rgba(15,23,42,.5)] ring-1 ring-line">
       <span className="flex items-center gap-[3px]">
@@ -146,7 +189,9 @@ function Couverture({ matiere, type, corrige }: { matiere: string; type: string;
       <span className="mt-2.5 block text-[4.5px] font-extrabold uppercase tracking-[.1em] text-teal-dark">
         {corrige ? "Corrigé" : "Sujet"} · {type}
       </span>
-      <span className="mt-0.5 line-clamp-2 block text-[6.5px] font-extrabold leading-[1.15]">{matiere}</span>
+      <span className="mt-0.5 line-clamp-2 block text-[6.5px] font-extrabold leading-[1.15]">
+        {matiere}
+      </span>
       <span className="mt-1.5 block h-[1.5px] w-full rounded bg-line" />
       <span className="mt-1 block h-[1.5px] w-[75%] rounded bg-line" />
       <span className="absolute -bottom-1 -right-1.5 rounded-[4px] bg-[#e5484d] px-1 py-[2px] text-[7px] font-black tracking-wide text-white">

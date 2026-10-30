@@ -36,3 +36,25 @@ export function versLecture(e: Extraction, id: number): Lecture | null {
     aRelire: e.pages.some((p) => p.aRelire),
   };
 }
+
+/*
+ * The paper as plain text, for the revision tutor to read: the same blocks as
+ * the Version reconstituée, written the way a model reads best — headings,
+ * numbered questions with their marks, LaTeX left as LaTeX, tables as rows.
+ */
+export function texteBrut(e: Extraction): string {
+  const pts = (p: number | null) => (p === null ? "" : ` (${p} pt${p > 1 ? "s" : ""})`);
+  const lignes: string[] = [];
+  for (const page of e.pages)
+    for (const b of page.blocs) {
+      if (b.t === "titre") lignes.push(`## ${b.texte}`);
+      else if (b.t === "exercice") lignes.push(`### ${b.titre}${pts(b.points)}`);
+      else if (b.t === "paragraphe") lignes.push(b.texte);
+      else if (b.t === "question") lignes.push(`${b.numero?.trim() ? `${b.numero} ` : ""}${b.texte}${pts(b.points)}`);
+      else if (b.t === "formule") lignes.push(`$$${b.latex}$$`);
+      else if (b.t === "liste") lignes.push((b.elements ?? []).map((x) => `- ${x}`).join("\n"));
+      else if (b.t === "tableau") lignes.push((b.lignes ?? []).map((l) => `| ${(Array.isArray(l) ? l : [String(l)]).join(" | ")} |`).join("\n"));
+      else if (b.t === "figure") lignes.push(`[Figure${b.legende ? ` : ${b.legende}` : ""}]`);
+    }
+  return lignes.join("\n\n");
+}
