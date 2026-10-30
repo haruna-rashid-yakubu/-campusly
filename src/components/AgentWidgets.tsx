@@ -42,7 +42,7 @@ export function AgentWidget({ widget, onSuite, onQuitter }: { widget: Widget; on
               <Link
                 href={`/sujets/${s.id}?tuteur=1`}
                 onClick={onQuitter}
-                className="press-scale flex h-8 flex-none items-center gap-1 rounded-full bg-[#4f46e5] px-2.5 text-[11.5px] font-black text-white"
+                className="press-scale flex h-8 flex-none items-center gap-1 rounded-full bg-teal px-2.5 text-[11.5px] font-black text-white"
                 aria-label={`Réviser ${s.matiere} avec le tuteur IA`}
               >
                 <Icon name="spark" size={12} strokeWidth={2.4} />

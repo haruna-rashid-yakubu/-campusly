@@ -29,7 +29,7 @@ const DEPARTS: { libelle: string; question: string; icone: IconName; teinte: str
   { libelle: "Trouver un sujet", question: "Trouve-moi des anciens sujets de ma promo", icone: "doc", teinte: "#4f46e5", fond: "#eef0ff" },
   { libelle: "Un logement", question: "Trouve-moi un logement pas cher près du campus", icone: "bed", teinte: "#ea580c", fond: "#fff1e6" },
   { libelle: "Ma semaine", question: "Montre-moi mon programme de la semaine", icone: "list", teinte: "#0284c7", fond: "#e8f4fd" },
-  { libelle: "Le sondage", question: "Y a-t-il un sondage en cours ?", icone: "ballot", teinte: "#7c3aed", fond: "#f3edff" },
+  { libelle: "Le sondage", question: "Y a-t-il un sondage en cours ?", icone: "ballot", teinte: "var(--color-teal-dark)", fond: "var(--color-teal-tint)" },
 ];
 
 function lire(): Tour[] {
@@ -144,7 +144,7 @@ export function Agent({ onFermer }: { onFermer: () => void }) {
         <button onClick={() => window.history.back()} className="press-scale grid h-11 w-11 place-items-center" aria-label="Fermer">
           <Icon name="x" size={21} strokeWidth={2} />
         </button>
-        <span className="grid h-9 w-9 flex-none place-items-center rounded-xl text-white" style={{ background: "linear-gradient(135deg, #6366f1, #7c3aed)" }}>
+        <span className="grid h-9 w-9 flex-none place-items-center rounded-xl bg-teal text-white">
           <Icon name="spark" size={19} strokeWidth={1.9} />
         </span>
         <div className="min-w-0 flex-1">
@@ -175,7 +175,7 @@ export function Agent({ onFermer }: { onFermer: () => void }) {
           </div>
         ) : vide ? (
           <div className="flex flex-col items-center pt-4 text-center">
-            <span className="grid h-16 w-16 place-items-center rounded-[22px] text-white shadow-[0_14px_30px_-12px_rgba(79,70,229,.8)]" style={{ background: "linear-gradient(135deg, #6366f1, #7c3aed)" }}>
+            <span className="grid h-16 w-16 place-items-center rounded-[22px] bg-teal-tint text-teal-dark">
               <Icon name="spark" size={30} strokeWidth={1.7} />
             </span>
             <div className="mt-4 text-[21px] font-extrabold tracking-tight">Qu&rsquo;est-ce que je fais pour toi ?</div>
@@ -201,7 +201,7 @@ export function Agent({ onFermer }: { onFermer: () => void }) {
           <div className="flex flex-col gap-3">
             {tours.map((t, i) =>
               t.role === "user" ? (
-                <div key={i} className="ml-10 self-end whitespace-pre-wrap rounded-[18px] rounded-br-md bg-[#4f46e5] px-3.5 py-2.5 text-[15px] leading-snug text-white">
+                <div key={i} className="ml-10 self-end whitespace-pre-wrap rounded-[18px] rounded-br-md bg-teal px-3.5 py-2.5 text-[15px] leading-snug text-white">
                   {t.content}
                 </div>
               ) : (
@@ -234,13 +234,12 @@ export function Agent({ onFermer }: { onFermer: () => void }) {
               rows={1}
               maxLength={1000}
               placeholder="Commande, cherche, demande…"
-              className="max-h-32 min-h-[46px] flex-1 resize-none rounded-[20px] border-[1.5px] border-line-4 bg-surface-3 px-4 py-[11px] text-[15px] leading-snug outline-none [field-sizing:content] focus:border-[#4f46e5]"
+              className="max-h-32 min-h-[46px] flex-1 resize-none rounded-[20px] border-[1.5px] border-line-4 bg-surface-3 px-4 py-[11px] text-[15px] leading-snug outline-none [field-sizing:content] focus:border-teal"
             />
             <button
               type="submit"
               disabled={enCours || !saisie.trim()}
-              className="press-scale grid h-[46px] w-[46px] flex-none place-items-center rounded-full text-white disabled:opacity-40"
-              style={{ background: "linear-gradient(135deg, #6366f1, #7c3aed)" }}
+              className="press-scale grid h-[46px] w-[46px] flex-none place-items-center rounded-full bg-teal text-white disabled:opacity-40"
               aria-label="Envoyer"
             >
               <Icon name="send" size={19} strokeWidth={2} />
@@ -277,9 +276,9 @@ function TourAssistant({
             return (
               <div key={i} className="anim-deplie flex items-center gap-2 text-[12.5px] font-semibold text-slate">
                 {enCours ? (
-                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#4f46e5] border-t-transparent" />
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-teal border-t-transparent" />
                 ) : (
-                  <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-[#4f46e5] text-white">
+                  <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-teal text-white">
                     <Icon name="check" size={9} strokeWidth={3.4} />
                   </span>
                 )}
@@ -319,7 +318,7 @@ function TourAssistant({
             <button
               key={s}
               onClick={() => onSuite(s)}
-              className="press-scale rounded-full border-[1.5px] border-[#c7cbff] bg-white px-3.5 py-2 text-[13px] font-bold text-[#4f46e5] active:bg-[#eef0ff]"
+              className="press-scale rounded-full border-[1.5px] border-teal-border bg-white px-3.5 py-2 text-[13px] font-bold text-teal-dark active:bg-teal-tint"
             >
               {s}
             </button>
