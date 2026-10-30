@@ -377,7 +377,7 @@ function Reponse({
   const suggestions = blocs.some((b) => b.t === "quiz") ? proposees.filter((s) => !/autre quiz/i.test(s)) : proposees;
 
   return (
-    <div className="mr-3 flex flex-col gap-2 self-start">
+    <div className="mr-3 flex min-w-0 max-w-[calc(100%-12px)] flex-col gap-2 self-start">
       {blocs.map((b, i) => (
         <BlocReponse key={i} bloc={b} onSuite={onSuite} />
       ))}
