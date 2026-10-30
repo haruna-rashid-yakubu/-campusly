@@ -4,7 +4,6 @@ import { useState } from "react";
 import { LectureSujet } from "@/components/LectureSujet";
 import { LecteurPdf } from "@/components/LecteurPdf";
 import type { Lecture } from "@/lib/numerisation/lecture";
-import { lienOriginal } from "@/lib/fichiers";
 import { DownloadButton } from "@/components/DownloadButton";
 import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 import { Icon } from "@/components/icons";
@@ -40,7 +39,7 @@ export function SujetViewer({
 }) {
   const hasCorrection = !!correctionUrl;
   const [mode, setMode] = useState<Mode>("sujet");
-  const [ouvert, setOuvert] = useState<"reconstituee" | "originale" | null>(null);
+  const [ouvert, setOuvert] = useState(false);
   const activeUrl = mode === "correction" ? correctionUrl : fileUrl;
   const lecture = mode === "correction" ? lectures.correction : lectures.sujet;
   const corrige = mode === "correction";
@@ -67,7 +66,7 @@ export function SujetViewer({
       {activeUrl ? (
         <div className="mt-5 rounded-[22px] border border-line bg-white p-3 shadow-[0_8px_24px_-16px_rgba(15,23,42,.35)]">
           <button
-            onClick={() => setOuvert("reconstituee")}
+            onClick={() => setOuvert(true)}
             className="press-scale flex w-full items-center gap-3.5 rounded-[16px] bg-surface p-3 text-left"
           >
             <Couverture matiere={matiere} type={type} corrige={corrige} />
@@ -86,7 +85,7 @@ export function SujetViewer({
 
           <div className="mt-3 flex gap-2">
             <button
-              onClick={() => setOuvert("reconstituee")}
+              onClick={() => setOuvert(true)}
               className="press-scale flex h-[52px] flex-1 items-center justify-center gap-2 rounded-2xl bg-teal text-[15.5px] font-extrabold text-white active:bg-teal-dark"
             >
               <Icon name="full" size={18} strokeWidth={2.2} />
@@ -108,15 +107,6 @@ export function SujetViewer({
             </WhatsAppShareButton>
           </div>
 
-          {lecture && (
-            <button
-              onClick={() => setOuvert("originale")}
-              className="press-scale mt-1 flex h-10 w-full items-center justify-center gap-1.5 text-[13px] font-bold text-slate"
-            >
-              <Icon name="cam" size={15} strokeWidth={2} />
-              Voir la version originale (photos)
-            </button>
-          )}
         </div>
       ) : (
         <div className="mt-5 overflow-hidden rounded-[20px] border border-line bg-surface-3 p-7 text-center">
@@ -136,9 +126,9 @@ export function SujetViewer({
 
       {ouvert && activeUrl && (
         <LecteurPdf
-          url={ouvert === "originale" ? lienOriginal(activeUrl) : activeUrl}
-          titre={`${corrige ? "Corrigé · " : ""}${matiere}${ouvert === "originale" ? " · original" : ""}`}
-          onFermer={() => setOuvert(null)}
+          url={activeUrl}
+          titre={`${corrige ? "Corrigé · " : ""}${matiere}`}
+          onFermer={() => setOuvert(false)}
         />
       )}
     </>

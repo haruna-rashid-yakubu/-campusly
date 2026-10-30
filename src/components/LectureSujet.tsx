@@ -90,7 +90,7 @@ export function LectureSujet({ lecture }: { lecture: Lecture }) {
               className="press-scale flex h-11 items-center gap-1.5 rounded-full border-[1.5px] border-line-4 bg-white px-5 text-[14px] font-bold shadow-sm"
             >
               {onglet === "texte" ? "Lire tout le texte" : "Voir toutes les photos"}
-              <Icon name="down" size={16} strokeWidth={2} />
+              <Icon name="chevD" size={16} strokeWidth={2} />
             </button>
           </div>
         )}
