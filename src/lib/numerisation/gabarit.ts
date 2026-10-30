@@ -8,6 +8,9 @@ import type { Bloc, PageExtraite } from "@/lib/numerisation/extraction";
  * questions with their marks aligned, real tables and typeset maths.
  *
  * Maths is rendered here to HTML by KaTeX, so the printer needs no script.
+ * Its stylesheet must be the same version as the KaTeX that rendered it: with
+ * 0.16's CSS over 0.19's HTML, subscripts sat on the line and fractions ran
+ * into their exponents.
  */
 
 export type Meta = {
@@ -126,7 +129,7 @@ export function gabarit(meta: Meta, pages: PageExtraite[], figures: Figures) {
   ];
 
   return `<!doctype html><html lang="${meta.langue}"><head><meta charset="utf-8">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@${katex.version}/dist/katex.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 @page { size: A4; margin: 20mm 18mm 22mm; }

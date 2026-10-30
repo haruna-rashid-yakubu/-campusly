@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Icon } from "@/components/icons";
-import { markdown } from "@/lib/markdown";
+import { markdown, markdownEnLigne } from "@/lib/markdown";
 import type { QuestionQuiz } from "@/lib/tuteur-blocs";
 
 /*
@@ -241,7 +241,11 @@ function Score({
             <span className={`grid h-6 w-6 flex-none place-items-center rounded-full text-white ${juste(i) ? "bg-[#16a34a]" : "bg-[#dc2626]"}`}>
               <Icon name={juste(i) ? "check" : "x"} size={13} strokeWidth={3} />
             </span>
-            <span className="line-clamp-1 min-w-0 flex-1 text-[13.5px] font-semibold">{q.question.replace(/\$/g, "")}</span>
+            {/* The question with its formulas typeset: stripping the dollars left raw \frac{…} on screen. */}
+            <span
+              className="line-clamp-1 min-w-0 flex-1 text-[13.5px] font-semibold"
+              dangerouslySetInnerHTML={{ __html: markdownEnLigne(q.question.split("\n")[0]) }}
+            />
             <Icon name="right" size={15} className="flex-none text-slate-light" />
           </button>
         ))}
