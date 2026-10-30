@@ -49,6 +49,8 @@ export function SujetsFilterBar({
     const params = new URLSearchParams(searchParams.toString());
     mutate(params);
     params.delete("n");
+    // New results start at their top; the field is in the sticky header, so it keeps the keyboard.
+    if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: "smooth" });
     startTransition(() => router.replace(params.size ? `${pathname}?${params.toString()}` : pathname, { scroll: false }));
   };
 
