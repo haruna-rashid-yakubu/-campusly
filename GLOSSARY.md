@@ -6,6 +6,9 @@ _À éviter_ : épreuve, annale (au sens d'un document isolé).
 **Corrigé** : la solution d'un Sujet, quand elle existe. Un Sujet a au plus un Corrigé ; un Corrigé n'existe jamais sans son Sujet.
 _À éviter_ : correction, solution.
 
+**Corrigé IA** : une proposition de solution d'un Sujet rédigée par l'intelligence artificielle de Campusly, puis revérifiée par elle, quand le Sujet n'a pas de Corrigé. Il n'est pas validé par l'enseignant et le dit toujours. Un Sujet qui a un Corrigé n'a pas de Corrigé IA.
+_À éviter_ : corrigé (seul, pour désigner celui de l'IA), corrigé officiel.
+
 **Type d'épreuve** : la nature de l'examen dont vient un Sujet, choisie dans une liste fermée : Partiel, CC, Examen, Rattrapage, TD, Concours.
 _À éviter_ : « Mid-term » (c'est un Partiel), « contrôle » (c'est un CC).
 

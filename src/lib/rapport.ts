@@ -96,8 +96,8 @@ export function contexteRapport(messages: { role: string; content: string }[], q
 
 const echapper = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-// The tutor's blocks, drawn for paper: hints and solutions shown, a method numbered.
-function corps(source: string) {
+/** The tutor's Markdown and blocks, drawn for paper: hints and solutions shown, a method numbered. */
+export function corpsDocument(source: string) {
   const { blocs } = decouper(source);
   return blocs
     .map((b) => {
@@ -111,13 +111,15 @@ function corps(source: string) {
     .join("\n");
 }
 
-export function gabaritRapport(
-  m: { matiere: string; type: string; filiere: string; niveau: string; annee: string; eleve: string; avecCours: boolean },
-  parties: { id: string; exercices: string[]; texte: string }[]
+/*
+ * A Campusly document to print: the cover (what it is, for which paper, a
+ * word of caution) and its body, in the type and the boxes every printed
+ * document shares — the revision report, the Corrigé IA.
+ */
+export function documentCampusly(
+  couverture: { nature: string; titre: string; sous: string; fiche: [string, string][]; avis: string },
+  corpsHtml: string
 ) {
-  const date = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-  // The exercises' parts open under one heading; a paper without named exercises brings its own.
-  const premierExercice = parties.findIndex((p) => p.id.startsWith("ex-") && p.exercices.length > 0);
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@${katex.version}/dist/katex.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -167,18 +169,37 @@ th { background: #f1f5f6; font-weight: 800; }
 </style></head><body>
 <section class="garde">
   <div class="marque">${LOGO}Campusly</div>
-  <div class="nature">Rapport de révision${m.avecCours ? " · avec ton cours" : ""}</div>
-  <div class="titre">${echapper(m.matiere)}</div>
-  <div class="sous">Préparé pour ${echapper(m.eleve)} par le tuteur IA de Campusly</div>
-  <dl class="fiche">
-    <div><dt>Sujet</dt><dd>${echapper(`${m.type} · ${m.annee}`)}</dd></div>
-    <div><dt>Filière</dt><dd>${echapper(`${m.filiere} · ${m.niveau}`)}</dd></div>
-    <div><dt>Rapport généré le</dt><dd>${date}</dd></div>
-  </dl>
-  <div class="avis">Ce rapport a été rédigé par une intelligence artificielle à partir du sujet${m.avecCours ? " et de ton cours" : ""}. Elle peut se tromper : vérifie les résultats avec ton cours et ton enseignant.</div>
+  <div class="nature">${echapper(couverture.nature)}</div>
+  <div class="titre">${echapper(couverture.titre)}</div>
+  <div class="sous">${echapper(couverture.sous)}</div>
+  <dl class="fiche">${couverture.fiche.map(([k, v]) => `<div><dt>${echapper(k)}</dt><dd>${echapper(v)}</dd></div>`).join("")}</dl>
+  <div class="avis">${echapper(couverture.avis)}</div>
 </section>
-<main>${parties.map((p, i) => (i === premierExercice ? "<h2>Exercice par exercice</h2>" : "") + corps(p.texte)).join("\n")}</main>
+<main>${corpsHtml}</main>
 </body></html>`;
+}
+
+export function gabaritRapport(
+  m: { matiere: string; type: string; filiere: string; niveau: string; annee: string; eleve: string; avecCours: boolean },
+  parties: { id: string; exercices: string[]; texte: string }[]
+) {
+  const date = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  // The exercises' parts open under one heading; a paper without named exercises brings its own.
+  const premierExercice = parties.findIndex((p) => p.id.startsWith("ex-") && p.exercices.length > 0);
+  return documentCampusly(
+    {
+      nature: `Rapport de révision${m.avecCours ? " · avec ton cours" : ""}`,
+      titre: m.matiere,
+      sous: `Préparé pour ${m.eleve} par le tuteur IA de Campusly`,
+      fiche: [
+        ["Sujet", `${m.type} · ${m.annee}`],
+        ["Filière", `${m.filiere} · ${m.niveau}`],
+        ["Rapport généré le", date],
+      ],
+      avis: `Ce rapport a été rédigé par une intelligence artificielle à partir du sujet${m.avecCours ? " et de ton cours" : ""}. Elle peut se tromper : vérifie les résultats avec ton cours et ton enseignant.`,
+    },
+    parties.map((p, i) => (i === premierExercice ? "<h2>Exercice par exercice</h2>" : "") + corpsDocument(p.texte)).join("\n")
+  );
 }
 
 export const piedRapport = (matiere: string, eleve: string) =>

@@ -1,4 +1,5 @@
 import type { Bloc, Extraction } from "@/lib/numerisation/extraction";
+import { markdown } from "@/lib/markdown";
 import { contenu } from "@/lib/numerisation/gabarit";
 import { cles, lire } from "@/lib/numerisation/r2";
 
@@ -8,6 +9,8 @@ export type Lecture = {
   // The cleaned photographs, in order of the sheets.
   photos: string[];
   aRelire: boolean;
+  // What the footnote under the text says instead of the transcription's caution (the Corrigé IA's own).
+  avertissement?: string;
 };
 
 const image = (id: number, nom: string) => `/api/sujets/${id}/images/${nom}`;
@@ -57,4 +60,24 @@ export function texteBrut(e: Extraction): string {
       else if (b.t === "figure") lignes.push(`[Figure${b.legende ? ` : ${b.legende}` : ""}]`);
     }
   return lignes.join("\n\n");
+}
+
+/** The Sujets that have a Corrigé IA (GLOSSARY.md), from the index scripts/corriger.ts keeps. */
+export async function sujetsAvecCorrigeIa(): Promise<Set<number>> {
+  const brut = await lire(cles.indexCorrigesIa).catch(() => null);
+  return new Set(brut ? (JSON.parse(Buffer.from(brut).toString()) as number[]) : []);
+}
+
+/** A Sujet's Corrigé IA as the page reads it: its text set like the paper's, no photographs. */
+export async function lireCorrigeIa(id: number): Promise<Lecture | null> {
+  const brut = await lire(cles.corrigeIaTexte(id)).catch(() => null);
+  if (!brut) return null;
+  const { texte } = JSON.parse(Buffer.from(brut).toString()) as { texte: string };
+  return {
+    html: markdown(texte, true),
+    photos: [],
+    aRelire: false,
+    avertissement:
+      "Corrigé rédigé puis revérifié par l'intelligence artificielle de Campusly, pas par ton enseignant : il peut contenir des erreurs. Sers-t'en pour vérifier ta démarche.",
+  };
 }

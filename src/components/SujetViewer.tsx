@@ -16,7 +16,7 @@ const TuteurIA = dynamic(
   { ssr: false },
 );
 
-type Mode = "sujet" | "correction";
+type Mode = "sujet" | "correction" | "ia";
 
 /*
  * A Sujet's content: its PDF first — one card, opened full screen in the
@@ -32,6 +32,7 @@ export function SujetViewer({
   fileUrl,
   correctionUrl,
   lectures,
+  corrigeIa,
   onRecord,
 }: {
   subjectId: number;
@@ -44,6 +45,8 @@ export function SujetViewer({
   correctionUrl: string | null;
   // The digitised text and photos, when the paper has been through the digitisation.
   lectures: { sujet: Lecture | null; correction: Lecture | null };
+  // The Corrigé IA (GLOSSARY.md), for a Sujet that has no Corrigé.
+  corrigeIa: { url: string; lecture: Lecture } | null;
   onRecord: () => Promise<void>;
 }) {
   const hasCorrection = !!correctionUrl;
@@ -52,16 +55,18 @@ export function SujetViewer({
   // ?tuteur=1 (from the assistant's "Réviser" button) opens the tutor straight away.
   const params = useSearchParams();
   const [tuteur, setTuteur] = useState(() => params.get("tuteur") === "1" && !!lectures.sujet);
-  const activeUrl = mode === "correction" ? correctionUrl : fileUrl;
-  const lecture = mode === "correction" ? lectures.correction : lectures.sujet;
+  const activeUrl = mode === "ia" ? (corrigeIa?.url ?? null) : mode === "correction" ? correctionUrl : fileUrl;
+  const lecture = mode === "ia" ? (corrigeIa?.lecture ?? null) : mode === "correction" ? lectures.correction : lectures.sujet;
+  // The tutor and the PDF's wording follow the official Corrigé; the Corrigé IA names itself.
   const corrige = mode === "correction";
+  const modes: Mode[] = ["sujet", ...(hasCorrection ? (["correction"] as const) : []), ...(corrigeIa ? (["ia"] as const) : [])];
   const feuilles = lecture?.photos.length ?? 0;
 
   return (
     <>
-      {hasCorrection && (
+      {modes.length > 1 && (
         <div className="mt-5 flex gap-1 rounded-2xl bg-surface-2 p-1">
-          {(["sujet", "correction"] as const).map((m) => (
+          {modes.map((m) => (
             <button
               key={m}
               onClick={() => setMode(m)}
@@ -69,7 +74,16 @@ export function SujetViewer({
                 mode === m ? "bg-white text-ink shadow-sm" : "text-slate"
               }`}
             >
-              {m === "sujet" ? "Sujet" : "Corrigé"}
+              {m === "ia" ? (
+                <span className="flex items-center justify-center gap-1.5">
+                  <Icon name="spark" size={15} strokeWidth={2.2} />
+                  Corrigé IA
+                </span>
+              ) : m === "sujet" ? (
+                "Sujet"
+              ) : (
+                "Corrigé"
+              )}
             </button>
           ))}
         </div>
@@ -81,15 +95,17 @@ export function SujetViewer({
             onClick={() => setOuvert(true)}
             className="press-scale flex w-full items-center gap-3.5 rounded-[16px] bg-surface p-3 text-left"
           >
-            <Couverture matiere={matiere} type={type} corrige={corrige} />
+            <Couverture matiere={matiere} type={type} corrige={corrige || mode === "ia"} />
             <span className="min-w-0 flex-1">
               <span className="block text-[15.5px] font-extrabold leading-snug">
-                {corrige ? "Le corrigé en PDF" : "Le sujet complet en PDF"}
+                {mode === "ia" ? "Le corrigé IA en PDF" : corrige ? "Le corrigé en PDF" : "Le sujet complet en PDF"}
               </span>
               <span className="mt-1 block text-[13px] leading-snug text-slate">
-                {lecture
-                  ? `${feuilles} feuille${feuilles > 1 ? "s" : ""} retranscrite${feuilles > 1 ? "s" : ""}, net et lisible sur ton téléphone`
-                  : "Le document tel qu'il a été envoyé"}
+                {mode === "ia"
+                  ? "Rédigé puis revérifié par l'IA, pas par ton enseignant"
+                  : lecture
+                    ? `${feuilles} feuille${feuilles > 1 ? "s" : ""} retranscrite${feuilles > 1 ? "s" : ""}, net et lisible sur ton téléphone`
+                    : "Le document tel qu'il a été envoyé"}
               </span>
             </span>
             <Icon
@@ -111,7 +127,7 @@ export function SujetViewer({
               compact
               fileUrl={activeUrl}
               onRecord={onRecord}
-              label={corrige ? "Télécharger le corrigé" : "Télécharger le PDF"}
+              label={mode === "ia" ? "Télécharger le corrigé IA" : corrige ? "Télécharger le corrigé" : "Télécharger le PDF"}
               className="press-scale grid h-[52px] w-[52px] flex-none place-items-center rounded-2xl border-[1.5px] border-line-4 bg-white text-ink active:bg-surface-3"
             />
             {lecture ? (

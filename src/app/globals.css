@@ -289,6 +289,12 @@ html[data-couleur="rose"] {
 .lecture h2:first-child, .lecture h3:first-child { margin-top: 0; }
 .lecture h3.exercice { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 16.5px; font-weight: 800; color: var(--color-teal-dark); margin: 26px 0 10px; padding-bottom: 6px; border-bottom: 1.5px solid var(--color-teal-border); }
 .lecture p { margin: 0 0 10px; }
+/* Headings of Markdown text (the Corrigé IA), the paper's own being h2 and h3.exercice. */
+.lecture h3:not(.exercice) { font-size: 16px; font-weight: 800; color: var(--color-teal-dark); margin: 22px 0 8px; }
+.lecture h4 { font-size: 15px; font-weight: 800; margin: 16px 0 6px; }
+.lecture strong { font-weight: 800; }
+.lecture blockquote { margin: 0 0 10px; padding: 2px 0 2px 12px; border-left: 3px solid var(--color-line-4); color: var(--color-slate); }
+.lecture .tableau { overflow-x: auto; margin: 8px 0 12px; }
 .lecture .question { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; margin: 0 0 10px; align-items: start; }
 .lecture .question.sans-num { grid-template-columns: 1fr auto; }
 .lecture .num { font-weight: 800; color: var(--color-teal-dark); min-width: 22px; }

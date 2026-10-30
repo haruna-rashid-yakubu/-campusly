@@ -20,6 +20,11 @@ export function lienFichier(subjectId: number, url: string | null, correction = 
   return `${APP_URL}/api/fichiers/${subjectId}/${encodeURIComponent(nom)}${requete ? `?${requete}` : ""}`;
 }
 
+/** A Sujet's Corrigé IA (GLOSSARY.md), through the same route and the same mark as its PDF. */
+export function lienCorrigeIa(subjectId: number, jeton?: string) {
+  return `${APP_URL}/api/fichiers/${subjectId}/corrige-ia.pdf?ia=1${jeton ? `&t=${encodeURIComponent(jeton)}` : ""}`;
+}
+
 /** The same paper as photographed: the reference to check the reconstituted text against. */
 export function lienOriginal(url: string) {
   return `${url}${url.includes("?") ? "&" : "?"}o=1`;

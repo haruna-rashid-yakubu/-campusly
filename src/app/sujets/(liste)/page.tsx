@@ -7,6 +7,7 @@ import { DownloadButton } from "@/components/DownloadButton";
 import { incrementSubjectDownload } from "@/lib/actions";
 import { NotifNudge } from "@/components/NotifNudge";
 import { getPreferredClasse, getSubjectsPage } from "@/lib/data";
+import { sujetsAvecCorrigeIa } from "@/lib/numerisation/lecture";
 import { filiereDeClasse, niveauDeClasse } from "@/lib/utils";
 import { lienFichier } from "@/lib/fichiers";
 import { jetonFichier } from "@/lib/jeton";
@@ -58,6 +59,8 @@ export default async function SujetsPage({
   const niveauPrefere = params.niveau
     ? undefined
     : niveauDeClasse(classe) || undefined;
+  // The Sujets with a Corrigé IA (GLOSSARY.md), for their badge.
+  const avecIa = await sujetsAvecCorrigeIa();
   const { subjects, total } = await getSubjectsPage(
     { ...filtres, filiere },
     { limit: affiches, niveauPrefere },
@@ -146,8 +149,8 @@ export default async function SujetsPage({
                     )}
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <Badge tone="neutral">{s.type}</Badge>
-                      <Badge tone={s.corrige ? "teal" : "neutral"}>
-                        {s.corrige ? "Corrigé" : "Sans corrigé"}
+                      <Badge tone={s.corrige || avecIa.has(s.id) ? "teal" : "neutral"}>
+                        {s.corrige ? "Corrigé" : avecIa.has(s.id) ? "Corrigé IA" : "Sans corrigé"}
                       </Badge>
                     </div>
                   </div>

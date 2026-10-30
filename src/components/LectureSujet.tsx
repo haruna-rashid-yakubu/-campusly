@@ -25,6 +25,8 @@ export function LectureSujet({ lecture }: { lecture: Lecture }) {
       <div className="mb-3 flex items-baseline justify-between">
         <h2 className="text-[17px] font-extrabold tracking-tight">Lire sur la page</h2>
       </div>
+      {/* The photographs' tab only when there are some: a Corrigé IA has none. */}
+      {lecture.photos.length > 0 && (
       <div className="flex gap-1 rounded-2xl bg-surface p-1" role="tablist">
         {(["texte", "original"] as const).map((o) => (
           <button
@@ -41,6 +43,7 @@ export function LectureSujet({ lecture }: { lecture: Lecture }) {
           </button>
         ))}
       </div>
+      )}
 
       <div className="relative mt-3">
         <div className={deplie ? "" : "max-h-[440px] overflow-hidden"}>
@@ -52,6 +55,9 @@ export function LectureSujet({ lecture }: { lecture: Lecture }) {
           />
           <p className="mt-2.5 flex items-start gap-2 text-[13px] leading-snug text-slate">
             <Icon name="warn" size={16} className="mt-0.5 flex-none" />
+            {lecture.avertissement ? (
+              <span>{lecture.avertissement}</span>
+            ) : (
             <span>
               Texte reconstitué à partir de la photo
               {lecture.aRelire ? ", avec des passages difficiles à lire" : ""}. En cas de doute sur un mot ou un chiffre,{" "}
@@ -60,6 +66,7 @@ export function LectureSujet({ lecture }: { lecture: Lecture }) {
               </button>
               .
             </span>
+            )}
           </p>
         </>
       ) : (

@@ -38,6 +38,12 @@ export async function lire(cle: string): Promise<Uint8Array | null> {
   return new Uint8Array(await res.arrayBuffer());
 }
 
+export async function supprimer(cle: string) {
+  const { aws, base } = client();
+  const res = await aws.fetch(`${base}/${chemin(cle)}`, { method: "DELETE" });
+  if (!res.ok && res.status !== 404) throw new Error(`R2 n'a pas pu supprimer ${cle} (${res.status})`);
+}
+
 // Where each file of a paper lives. `c` is the Corrigé's prefix.
 export const cles = {
   original: (id: number, nom: string, corrige = false) => `originaux/sujets/${id}/${corrige ? "corrige-" : ""}${nom}`,
@@ -46,4 +52,8 @@ export const cles = {
   extraction: (id: number, corrige = false) => `sujets/${id}/${corrige ? "corrige-" : ""}extraction.json`,
   // A cleaned page photograph or a cropped figure, shown on the Sujet page.
   image: (id: number, nom: string) => `sujets/${id}/images/${nom}`,
+  // The Corrigé IA (GLOSSARY.md): its PDF, its text for the page, and the list of the Sujets that have one.
+  corrigeIa: (id: number) => `sujets/${id}/corrige-ia.pdf`,
+  corrigeIaTexte: (id: number) => `sujets/${id}/corrige-ia.json`,
+  indexCorrigesIa: "corriges-ia/index.json",
 };

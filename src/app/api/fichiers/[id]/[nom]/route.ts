@@ -56,9 +56,12 @@ export async function GET(request: Request, ctx: { params: Promise<{ id: string;
   // The digitised versions in R2 first: the Version reconstituée, or the
   // Version originale with ?o=1. The file as first published while a paper
   // has not been digitised.
-  const cle = params.get("o") === "1" ? cles.originale(numero, corrige) : cles.reconstituee(numero, corrige);
+  // ?ia=1: the Corrigé IA, which only exists in R2.
+  const ia = params.get("ia") === "1";
+  const cle = ia ? cles.corrigeIa(numero) : params.get("o") === "1" ? cles.originale(numero, corrige) : cles.reconstituee(numero, corrige);
   let octets = await lire(cle).catch(() => null);
   let type = "application/pdf";
+  if (!octets && ia) return new NextResponse(null, { status: 404 });
   if (!octets) {
     const original = await fetch(source).catch(() => null);
     if (!original?.ok) return new NextResponse(null, { status: 404 });

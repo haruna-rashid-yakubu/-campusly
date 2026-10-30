@@ -12,9 +12,9 @@ import { incrementSubjectDownload } from "@/lib/actions";
 import { auth } from "@/auth";
 import { SignInButton } from "@/components/SignInButton";
 import { ouvrir, QUOTA, type Acces } from "@/lib/acces";
-import { lienFichier } from "@/lib/fichiers";
+import { lienCorrigeIa, lienFichier } from "@/lib/fichiers";
 import { jetonFichier } from "@/lib/jeton";
-import { lireExtraction, versLecture } from "@/lib/numerisation/lecture";
+import { lireCorrigeIa, lireExtraction, versLecture } from "@/lib/numerisation/lecture";
 
 export const dynamic = "force-dynamic";
 
@@ -43,11 +43,13 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
   const subject = await getSubjectById(subjectId);
   if (!subject) notFound();
 
-  const [{ sameMatiere, sameFiliere }, session, extraction, extractionCorrige] = await Promise.all([
+  const [{ sameMatiere, sameFiliere }, session, extraction, extractionCorrige, corrigeIa] = await Promise.all([
     getRelatedSubjects(subject.id, subject.matiere, subject.filiere),
     auth(),
     lireExtraction(subject.id).catch(() => null),
     subject.correctionUrl ? lireExtraction(subject.id, true).catch(() => null) : null,
+    // A Sujet with a Corrigé has no Corrigé IA (GLOSSARY.md).
+    subject.correctionUrl || subject.corrige ? null : lireCorrigeIa(subject.id),
   ]);
   // Opening the page is reading the Sujet: it counts against the account's day (lib/acces).
   const acces = await ouvrir(session?.user?.id ?? null, subject.id);
@@ -97,6 +99,7 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
               sujet: extraction && versLecture(extraction, subject.id),
               correction: extractionCorrige && versLecture(extractionCorrige, subject.id),
             }}
+            corrigeIa={corrigeIa && { url: lienCorrigeIa(subject.id, jeton), lecture: corrigeIa }}
             onRecord={incrementSubjectDownload.bind(null, subject.id)}
           />
         ) : (
@@ -136,6 +139,8 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
                 ? "Disponible séparément"
                 : subject.corrige
                 ? "Joint au document"
+                : corrigeIa
+                ? "Corrigé IA disponible"
                 : "Pas encore",
             },
             { label: "Vérifié le", valeur: subject.createdAt.toLocaleDateString("fr-FR") },
