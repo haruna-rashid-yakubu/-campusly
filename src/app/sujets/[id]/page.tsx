@@ -70,16 +70,14 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
         }
       />
 
-      <div className="px-5 pt-1">
-        <div className="text-[24px] font-extrabold leading-tight tracking-tight">{subject.matiere}</div>
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          <Badge tone="neutral">{subject.type}</Badge>
-          <Badge tone={subject.corrige ? "teal" : "neutral"}>
-            {subject.corrige ? "Corrigé disponible" : "Sans corrigé"}
-          </Badge>
-          <Badge tone="neutral">
-            {subject.filiere} · {subject.niveau}
-          </Badge>
+      <div className="px-5 pt-2">
+        <h1 className="text-[25px] font-extrabold leading-[1.15] tracking-tight">{subject.matiere}</h1>
+        {/* What the paper is, once: the card and the details below do not say it again. */}
+        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[14px] font-semibold text-slate">
+          <span>
+            {subject.type} · {subject.annee} · {subject.filiere} {subject.niveau}
+          </span>
+          {subject.corrige && <Badge tone="teal">Avec corrigé</Badge>}
         </div>
 
         {acces.ok ? (
@@ -103,9 +101,9 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
         )}
 
         {themes.length > 0 && (
-          <div className="mt-[18px]">
-            <div className="text-[13px] font-bold text-slate-light">Thèmes abordés</div>
-            <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-7">
+            <h2 className="text-[17px] font-extrabold tracking-tight">Thèmes abordés</h2>
+            <div className="mt-3 flex flex-wrap gap-1.5">
               {themes.map((t) => (
                 <Badge key={t} tone="neutral">
                   {t}
@@ -115,10 +113,9 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
           </div>
         )}
 
-        <div className="mt-[18px] rounded-[20px] border border-line px-3.5">
+        <h2 className="mt-7 text-[17px] font-extrabold tracking-tight">Détails</h2>
+        <div className="mt-3 rounded-[20px] border border-line px-3.5">
           {([
-            { label: "Année", valeur: subject.annee },
-            { label: "Épreuve", valeur: subject.type },
             {
               label: "Enseignant",
               valeur: subject.enseignant,
@@ -159,7 +156,7 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
 
         {sameMatiere.length > 0 && (
           <>
-            <div className="mb-0.5 mt-6 text-[17px] font-extrabold tracking-tight">
+            <div className="mb-0.5 mt-7 text-[17px] font-extrabold tracking-tight">
               Autres documents de {subject.matiere}
             </div>
             {sameMatiere.map((s) => (
@@ -189,7 +186,7 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
 
         {sameFiliere.length > 0 && (
           <>
-            <div className="mb-0.5 mt-6 text-[17px] font-extrabold tracking-tight">Dans la même filière</div>
+            <div className="mb-0.5 mt-7 text-[17px] font-extrabold tracking-tight">Dans la même filière</div>
             {sameFiliere.map((s) => (
               <Link
                 key={s.id}

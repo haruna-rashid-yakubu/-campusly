@@ -30,7 +30,8 @@ export function BackHeader({
       >
         <Icon name="back" size={22} strokeWidth={2} />
       </button>
-      {title && <span className="flex-1 text-[17px] font-extrabold">{title}</span>}
+      {/* Without a title, the space still pushes `right` to the right edge. */}
+      <span className="flex-1 text-[17px] font-extrabold">{title}</span>
       {right}
     </div>
   );

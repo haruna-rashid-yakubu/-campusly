@@ -306,3 +306,6 @@ html[data-couleur="rose"] {
 .lecture figure { margin: 12px 0; text-align: center; }
 .lecture figure img { max-width: 100%; border: 1px solid var(--color-line); border-radius: 10px; }
 .lecture figcaption { font-size: 13px; color: var(--color-slate); margin-top: 6px; }
+/* Last, to win over the headings' own margins: the text starts at the box's edge. */
+.lecture > :first-child, .lecture > h3.exercice:first-child { margin-top: 0; }
+.lecture > :empty { display: none; }

@@ -27,12 +27,15 @@ export function DownloadButton({
   onRecord,
   label = "Télécharger",
   compact = false,
+  className,
 }: {
   fileUrl: string | null;
   onRecord?: () => Promise<void>;
   label?: string;
   // Icon only, for a list row: the same download and the same share gate.
   compact?: boolean;
+  // The compact button's look, where a row's small square does not fit.
+  className?: string;
 }) {
   const { show } = useToast();
   const [, startTransition] = useTransition();
@@ -90,7 +93,10 @@ export function DownloadButton({
         <button
           onClick={handleClick}
           aria-label={label}
-          className="press-scale grid h-11 w-11 flex-none place-items-center rounded-[13px] bg-teal-tint text-teal-dark active:bg-teal-border"
+          className={
+            className ??
+            "press-scale grid h-11 w-11 flex-none place-items-center rounded-[13px] bg-teal-tint text-teal-dark active:bg-teal-border"
+          }
         >
           <Icon name="down" size={19} strokeWidth={1.9} />
         </button>

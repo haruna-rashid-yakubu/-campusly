@@ -17,9 +17,14 @@ type Onglet = "texte" | "original";
 export function LectureSujet({ lecture }: { lecture: Lecture }) {
   const [onglet, setOnglet] = useState<Onglet>("texte");
   const [plein, setPlein] = useState<string | null>(null);
+  // Folded to a preview: the whole text inline pushed the rest of the page thousands of pixels down.
+  const [deplie, setDeplie] = useState(false);
 
   return (
-    <div className="mt-4">
+    <section className="mt-7">
+      <div className="mb-3 flex items-baseline justify-between">
+        <h2 className="text-[17px] font-extrabold tracking-tight">Lire sur la page</h2>
+      </div>
       <div className="flex gap-1 rounded-2xl bg-surface p-1" role="tablist">
         {(["texte", "original"] as const).map((o) => (
           <button
@@ -27,20 +32,22 @@ export function LectureSujet({ lecture }: { lecture: Lecture }) {
             role="tab"
             aria-selected={onglet === o}
             onClick={() => setOnglet(o)}
-            className={`press-scale flex h-11 flex-1 items-center justify-center gap-2 rounded-xl text-[14.5px] font-bold transition-colors ${
+            className={`press-scale flex h-10 flex-1 items-center justify-center gap-2 rounded-xl text-[14.5px] font-bold transition-colors ${
               onglet === o ? "bg-white text-ink shadow-sm" : "text-slate"
             }`}
           >
             <Icon name={o === "texte" ? "doc" : "cam"} size={17} />
-            {o === "texte" ? "Texte" : "Photos d'origine"}
+            {o === "texte" ? "Texte" : `Photos (${lecture.photos.length})`}
           </button>
         ))}
       </div>
 
+      <div className="relative mt-3">
+        <div className={deplie ? "" : "max-h-[440px] overflow-hidden"}>
       {onglet === "texte" ? (
         <>
           <div
-            className="lecture mt-4 rounded-[20px] border border-line bg-white px-4 py-5"
+            className="lecture rounded-[20px] border border-line bg-white px-4 py-5"
             dangerouslySetInnerHTML={{ __html: lecture.html }}
           />
           <p className="mt-2.5 flex items-start gap-2 text-[13px] leading-snug text-slate">
@@ -56,7 +63,7 @@ export function LectureSujet({ lecture }: { lecture: Lecture }) {
           </p>
         </>
       ) : (
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="flex flex-col gap-3">
           {lecture.photos.map((src, i) => (
             <button
               key={src}
@@ -75,6 +82,20 @@ export function LectureSujet({ lecture }: { lecture: Lecture }) {
         </div>
       )}
 
+        </div>
+        {!deplie && (
+          <div className="absolute inset-x-0 bottom-0 flex h-36 items-end justify-center bg-gradient-to-t from-white via-white/90 to-transparent pb-1">
+            <button
+              onClick={() => setDeplie(true)}
+              className="press-scale flex h-11 items-center gap-1.5 rounded-full border-[1.5px] border-line-4 bg-white px-5 text-[14px] font-bold shadow-sm"
+            >
+              {onglet === "texte" ? "Lire tout le texte" : "Voir toutes les photos"}
+              <Icon name="down" size={16} strokeWidth={2} />
+            </button>
+          </div>
+        )}
+      </div>
+
       {plein && (
         <div className="fixed inset-0 z-40 flex flex-col bg-ink anim-fade">
           <div className="flex justify-end p-3" style={{ paddingTop: "calc(12px + var(--safe-top))" }}>
@@ -89,6 +110,6 @@ export function LectureSujet({ lecture }: { lecture: Lecture }) {
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }
