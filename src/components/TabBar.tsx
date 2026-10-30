@@ -35,20 +35,23 @@ export function TabBar() {
       >
         {[...TABS.slice(0, 2), null, TABS[2]].map((tab) => {
           if (!tab) {
+            // A tab like the others; lit while the assistant is open over the page.
             return (
               <button
                 key="assistant"
                 onClick={() => setAssistant(true)}
                 aria-label="Assistant Campusly"
-                className="press-scale flex min-h-[62px] flex-1 flex-col items-center justify-center gap-0.5 px-0.5 pb-3 pt-1 text-[#4f46e5]"
+                aria-expanded={assistant}
+                className="press-scale flex min-h-[62px] flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-0.5 pb-3 pt-1"
+                style={{
+                  background: assistant ? "var(--color-teal-tint)" : "transparent",
+                  color: assistant ? "var(--color-teal-active)" : "var(--color-slate-light)",
+                }}
               >
-                <span
-                  className="grid h-[34px] w-[38px] place-items-center rounded-[14px] text-white shadow-[0_8px_18px_-8px_rgba(79,70,229,.8)]"
-                  style={{ background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #7c3aed 100%)" }}
-                >
-                  <Icon name="spark" size={21} strokeWidth={2.1} />
+                <span className="grid h-[34px] place-items-center">
+                  <Icon name="spark" size={23} strokeWidth={assistant ? 2.1 : 1.6} />
                 </span>
-                <span className="text-[10.5px] font-extrabold tracking-[0.01em]">Assistant</span>
+                <span className="text-[10.5px] font-bold tracking-[0.01em]">Assistant</span>
               </button>
             );
           }
@@ -64,7 +67,6 @@ export function TabBar() {
                 color: active ? "var(--color-teal-active)" : "var(--color-slate-light)",
               }}
             >
-              {/* As tall as the assistant's tile, so the four labels share one line. */}
               <span className="grid h-[34px] place-items-center">
                 <Icon name={tab.icon} size={23} strokeWidth={active ? 2.1 : 1.6} />
               </span>
