@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Icon } from "@/components/icons";
 import { markdown, markdownEnLigne } from "@/lib/markdown";
 import type { QuestionQuiz } from "@/lib/tuteur-blocs";
+import type { ResultatQuiz } from "@/lib/rapport-client";
 
 /*
  * The tutor's quiz, one question at a time.
@@ -39,7 +40,16 @@ const vibrer = (motif: number | number[]) => {
   }
 };
 
-export function QuizCarrousel({ questions, onSuite }: { questions: QuestionQuiz[]; onSuite: (question: string) => void }) {
+export function QuizCarrousel({
+  questions,
+  onSuite,
+  onTermine,
+}: {
+  questions: QuestionQuiz[];
+  onSuite: (question: string) => void;
+  // The score, once, when the last question is answered: it goes into the PDF report.
+  onTermine?: (resultat: ResultatQuiz) => void;
+}) {
   // The choice picked for each question, as an index into its shuffled order.
   const [reponses, setReponses] = useState<(number | null)[]>(() => questions.map(() => null));
   const [index, setIndex] = useState(0);
@@ -68,8 +78,13 @@ export function QuizCarrousel({ questions, onSuite }: { questions: QuestionQuiz[
   };
 
   // Answers go in order, so the next one to answer is always after the one on screen.
+  const signale = useRef(false);
   const suivant = () => {
     if (premiereLibre !== -1) return aller(premiereLibre);
+    if (!signale.current) {
+      signale.current = true;
+      onTermine?.({ score, total: n, erreurs: questions.filter((_, i) => !juste(i)).map((q) => q.question.slice(0, 160)) });
+    }
     setSens("avant");
     setFini(true);
     requestAnimationFrame(() => carteRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }));

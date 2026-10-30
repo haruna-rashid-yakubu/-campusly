@@ -22,7 +22,21 @@ const ZOOMS = [1, 1.6, 2.2];
 
 type Etat = { t: "chargement"; part: number } | { t: "pret"; pages: number } | { t: "erreur" };
 
-export function LecteurPdf({ url, titre, filigrane, onFermer }: { url: string; titre: string; filigrane: string; onFermer: () => void }) {
+export function LecteurPdf({
+  source,
+  titre,
+  filigrane,
+  onTelecharger,
+  onFermer,
+}: {
+  // A Sujet's address, or the bytes of a PDF made on the spot (the tutor's report).
+  source: string | Uint8Array;
+  titre: string;
+  filigrane: string;
+  onTelecharger?: () => void;
+  onFermer: () => void;
+}) {
+  const telecharger = () => (onTelecharger ? onTelecharger() : typeof source === "string" && downloadFile(source));
   const [etat, setEtat] = useState<Etat>({ t: "chargement", part: 0 });
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(0);
@@ -35,8 +49,12 @@ export function LecteurPdf({ url, titre, filigrane, onFermer }: { url: string; t
 
   // The back button closes the viewer: one history step, pushed once.
   useEffect(() => {
-    window.history.pushState({ ...window.history.state, lecteurPdf: true }, "");
-    const retour = () => fermerRef.current();
+    // Once: a second mount (React's development check) must not add a second step.
+    if (!(window.history.state as Record<string, unknown> | null)?.lecteurPdf) window.history.pushState({ ...window.history.state, lecteurPdf: true }, "");
+    // Layers stack (the report's reader opens over the tutor): close only when this one's step is left.
+    const retour = () => {
+      if (!(window.history.state as Record<string, unknown> | null)?.lecteurPdf) fermerRef.current();
+    };
     window.addEventListener("popstate", retour);
     const defilement = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -52,7 +70,10 @@ export function LecteurPdf({ url, titre, filigrane, onFermer }: { url: string; t
       try {
         const pdfjs = await import("pdfjs-dist");
         pdfjs.GlobalWorkerOptions.workerSrc = WORKER;
-        const tache = pdfjs.getDocument({ url, disableRange: true, disableStream: true });
+        // pdf.js takes the bytes it is given: a copy, so the caller keeps its own.
+        const tache = pdfjs.getDocument(
+          typeof source === "string" ? { url: source, disableRange: true, disableStream: true } : { data: source.slice() }
+        );
         tache.onProgress = ({ loaded, total }: { loaded: number; total: number }) => {
           if (!annule && total) setEtat({ t: "chargement", part: Math.min(loaded / total, 1) });
         };
@@ -69,7 +90,7 @@ export function LecteurPdf({ url, titre, filigrane, onFermer }: { url: string; t
       void docRef.current?.loadingTask.destroy();
       docRef.current = null;
     };
-  }, [url]);
+  }, [source]);
 
   // Every page drawn at the column's width times the zoom, at the screen's density.
   // All are sized first, so the place being read stays put while they draw.
@@ -155,7 +176,7 @@ export function LecteurPdf({ url, titre, filigrane, onFermer }: { url: string; t
           {Math.round(ZOOMS[zoom] * 100)} %
         </button>
         <button
-          onClick={() => downloadFile(url)}
+          onClick={telecharger}
           className="press-scale grid h-11 w-11 place-items-center"
           aria-label="Télécharger"
         >
@@ -177,7 +198,7 @@ export function LecteurPdf({ url, titre, filigrane, onFermer }: { url: string; t
             <div className="text-[16px] font-extrabold">Impossible d&rsquo;afficher ce PDF ici</div>
             <p className="mx-auto mt-2 max-w-xs text-[14px] text-white/70">Tu peux le télécharger pour l&rsquo;ouvrir sur ton téléphone.</p>
             <button
-              onClick={() => downloadFile(url)}
+              onClick={telecharger}
               className="press-scale mx-auto mt-6 flex h-12 items-center gap-2 rounded-2xl bg-teal px-6 text-[15px] font-bold text-white"
             >
               <Icon name="down" size={18} strokeWidth={2} />

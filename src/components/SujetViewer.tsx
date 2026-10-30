@@ -165,7 +165,7 @@ export function SujetViewer({
 
       {ouvert && activeUrl && (
         <LecteurPdf
-          url={activeUrl}
+          source={activeUrl}
           titre={`${corrige ? "Corrigé · " : ""}${matiere}`}
           filigrane={filigrane}
           onFermer={() => setOuvert(false)}

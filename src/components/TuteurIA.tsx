@@ -7,6 +7,8 @@ import { lireCours, type Cours } from "@/lib/cours";
 import { markdown } from "@/lib/markdown";
 import { QuizCarrousel } from "@/components/QuizCarrousel";
 import { Filigrane } from "@/components/Filigrane";
+import { RapportIA } from "@/components/RapportIA";
+import type { ResultatQuiz } from "@/lib/rapport-client";
 import { decouper, enClair, type Bloc } from "@/lib/tuteur-blocs";
 
 /*
@@ -68,6 +70,9 @@ export function TuteurIA({
 }) {
   const [messages, setMessages] = useState<Message[]>(() => lire(cle(subjectId, corrige, "fil"), []));
   const [cours, setCours] = useState<Cours[]>(() => lire(cle(subjectId, corrige, "cours"), []));
+  // Finished quizzes' scores, for the report's "Ton bilan".
+  const [quiz, setQuiz] = useState<ResultatQuiz[]>(() => lire(cle(subjectId, corrige, "quiz"), []));
+  const [rapport, setRapport] = useState(false);
   const [chargement, setChargement] = useState<Chargement | null>(null);
   const [saisie, setSaisie] = useState("");
   const [enCours, setEnCours] = useState(false);
@@ -80,8 +85,12 @@ export function TuteurIA({
   });
 
   useEffect(() => {
-    window.history.pushState({ ...window.history.state, tuteur: true }, "");
-    const retour = () => fermerRef.current();
+    // Once: a second mount (React's development check) must not add a second step.
+    if (!(window.history.state as Record<string, unknown> | null)?.tuteur) window.history.pushState({ ...window.history.state, tuteur: true }, "");
+    // Layers stack (the report's reader opens over the tutor): close only when this one's step is left.
+    const retour = () => {
+      if (!(window.history.state as Record<string, unknown> | null)?.tuteur) fermerRef.current();
+    };
     window.addEventListener("popstate", retour);
     const defilement = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -99,6 +108,10 @@ export function TuteurIA({
   useEffect(() => {
     garder(cle(subjectId, corrige, "cours"), cours);
   }, [cours, subjectId, corrige]);
+
+  useEffect(() => {
+    garder(cle(subjectId, corrige, "quiz"), quiz.slice(-10));
+  }, [quiz, subjectId, corrige]);
 
   async function ajouterCours(fichiers: FileList | null) {
     if (!fichiers?.length) return;
@@ -184,6 +197,14 @@ export function TuteurIA({
               {corrige ? `Corrigé · ${matiere}` : matiere}
             </div>
           </div>
+          <button
+            onClick={() => setRapport(true)}
+            className="press-scale flex h-9 items-center gap-1.5 rounded-xl bg-teal-tint px-2.5 text-[12.5px] font-extrabold text-teal-dark"
+            aria-label="Générer le rapport de révision en PDF"
+          >
+            <Icon name="doc" size={15} strokeWidth={2.2} />
+            Rapport PDF
+          </button>
           {!vide && (
             <button
               onClick={() => setMessages([])}
@@ -252,6 +273,20 @@ export function TuteurIA({
               </button>
             )}
 
+            <button
+              onClick={() => setRapport(true)}
+              className="press-scale mt-3 flex w-full max-w-[360px] items-center gap-3 rounded-2xl border-[1.5px] border-line-4 bg-white p-3.5 text-left active:bg-surface-3"
+            >
+              <span className="grid h-11 w-11 flex-none place-items-center rounded-xl bg-teal-tint text-teal-dark">
+                <Icon name="doc" size={20} strokeWidth={1.9} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[14.5px] font-extrabold">Rapport de révision PDF</span>
+                <span className="mt-0.5 block text-[12.5px] leading-snug text-slate">Tout le sujet expliqué et corrigé, avec un plan de révision.</span>
+              </span>
+              <Icon name="right" size={16} className="flex-none text-slate-light" />
+            </button>
+
             <div className="mt-3 flex w-full max-w-[360px] flex-col gap-2">
               {SUGGESTIONS.map((s) => (
                 <button
@@ -279,6 +314,7 @@ export function TuteurIA({
                   derniere={i === messages.length - 1}
                   ecrit={enCours && i === messages.length - 1}
                   onSuite={(q) => void envoyer(q)}
+                  onQuiz={(r) => setQuiz((q) => [...q, r])}
                 />
               )
             )}
@@ -291,6 +327,19 @@ export function TuteurIA({
           </div>
         )}
       </div>
+
+      {rapport && (
+        <RapportIA
+          subjectId={subjectId}
+          matiere={matiere}
+          corrige={corrige}
+          messages={messages}
+          quiz={quiz}
+          cours={cours.map((c) => `## ${c.nom}\n${c.texte}`).join("\n\n").slice(0, COURS_MAX)}
+          filigrane={filigrane}
+          onFermer={() => setRapport(false)}
+        />
+      )}
 
       <form
         onSubmit={(e) => {
@@ -361,11 +410,13 @@ function Reponse({
   derniere,
   ecrit,
   onSuite,
+  onQuiz,
 }: {
   contenu: string;
   derniere: boolean;
   ecrit: boolean;
   onSuite: (question: string) => void;
+  onQuiz: (resultat: ResultatQuiz) => void;
 }) {
   const [copie, setCopie] = useState(false);
   if (!contenu) {
@@ -384,7 +435,7 @@ function Reponse({
   return (
     <div className="mr-3 flex min-w-0 max-w-[calc(100%-12px)] flex-col gap-2 self-start">
       {blocs.map((b, i) => (
-        <BlocReponse key={i} bloc={b} onSuite={onSuite} />
+        <BlocReponse key={i} bloc={b} onSuite={onSuite} onQuiz={onQuiz} />
       ))}
 
       {derniere && !ecrit && (
@@ -434,7 +485,15 @@ function Reponse({
 
 const html = (texte: string) => ({ __html: markdown(texte) });
 
-function BlocReponse({ bloc, onSuite }: { bloc: Bloc; onSuite: (question: string) => void }) {
+function BlocReponse({
+  bloc,
+  onSuite,
+  onQuiz,
+}: {
+  bloc: Bloc;
+  onSuite: (question: string) => void;
+  onQuiz: (resultat: ResultatQuiz) => void;
+}) {
   if (bloc.t === "md") {
     return <div className="reponse-ia rounded-[18px] rounded-bl-md bg-surface px-3.5 py-3 text-ink" dangerouslySetInnerHTML={html(bloc.texte)} />;
   }
@@ -466,7 +525,7 @@ function BlocReponse({ bloc, onSuite }: { bloc: Bloc; onSuite: (question: string
     );
   }
   if (bloc.t === "etapes") return <Etapes etapes={bloc.etapes} />;
-  if (bloc.t === "quiz") return <QuizCarrousel questions={bloc.questions} onSuite={onSuite} />;
+  if (bloc.t === "quiz") return <QuizCarrousel questions={bloc.questions} onSuite={onSuite} onTermine={onQuiz} />;
   return null;
 }
 

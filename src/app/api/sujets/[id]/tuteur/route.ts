@@ -5,6 +5,7 @@ import { evenements, subjects, users } from "@/db/schema";
 import { lecteur, ouvrir } from "@/lib/acces";
 import { lireExtraction, texteBrut } from "@/lib/numerisation/lecture";
 import { consigne, COURS_MAX } from "@/lib/tuteur";
+import { fluxDeepSeek } from "@/lib/deepseek";
 
 /*
  * The revision tutor of a Sujet: a conversation with DeepSeek, which has the
@@ -57,50 +58,16 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   const s = sujet[0];
   if (!s || !extraction) return NextResponse.json({ erreur: "indisponible" }, { status: 404 });
 
-  const cle = process.env.DEEPSEEK_API_KEY;
-  if (!cle) return NextResponse.json({ erreur: "indisponible" }, { status: 503 });
-
-  const reponse = await fetch("https://api.deepseek.com/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${cle}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "deepseek-flash",
-      stream: true,
-      // Its reasoning counts in here too (up to ~2000 tokens): a quiz was cut off at 2500.
-      max_tokens: 6000,
-      temperature: 0.4,
-      messages: [
-        { role: "system", content: consigne(s.matiere, `${s.type} · ${s.filiere} ${s.niveau} · ${s.annee}`, texteBrut(extraction), corrige, cours) },
-        ...messages,
-      ],
-    }),
-  }).catch(() => null);
-  if (!reponse?.ok || !reponse.body) return NextResponse.json({ erreur: "ia" }, { status: 502 });
+  const texte = await fluxDeepSeek(
+    [
+      { role: "system", content: consigne(s.matiere, `${s.type} · ${s.filiere} ${s.niveau} · ${s.annee}`, texteBrut(extraction), corrige, cours) },
+      ...messages,
+    ],
+    // Its reasoning counts in here too: a quiz was cut off at 2500.
+    6000
+  );
+  if (!texte) return NextResponse.json({ erreur: "ia" }, { status: 502 });
 
   await db.insert(evenements).values({ type: "message_ia", cible: "sujet", cibleId: numero, userId: acces.userId });
-
-  // DeepSeek's server-sent events, reduced to the text of the answer.
-  const decodeur = new TextDecoder();
-  const encodeur = new TextEncoder();
-  let reste = "";
-  const texte = reponse.body.pipeThrough(
-    new TransformStream<Uint8Array, Uint8Array>({
-      transform(morceau, sortie) {
-        reste += decodeur.decode(morceau, { stream: true });
-        const lignes = reste.split("\n");
-        reste = lignes.pop() ?? "";
-        for (const ligne of lignes) {
-          const donnees = ligne.replace(/^data:\s*/, "").trim();
-          if (!ligne.startsWith("data:") || !donnees || donnees === "[DONE]") continue;
-          try {
-            const delta = (JSON.parse(donnees) as { choices?: { delta?: { content?: string } }[] }).choices?.[0]?.delta?.content;
-            if (delta) sortie.enqueue(encodeur.encode(delta));
-          } catch {
-            /* a keep-alive or a partial line */
-          }
-        }
-      },
-    })
-  );
   return new Response(texte, { headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
 }

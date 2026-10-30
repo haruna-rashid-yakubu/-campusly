@@ -44,6 +44,15 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   /*
+   * The tutor's PDF report is printed by a real Chromium in the function
+   * (lib/pdf-serveur). Both are loaded from node_modules at run time rather
+   * than bundled, and the compressed browser is copied along with the route.
+   */
+  serverExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
+  outputFileTracingIncludes: {
+    "/api/sujets/[id]/tuteur/rapport/pdf": ["./node_modules/@sparticuz/chromium/bin/**"],
+  },
+  /*
    * A Server Action body is capped at 1 MB by default, and one photograph of
    * an exam sheet is already past it — which is why sending a paper failed
    * with nothing useful on screen. The batch uploader now sends its files

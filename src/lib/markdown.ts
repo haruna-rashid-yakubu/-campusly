@@ -117,7 +117,11 @@ function element(ligne: string): Element | null {
   return { retrait: retrait(m[1]), balise: m[2] ? "ul" : "ol", html, debut: m[3] ? Number(m[3]) : undefined };
 }
 
-export function markdown(source: string): string {
+/*
+ * `imprime`: a page to print (the PDF report), where ## is a section and
+ * deserves an <h2>; in a chat bubble, # and ## share the largest size there is.
+ */
+export function markdown(source: string, imprime = false): string {
   const blocs: string[] = [];
   const aPart = (html: string) => `\n${BLOC}${blocs.push(html) - 1}${BLOC}\n`;
   const formule = (m: string) => aPart(`<div class="formule">${maths(m, true)}</div>`);
@@ -134,10 +138,10 @@ export function markdown(source: string): string {
     // An environment written without dollars around it.
     .replace(/^[ \t]*(\\begin\{([a-z*]+)\}[\s\S]+?\\end\{\2\})[ \t]*$/gm, (_, m: string) => formule(m))
     .replace(/\\\(([\s\S]+?)\\\)/g, (_, m: string) => `$${m.replace(/\n/g, " ")}$`);
-  return rendre(texte, blocs);
+  return rendre(texte, blocs, imprime);
 }
 
-function rendre(texte: string, blocs: string[]): string {
+function rendre(texte: string, blocs: string[], imprime: boolean): string {
   const sortie: string[] = [];
   let paragraphe: string[] = [];
   let elements: Element[] = [];
@@ -148,7 +152,7 @@ function rendre(texte: string, blocs: string[]): string {
     if (elements.length) sortie.push(liste(elements));
     if (table.length) sortie.push(tableau(table));
     // A quote holds Markdown of its own: lists, formulas, emphasis.
-    if (citation.length) sortie.push(`<blockquote>${rendre(citation.join("\n"), blocs)}</blockquote>`);
+    if (citation.length) sortie.push(`<blockquote>${rendre(citation.join("\n"), blocs, imprime)}</blockquote>`);
     paragraphe = [];
     elements = [];
     table = [];
@@ -181,7 +185,8 @@ function rendre(texte: string, blocs: string[]): string {
       sortie.push("<hr>");
     } else if (titre) {
       fermer();
-      const niveau = titre[1].length <= 2 ? "h3" : titre[1].length === 3 ? "h4" : "h5";
+      const n = titre[1].length;
+      const niveau = imprime ? (n <= 2 ? "h2" : n === 3 ? "h3" : n === 4 ? "h4" : "h5") : n <= 2 ? "h3" : n === 3 ? "h4" : "h5";
       sortie.push(`<${niveau}>${enLigne(titre[2])}</${niveau}>`);
     } else if (item) {
       if (paragraphe.length || table.length) fermer();
