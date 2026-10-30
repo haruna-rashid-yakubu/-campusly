@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icons";
 import { downloadFile } from "@/lib/download";
-import { Filigrane } from "@/components/Filigrane";
 
 /*
  * A Sujet's PDF, read full screen on the page itself.
@@ -25,14 +24,12 @@ type Etat = { t: "chargement"; part: number } | { t: "pret"; pages: number } | {
 export function LecteurPdf({
   source,
   titre,
-  filigrane,
   onTelecharger,
   onFermer,
 }: {
   // A Sujet's address, or the bytes of a PDF made on the spot (the tutor's report).
   source: string | Uint8Array;
   titre: string;
-  filigrane: string;
   onTelecharger?: () => void;
   onFermer: () => void;
 }) {
@@ -184,7 +181,7 @@ export function LecteurPdf({
         </button>
       </div>
 
-      <div ref={pagesRef} className="relative flex-1 overflow-auto overscroll-contain" style={{ touchAction: "pan-x pan-y pinch-zoom" }}>
+      <div ref={pagesRef} className="flex-1 overflow-auto overscroll-contain" style={{ touchAction: "pan-x pan-y pinch-zoom" }}>
         {etat.t === "chargement" && (
           <div className="mx-auto flex max-w-[420px] flex-col items-center px-8 pt-16">
             <div className="cy-skeleton aspect-[1/1.414] w-full rounded-md opacity-20" />
@@ -207,8 +204,7 @@ export function LecteurPdf({
           </div>
         )}
         {etat.t === "pret" && (
-          <div className="relative flex w-max min-w-full flex-col items-center gap-3 px-3 py-4" style={{ paddingBottom: "calc(24px + var(--safe-bottom))" }}>
-            <Filigrane texte={filigrane} />
+          <div className="flex w-max min-w-full flex-col items-center gap-3 px-3 py-4" style={{ paddingBottom: "calc(24px + var(--safe-bottom))" }}>
             {Array.from({ length: etat.pages }, (_, i) => (
               <canvas
                 key={`${i}-${zoom}`}

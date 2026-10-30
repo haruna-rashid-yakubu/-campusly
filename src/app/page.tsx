@@ -17,6 +17,7 @@ import {
   getLatestProgramme,
   getPreferredClasse,
   getRecentCite,
+  getNombreSujets,
   getRecentSubjects,
 } from "@/lib/data";
 import { SondageVote } from "@/components/SondageVote";
@@ -38,11 +39,12 @@ export const dynamic = "force-dynamic";
 
 export default async function AccueilPage({ searchParams }: { searchParams: Promise<{ apercu?: string }> }) {
   const session = await auth();
-  const [classe, classesRows, recentSubjects, recentCite] = await Promise.all([
+  const [classe, classesRows, recentSubjects, recentCite, nombreSujets] = await Promise.all([
     getPreferredClasse(),
     getClasses(),
     getRecentSubjects(1),
     getRecentCite(),
+    getNombreSujets().catch(() => 0),
   ]);
 
   // Belt and braces on the délégué alert: someone may be named while their
@@ -187,7 +189,11 @@ export default async function AccueilPage({ searchParams }: { searchParams: Prom
       )}
       {cartesUne.length > 0 && <AlaUne cartes={cartesUne} />}
 
-      <AccueilServices boutiques={vendeursOuverts.map((v) => ({ nom: v.nom, logo: v.logoCarreUrl }))} />
+      <AccueilServices
+        boutiques={vendeursOuverts.map((v) => ({ nom: v.nom, logo: v.logoCarreUrl }))}
+        nombreSujets={nombreSujets}
+        classe={classe}
+      />
 
       <section className="mt-7 px-5">
         <TitreSection lien={{ href: "/sujets", label: "Tout voir" }}>Nouveautés</TitreSection>

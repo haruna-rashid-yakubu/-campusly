@@ -366,7 +366,7 @@ html[data-couleur="rose"] {
 }
 
 /*
- * Against captures (AntiCapture, Filigrane): the page blurs while it is not
+ * Against captures (AntiCapture): the page blurs while it is not
  * being looked at, nothing outside a field can be selected or long-pressed,
  * and printing gives a blank page with a word of explanation.
  */

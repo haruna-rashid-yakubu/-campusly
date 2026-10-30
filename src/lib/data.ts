@@ -493,6 +493,11 @@ export async function getClassesWithoutRecentProgramme() {
   return results;
 }
 
+/** How many Sujets there are, for the home screen's tile. */
+export async function getNombreSujets() {
+  return db.$count(subjects);
+}
+
 export async function getRecentSubjects(limit = 1) {
   return db.select().from(subjects).orderBy(desc(subjects.createdAt)).limit(limit);
 }

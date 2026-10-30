@@ -8,9 +8,8 @@ import { useEffect } from "react";
  * A browser cannot stop the phone or the computer from capturing its screen —
  * that happens outside it. What it can do: hide the page the moment it stops
  * being looked at (an app switcher's snapshot, a snipping tool that takes the
- * focus), hide it on the shortcuts that start a capture, refuse to print,
- * refuse to copy, and mark what is on screen with the reader's name
- * (Filigrane), so a capture that does get through says whose it was.
+ * focus), hide it on the shortcuts that start a capture, refuse to print
+ * and refuse to copy.
  *
  * The hiding is a blur on <html>, lifted as soon as the page has the focus
  * again; fields keep copy and paste.

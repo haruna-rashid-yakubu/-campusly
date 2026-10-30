@@ -53,9 +53,6 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
   const acces = await ouvrir(session?.user?.id ?? null, subject.id);
   const jeton = acces.ok ? jetonFichier(acces.userId) : undefined;
   const themes = extraction?.themes ?? [];
-  // Whose screen it is, on everything the content is shown in (Filigrane).
-  const qui = session?.user?.name || session?.user?.email?.split("@")[0] || "Campusly";
-  const filigrane = `${qui} · ${new Date().toLocaleDateString("fr-FR")} · mycampusly.fr`;
 
   return (
     <div className="relative min-h-dvh pb-[calc(92px+var(--safe-bottom))]">
@@ -93,7 +90,6 @@ export default async function SujetDetailPage({ params }: { params: Promise<{ id
             annee={subject.annee}
             fileUrl={lienFichier(subject.id, subject.fileUrl, false, jeton)}
             correctionUrl={lienFichier(subject.id, subject.correctionUrl, true, jeton)}
-            filigrane={filigrane}
             lectures={{
               sujet: extraction && versLecture(extraction, subject.id),
               correction: extractionCorrige && versLecture(extractionCorrige, subject.id),

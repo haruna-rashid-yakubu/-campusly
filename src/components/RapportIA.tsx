@@ -27,7 +27,6 @@ export function RapportIA({
   messages,
   quiz,
   cours,
-  filigrane,
   onFermer,
 }: {
   subjectId: number;
@@ -36,7 +35,6 @@ export function RapportIA({
   messages: { role: string; content: string }[];
   quiz: ResultatQuiz[];
   cours: string;
-  filigrane: string;
   onFermer: () => void;
 }) {
   const [etape, setEtape] = useState<Etape>({ t: "intro" });
@@ -302,7 +300,6 @@ export function RapportIA({
         <LecteurPdf
           source={etape.pdf}
           titre={`Rapport · ${matiere}`}
-          filigrane={filigrane}
           onTelecharger={() => telecharger(etape.pdf)}
           onFermer={() => setLecteur(false)}
         />
