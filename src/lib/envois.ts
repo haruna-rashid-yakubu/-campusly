@@ -1,12 +1,11 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { APP_URL } from "@/lib/constants";
+import { deposer, lireAvecType, supprimer } from "@/lib/numerisation/r2";
 
 /*
  * The files people send — a paper's photos, a timetable, a cité's façade —
  * kept in the R2 bucket under envois/, where Vercel Blob used to hold them.
- * The Worker writes and reads them through the FICHIERS binding
- * (wrangler.jsonc); /fichiers/<clé> serves them at an address that, as on the
- * blob store, cannot be guessed.
+ * /fichiers/<clé> serves them at an address that, as on the blob store,
+ * cannot be guessed.
  */
 
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -14,10 +13,6 @@ export const TYPES_ACCEPTES = ["image/jpeg", "image/png", "image/webp", "applica
 
 const PREFIXE = "envois/";
 const CHEMIN_PUBLIC = "/fichiers/";
-
-function bucket() {
-  return getCloudflareContext().env.FICHIERS;
-}
 
 /** The address a file is served at, which is also what the rows store. */
 export function urlEnvoi(cle: string) {
@@ -44,16 +39,14 @@ export async function uploadFile(file: File, folder: string) {
   }
   const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
   const cle = `${PREFIXE}${folder}/${Date.now()}-${crypto.randomUUID().slice(0, 12)}-${safeName}`;
-  await bucket().put(cle, await file.arrayBuffer(), {
-    httpMetadata: { contentType: file.type || "application/octet-stream" },
-  });
+  await deposer(cle, new Uint8Array(await file.arrayBuffer()), file.type || "application/octet-stream");
   return { url: urlEnvoi(cle), name: file.name };
 }
 
-/** The object behind one of this app's addresses, or null. */
+/** The file behind one of this app's addresses, or null. */
 export async function lireEnvoi(url: string) {
   const cle = cleEnvoi(url);
-  return cle ? bucket().get(cle) : null;
+  return cle ? lireAvecType(cle) : null;
 }
 
 // Deleting the row is what the admin asked for; losing the file afterwards is
@@ -62,7 +55,7 @@ export async function deleteFile(url: string) {
   const cle = cleEnvoi(url);
   if (!cle) return;
   try {
-    await bucket().delete(cle);
+    await supprimer(cle);
   } catch {
     // orphaned file — harmless, and the row is already gone
   }

@@ -2,6 +2,10 @@ import type { MetadataRoute } from "next";
 import { getSubjects, getCitesWithAvailability } from "@/lib/data";
 import { APP_URL as SITE_URL } from "@/lib/constants";
 
+// Read at each request rather than at build: the image is built without the
+// database, and a sitemap frozen at build time would miss every new paper.
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [subjects, cites] = await Promise.all([getSubjects(), getCitesWithAvailability()]);
 

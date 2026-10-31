@@ -1,0 +1,37 @@
+# Campusly on a server: the site, and the two daily crons that call it.
+#
+#   cp .env.example .env    # then fill it in
+#   docker compose pull && docker compose up -d
+#
+# The image is built and pushed by .github/workflows/docker.yml. Put a reverse
+# proxy with TLS (Caddy, Nginx, Traefik, a Cloudflare Tunnel) in front of
+# port 3000 for www.mycampusly.fr.
+
+services:
+  web:
+    image: ghcr.io/haruna-rashid-yakubu/campusly:${CAMPUSLY_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Behind the reverse proxy, next-auth has to be told to trust the host it is given.
+      AUTH_TRUST_HOST: "true"
+    ports:
+      - "3000:3000"
+
+  # The evening reminder (19:00 UTC) and the morning sends (07:00 UTC), called
+  # as Vercel used to: a GET with CRON_SECRET as a bearer token.
+  cron:
+    image: alpine:3.22
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - web
+    command:
+      - sh
+      - -c
+      - |
+        cat > /etc/crontabs/root <<EOF
+        0 19 * * * wget -q -O- --header "Authorization: Bearer $$CRON_SECRET" http://web:3000/api/cron/rappel-du-soir
+        0 7 * * * wget -q -O- --header "Authorization: Bearer $$CRON_SECRET" http://web:3000/api/cron/matin
+        EOF
+        exec crond -f -l 2

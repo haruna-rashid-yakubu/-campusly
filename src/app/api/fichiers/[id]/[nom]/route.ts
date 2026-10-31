@@ -66,8 +66,8 @@ export async function GET(request: Request, ctx: { params: Promise<{ id: string;
   if (!octets) {
     const original = await lireEnvoi(source).catch(() => null);
     if (!original) return new NextResponse(null, { status: 404 });
-    octets = new Uint8Array(await original.arrayBuffer());
-    type = original.httpMetadata?.contentType ?? "application/octet-stream";
+    octets = original.octets;
+    type = original.type;
   }
   if (octets.byteLength > LIMITE) return new NextResponse("Fichier trop lourd pour être servi.", { status: 503 });
 

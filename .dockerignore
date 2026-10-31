@@ -1,0 +1,13 @@
+.git
+.github
+node_modules
+.next
+.open-next
+.wrangler
+.vercel
+.env*
+!.env.example
+*.log
+tsconfig.tsbuildinfo
+Dockerfile
+docker-compose.yml

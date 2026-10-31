@@ -3,8 +3,8 @@ import { AwsClient } from "aws4fetch";
 /*
  * The private R2 bucket the papers live in. Nothing in it is public: the site
  * reads it here and serves files through /api/fichiers, which marks them.
- * aws4fetch signs plain fetch calls, so this runs the same on Vercel and in a
- * local script.
+ * aws4fetch signs plain fetch calls, so this runs the same on the server and in
+ * a local script.
  */
 function client() {
   const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET } = process.env;
@@ -36,6 +36,15 @@ export async function lire(cle: string): Promise<Uint8Array | null> {
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`R2 n'a pas pu lire ${cle} (${res.status})`);
   return new Uint8Array(await res.arrayBuffer());
+}
+
+/** The object's bytes and the type it was stored with, or null when it does not exist. */
+export async function lireAvecType(cle: string): Promise<{ octets: Uint8Array; type: string } | null> {
+  const { aws, base } = client();
+  const res = await aws.fetch(`${base}/${chemin(cle)}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`R2 n'a pas pu lire ${cle} (${res.status})`);
+  return { octets: new Uint8Array(await res.arrayBuffer()), type: res.headers.get("content-type") ?? "application/octet-stream" };
 }
 
 export async function supprimer(cle: string) {

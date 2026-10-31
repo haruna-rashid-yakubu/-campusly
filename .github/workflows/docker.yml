@@ -1,0 +1,62 @@
+# Builds the Docker image (Dockerfile) on every push to main and pushes it to
+# GitHub's registry, tagged latest and with the commit: the server then runs
+# `docker compose pull && docker compose up -d`.
+#
+# The browser's public values are repository variables (Settings → Secrets and
+# variables → Actions → Variables): NEXT_PUBLIC_VAPID_PUBLIC_KEY and
+# NEXT_PUBLIC_PRESSING_WHATSAPP. Secrets are never baked into the image.
+
+name: Image Docker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Connexion à ghcr.io
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          # The repository is named "-campusly", and an image name cannot start with a hyphen.
+          images: ghcr.io/${{ github.repository_owner }}/campusly
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=short
+            type=ref,event=pr
+
+      # A pull request is built to prove it builds, never pushed.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_VAPID_PUBLIC_KEY=${{ vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+            NEXT_PUBLIC_PRESSING_WHATSAPP=${{ vars.NEXT_PUBLIC_PRESSING_WHATSAPP }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

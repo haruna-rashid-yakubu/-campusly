@@ -21,7 +21,7 @@ const DOSSIER = join(process.env.HOME ?? "", "campusly-numerisation");
 async function principal() {
   const { cles, deposer } = await import("../src/lib/numerisation/r2");
   const { gabaritCorrige } = await import("../src/lib/corrige-ia");
-  const { imprimerPdf } = await import("./pdf-local");
+  const { imprimerPdf } = await import("../src/lib/pdf-serveur");
   type Meta = { matiere: string; type: string; filiere: string; niveau: string; annee: string; enseignant: string | null };
 
   const pret = (id: number) => existsSync(join(DOSSIER, String(id), "corrige-ia.md")) && existsSync(join(DOSSIER, String(id), "corrige-ia.verif"));

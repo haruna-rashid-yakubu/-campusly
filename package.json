@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.3",
-    "@cloudflare/puppeteer": "^1.4.0",
     "@neondatabase/serverless": "^1.1.0",
     "@opennextjs/cloudflare": "^1.20.15",
     "aws4fetch": "^1.0.20",
@@ -26,6 +25,7 @@
     "next-auth": "^5.0.0-beta.32",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.4.299",
+    "puppeteer-core": "^25.16.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "web-push": "^3.6.7"
@@ -41,7 +41,6 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
-    "puppeteer-core": "^25.16.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",

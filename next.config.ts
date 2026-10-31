@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 // script-src/style-src need 'unsafe-inline' because Next's hydration
 // bootstrap script and this app's many inline `style={{}}` props aren't
@@ -36,6 +35,14 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // A self-contained server (.next/standalone) for the Docker image.
+  output: "standalone",
+  /*
+   * The tutor's PDF report is printed by the Chromium the image installs
+   * (lib/pdf-serveur). Puppeteer is loaded from node_modules at run time
+   * rather than bundled.
+   */
+  serverExternalPackages: ["puppeteer-core"],
   /*
    * A Server Action body is capped at 1 MB by default, and one photograph of
    * an exam sheet is already past it — which is why sending a paper failed
@@ -66,6 +73,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
-// Gives `next dev` the Cloudflare bindings (getCloudflareContext), as on the Worker.
-initOpenNextCloudflareForDev();
