@@ -143,6 +143,13 @@ export async function sendPushToAll(payload: PushPayload) {
   return diffuser(subs, payload, "tous");
 }
 
+/** Every browser that subscribed, but not the native app: what concerns the web app only. */
+export async function sendPushToNavigateurs(payload: PushPayload) {
+  if (!ensureConfigured()) return 0;
+  const subs = (await db.select().from(pushSubscriptions)).filter((s) => !isExpoToken(s.endpoint));
+  return diffuser(subs, payload, "tous");
+}
+
 export async function sendPushToUser(userId: string, payload: PushPayload) {
   if (!ensureConfigured()) return 0;
   const subs = await db

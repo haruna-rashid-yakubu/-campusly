@@ -33,6 +33,10 @@
 		{ "pattern": "mycampusly.fr/*", "zone_name": "mycampusly.fr" }
 	],
 	"triggers": { "crons": ["0 19 * * *", "0 7 * * *"] },
+	// Next to the database (Neon, us-west-2): a page makes several queries, and
+	// each one crossed the Atlantic when the Worker ran near the visitor. The
+	// static files are still served from the nearest datacenter.
+	"placement": { "mode": "targeted", "region": "aws:us-west-2" },
 	"observability": { "enabled": true },
 	// next-auth trusted the host by itself on Vercel; here it has to be told.
 	"vars": { "AUTH_TRUST_HOST": "true" }
