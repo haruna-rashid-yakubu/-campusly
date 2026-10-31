@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { lireEnvoi } from "@/lib/envois";
 import { eq } from "drizzle-orm";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { db } from "@/db";
@@ -17,7 +18,7 @@ import { cles, lire } from "@/lib/numerisation/r2";
  * survives a re-save. <account> is the first characters of sha256(user id):
  * it names no one on the file, but the admins can find whose it is.
  *
- * The stored original is never handed out: its address is a public blob.
+ * The stored original is never handed out: its address is public.
  * A paper not yet digitised is fetched here and served from here, or not
  * at all when it is too large for a function's response.
  */
@@ -63,10 +64,10 @@ export async function GET(request: Request, ctx: { params: Promise<{ id: string;
   let type = "application/pdf";
   if (!octets && ia) return new NextResponse(null, { status: 404 });
   if (!octets) {
-    const original = await fetch(source).catch(() => null);
-    if (!original?.ok) return new NextResponse(null, { status: 404 });
+    const original = await lireEnvoi(source).catch(() => null);
+    if (!original) return new NextResponse(null, { status: 404 });
     octets = new Uint8Array(await original.arrayBuffer());
-    type = original.headers.get("content-type") ?? "application/octet-stream";
+    type = original.httpMetadata?.contentType ?? "application/octet-stream";
   }
   if (octets.byteLength > LIMITE) return new NextResponse("Fichier trop lourd pour être servi.", { status: 503 });
 

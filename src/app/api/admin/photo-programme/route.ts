@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { programmePublications } from "@/db/schema";
-import { uploadFile } from "@/lib/blob";
+import { uploadFile } from "@/lib/envois";
 import { getClasseByLabel, getProgrammeForWeek } from "@/lib/data";
 import { fromISODate, mondayOf } from "@/lib/semaine";
 

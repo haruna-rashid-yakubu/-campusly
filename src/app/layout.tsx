@@ -1,7 +1,6 @@
 import { scriptCouleurDuJour } from "@/lib/evenements";
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { ToastProvider } from "@/components/Toast";
 import { OfflineOverlay } from "@/components/OfflineOverlay";
@@ -98,7 +97,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ServiceWorkerRegister />
         <Visite />
         <SuiviNavigation />
-        <SpeedInsights />
       </body>
     </html>
   );

@@ -91,7 +91,7 @@ export const config = {
     // The files too: a later app sends its session to them directly instead of a signed link.
     "/admin/:path*",
     "/api/v1/:path*",
-    "/api/blob/:path*",
+    "/api/envoi",
     "/api/fichiers/:path*",
     "/api/sujets/:path*",
     "/api/entrainement/:path*",

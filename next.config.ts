@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 // script-src/style-src need 'unsafe-inline' because Next's hydration
 // bootstrap script and this app's many inline `style={{}}` props aren't
@@ -12,18 +13,10 @@ const CSP = [
   // blob: is for the preview of a photo the student has just taken, before it
   // is uploaded — the URL is minted by this page from a file the person chose,
   // and nothing else can produce one.
-  "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
+  "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  /*
-   * vercel.com is here because the browser needs it to send a file.
-   *
-   * @vercel/blob/client first asks our own route for a token, then calls the
-   * blob API at https://vercel.com/api/blob to get the presigned URL, and
-   * only then PUTs to the store. That middle call was blocked, so a paper
-   * could not leave a student's phone at all -- and the failure was silent.
-   * The wildcard below covers the store itself, never the API.
-   */
-  "connect-src 'self' https://vercel.com https://*.public.blob.vercel-storage.com https://*.blob.vercel-storage.com",
+  // Files are sent to this site itself (/api/envoi) and served by it (/fichiers).
+  "connect-src 'self'",
   // Still Google's viewer in production: the native PDF reader ships in a
   // later batch, and dropping this origin before it would blank every preview.
   "frame-src https://docs.google.com",
@@ -44,34 +37,26 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   /*
-   * The tutor's PDF report is printed by a real Chromium in the function
-   * (lib/pdf-serveur). Both are loaded from node_modules at run time rather
-   * than bundled, and the compressed browser is copied along with the route.
-   */
-  serverExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
-  outputFileTracingIncludes: {
-    "/api/sujets/[id]/tuteur/rapport/pdf": ["./node_modules/@sparticuz/chromium/bin/**"],
-  },
-  /*
    * A Server Action body is capped at 1 MB by default, and one photograph of
    * an exam sheet is already past it — which is why sending a paper failed
    * with nothing useful on screen. The batch uploader now sends its files
-   * straight to the blob store and never hits this, but the single-file
-   * forms still post through an action: a student proposing a paper or a
-   * timetable, an admin attaching the week's photo.
+   * through /api/envoi and never hits this, but the single-file forms still
+   * post through an action: a student proposing a paper or a timetable, an
+   * admin attaching the week's photo.
    *
-   * 4 MB rather than more: the platform refuses a function request body over
-   * 4.5 MB whatever is written here, so a larger number would only move the
-   * failure somewhere less legible.
+   * 25 MB, the most lib/envois keeps: a Worker takes request bodies far
+   * larger, so the limit is now ours rather than the platform's.
    */
   experimental: {
-    serverActions: { bodySizeLimit: "4mb" },
+    serverActions: { bodySizeLimit: "25mb" },
   },
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "*.public.blob.vercel-storage.com",
+        // The files people send, served by /fichiers (lib/envois) at an absolute address.
+        hostname: "www.mycampusly.fr",
+        pathname: "/fichiers/**",
       },
     ],
   },
@@ -81,3 +66,6 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+// Gives `next dev` the Cloudflare bindings (getCloudflareContext), as on the Worker.
+initOpenNextCloudflareForDev();

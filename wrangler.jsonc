@@ -1,0 +1,39 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "campusly",
+	// The Campusly account: mycampusly.fr and the papers' R2 bucket.
+	"account_id": "af5eb65d1ad00c26a1959e928f5cb682",
+	// worker.ts wraps the OpenNext worker to add the daily crons.
+	"main": "worker.ts",
+	"compatibility_date": "2026-10-23",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		// OpenNext calls itself through this binding (caching); the name must match the worker's.
+		{ "binding": "WORKER_SELF_REFERENCE", "service": "campusly" }
+	],
+	"r2_buckets": [
+		// The Next.js incremental cache (pages and fetches revalidated by revalidatePath).
+		{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "campusly-opennext-cache" },
+		// The papers' bucket; the Worker reads and writes the files people send in it (lib/envois).
+		{ "binding": "FICHIERS", "bucket_name": "campusly" }
+	],
+	// next/image resized by Cloudflare Images.
+	"images": { "binding": "IMAGES" },
+	// The tutor's PDF report, printed by Browser Rendering (lib/pdf-serveur).
+	"browser": { "binding": "BROWSER" },
+	// UTC, as on Vercel: 19:00 is the evening reminder, 07:00 the morning sends (worker.ts).
+	// Worker routes rather than custom domains: the zone's DNS records stay as they are
+	// (proxied), and taking these two lines out hands the domain back.
+	"routes": [
+		{ "pattern": "www.mycampusly.fr/*", "zone_name": "mycampusly.fr" },
+		{ "pattern": "mycampusly.fr/*", "zone_name": "mycampusly.fr" }
+	],
+	"triggers": { "crons": ["0 19 * * *", "0 7 * * *"] },
+	"observability": { "enabled": true },
+	// next-auth trusted the host by itself on Vercel; here it has to be told.
+	"vars": { "AUTH_TRUST_HOST": "true" }
+}

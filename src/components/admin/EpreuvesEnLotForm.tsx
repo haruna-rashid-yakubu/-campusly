@@ -4,7 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/Toast";
-import { upload } from "@vercel/blob/client";
+import { envoyerFichier } from "@/lib/envoi-client";
 import { publierEpreuves } from "@/lib/actions";
 import { fusionnerPages } from "@/lib/pages";
 
@@ -118,20 +118,16 @@ export function EpreuvesEnLotForm({
     startTransition(async () => {
       try {
         /*
-         * The pages are bound and sent from here, straight to the blob store.
-         * A Server Action body is capped at 1 MB by default and 4.5 MB by the
-         * platform, which one photograph of an exam already exceeds — that
-         * cap is what made a cupboard impossible to send. The action then
-         * receives only labels and links, which weigh nothing.
+         * The pages are bound and sent from here, one paper per request, to
+         * /api/envoi. A single action carrying a whole cupboard of photographs
+         * would either fit or fail whole; the action then receives only labels
+         * and links, which weigh nothing.
          */
         const prets: { ligne: Ligne; url: string; nom: string }[] = [];
         for (const [i, ligne] of lignes.entries()) {
           setProgres({ fait: i, total: lignes.length });
           const document = await fusionnerPages(ligne.pages, `${ligne.matiere} ${ligne.annee}`);
-          const envoye = await upload(`sujets/${document.name}`, document, {
-            access: "public",
-            handleUploadUrl: "/api/blob/upload",
-          });
+          const envoye = await envoyerFichier(document, "sujets");
           prets.push({ ligne, url: envoye.url, nom: document.name });
         }
         setProgres({ fait: lignes.length, total: lignes.length });

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { cites, roomTypes } from "@/db/schema";
-import { uploadFile } from "@/lib/blob";
+import { uploadFile } from "@/lib/envois";
 
 export const dynamic = "force-dynamic";
 

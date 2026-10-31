@@ -6,7 +6,7 @@ import { PickerButton } from "@/components/PickerButton";
 import { Icon } from "@/components/icons";
 import { NotifNudge } from "@/components/NotifNudge";
 import { useToast } from "@/components/Toast";
-import { upload } from "@vercel/blob/client";
+import { envoyerFichier } from "@/lib/envoi-client";
 import { proposeSubject } from "@/lib/actions";
 import { fusionnerPages } from "@/lib/pages";
 import { PROPOSER_LABELS } from "@/lib/constants";
@@ -53,14 +53,11 @@ export function ProposerForm({
 
     startTransition(async () => {
       try {
-        // Bound here and sent straight to the store: a Server Action body is
-        // capped at 1 MB, which one photograph of a sheet already exceeds.
+        // Bound here and sent on its own: the action then receives only its
+        // address, whatever the photographs weigh.
         if (pages.length > 0) {
           const document = await fusionnerPages(pages, `${values.matiere} ${values.annee}`);
-          const envoye = await upload(`submissions/${document.name}`, document, {
-            access: "public",
-            handleUploadUrl: "/api/blob/upload",
-          });
+          const envoye = await envoyerFichier(document, "submissions");
           fd.set("fileUrl", envoye.url);
           fd.set("fileName", document.name);
         }

@@ -37,7 +37,10 @@ export const AVIS_CORRIGE =
 
 /** The lecturers with Sujets d'entraînement, from the index scripts/entrainer.ts keeps. */
 export async function enseignantsEntrainement(): Promise<EnseignantEntrainement[]> {
-  const brut = await lire(cles.indexEntrainement).catch(() => null);
+  const brut = await lire(cles.indexEntrainement).catch((e) => {
+    console.error("Entraînement : lecture R2 impossible", e);
+    return null;
+  });
   return brut ? (JSON.parse(Buffer.from(brut).toString()) as EnseignantEntrainement[]) : [];
 }
 
@@ -47,7 +50,10 @@ export async function enseignantEntrainement(slug: string) {
 
 /** A paper and its corrigé as the page reads them. */
 export async function lireEntrainement(slug: string, n: number): Promise<{ sujet: Lecture; corrige: Lecture } | null> {
-  const brut = await lire(cles.entrainementTextes(slug, n)).catch(() => null);
+  const brut = await lire(cles.entrainementTextes(slug, n)).catch((e) => {
+    console.error("Entraînement : lecture R2 impossible", e);
+    return null;
+  });
   if (!brut) return null;
   const { sujet, corrige } = JSON.parse(Buffer.from(brut).toString()) as { sujet: string; corrige: string };
   return {

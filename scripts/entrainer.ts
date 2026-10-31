@@ -35,7 +35,7 @@ async function principal() {
   const { gabaritEntrainement, lireProfil } = await import("../src/lib/entrainement");
   type Enseignant = import("../src/lib/entrainement").EnseignantEntrainement;
   type Sujet = import("../src/lib/entrainement").SujetEntrainement;
-  const { imprimerPdf } = await import("../src/lib/pdf-serveur");
+  const { imprimerPdf } = await import("./pdf-local");
 
   const noms = new Map(
     (JSON.parse(readFileSync(join(DOSSIER, "enseignants.json"), "utf8")) as { slug: string; nom: string }[]).map((e) => [e.slug, e.nom])

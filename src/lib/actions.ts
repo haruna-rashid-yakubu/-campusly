@@ -26,7 +26,7 @@ import {
   visites,
   notificationClics,
 } from "@/db/schema";
-import { deleteFile, uploadFile } from "@/lib/blob";
+import { deleteFile, estLienEnvoi, uploadFile } from "@/lib/envois";
 import { estOuvert, getSondage, getSondageOuvert } from "@/lib/sondage";
 import { getCatalogue, resumerDetail, type LignePanier } from "@/lib/vendeurs";
 import { calendrierDe, prochaineLivraison } from "@/lib/livraison";
@@ -288,7 +288,7 @@ export async function proposeSubject(formData: FormData): Promise<Refus | { ok: 
   let fileName: string | null = null;
   if (lien) {
     // A URL from a browser is a claim: only this app's own store is accepted.
-    if (!estLienBlob(lien)) return { ok: false, message: "Document invalide." };
+    if (!estLienEnvoi(lien)) return { ok: false, message: "Document invalide." };
     fileUrl = lien;
     fileName = nomFichier || `${matiere} ${annee}`;
   } else if (file && file.size > 0) {
@@ -538,7 +538,7 @@ export async function deleteSubject(subjectId: number) {
 
   await db.delete(subjects).where(eq(subjects.id, subjectId));
 
-  // Best effort: an orphaned blob costs storage but a failure here must not
+  // Best effort: an orphaned file costs storage but a failure here must not
   // leave the row deleted-but-reported-failed.
   if (subject.fileUrl) await deleteFile(subject.fileUrl);
   if (subject.correctionUrl) await deleteFile(subject.correctionUrl);
@@ -800,7 +800,7 @@ export type ChambreInput = {
  * price, so it cannot be sorted, filtered or compared — so the two are
  * written together rather than leaving a shell behind to be completed later.
  *
- * Photos arrive already uploaded: the form sends them to the blob store
+ * Photos arrive already uploaded: the form sends them to R2 (lib/envois)
  * first, because a form post carrying several phone photos is the one that
  * times out on a campus connection.
  */
@@ -1196,23 +1196,13 @@ export async function definirTroncCommun(
   return { ok: true };
 }
 
-/** Only this app's own blob store; a URL from the browser proves nothing. */
-function estLienBlob(url: string) {
-  try {
-    const { protocol, hostname } = new URL(url);
-    return protocol === "https:" && hostname.endsWith(".public.blob.vercel-storage.com");
-  } catch {
-    return false;
-  }
-}
-
 export type EpreuveEnLot = {
   matiere: string;
   annee: string;
   type: string;
   enseignant: string;
-  // Already in the blob store: the browser sent it there directly, because a
-  // Server Action body cannot carry a photograph.
+  // Already in R2: the browser sent it through /api/envoi, because a Server
+  // Action is no place for a photograph.
   fileUrl: string;
   fileName: string;
 };
@@ -1279,9 +1269,9 @@ export async function publierEpreuves(formData: FormData): Promise<Refus | Resul
     }
 
     // A URL is a claim, not a proof: it arrives from the browser, so only one
-    // pointing at this app's own blob store is accepted. Anything else would
+    // pointing at this app's own files is accepted. Anything else would
     // let a published paper link wherever its sender liked.
-    if (!estLienBlob(ligne.fileUrl)) {
+    if (!estLienEnvoi(ligne.fileUrl)) {
       refusees.push({ matiere: nom, message: "Document manquant ou invalide." });
       continue;
     }
