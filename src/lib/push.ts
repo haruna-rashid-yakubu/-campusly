@@ -81,9 +81,13 @@ async function sendToSubscription(
 ) {
   if (isExpoToken(sub.endpoint)) return sendToExpo(sub.endpoint, payload);
   try {
+    // High urgency: every message here is meant to be seen. At the default
+    // ("normal") a phone asleep may hold it for hours, and students said
+    // they had received nothing.
     await webpush.sendNotification(
       { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-      JSON.stringify(payload)
+      JSON.stringify(payload),
+      { urgency: "high" }
     );
     return true;
   } catch (err: unknown) {
